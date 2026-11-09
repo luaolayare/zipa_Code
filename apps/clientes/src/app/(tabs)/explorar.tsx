@@ -1,4 +1,4 @@
-import { CATEGORIES, categoryLabel, colors, fonts, normalize, useAuth, type Business, type Category } from '@zipa/shared';
+import { BRAND, CATEGORIES, categoryLabel, colors, fonts, normalize, useAuth, type Business, type Category } from '@zipa/shared';
 import { useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Coffee, LayoutGrid, MapPin, Search, ShoppingBag, Utensils, X, type LucideIcon } from 'lucide-react-native';
@@ -66,7 +66,7 @@ export default function Explorar() {
         <View style={styles.header}>
           <View style={styles.location}>
             <MapPin size={16} color={colors.accent} strokeWidth={2} />
-            <Text style={styles.locationText}>Cartagena · Centro histórico</Text>
+            <Text style={styles.locationText}>{BRAND.city} · {BRAND.zone}</Text>
           </View>
           <View style={styles.greeting}>
             <Text style={styles.hello}>Hola, {user?.name ?? 'viajero'}</Text>

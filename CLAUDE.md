@@ -1,4 +1,6 @@
-# Vitrina Local (zipa_Code)
+# Zipa lo tiene (zipa_Code)
+
+> Antes se llamaba Vitrina Local. El nombre y la ciudad están en `packages/shared/src/brand.ts`.
 
 Lee también `AGENTS.md` (reglas de Expo: usar `npx expo install`, no confiar en APIs de memoria).
 

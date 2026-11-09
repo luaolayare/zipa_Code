@@ -1,4 +1,5 @@
 export * from './theme';
+export * from './brand';
 export * from './types';
 export * from './categories';
 export * from './supabase';

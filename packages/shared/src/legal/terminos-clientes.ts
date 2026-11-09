@@ -1,3 +1,4 @@
+import { BRAND } from '../brand';
 import type { LegalDocument } from './tipos';
 
 // BORRADOR para revisión de un abogado. Los textos entre [CORCHETES] los completa el responsable.
@@ -8,16 +9,16 @@ export const TERMINOS_CLIENTES: LegalDocument = {
   FECHA: '2026-11-08',
   borrador: true,
   intro:
-    'Estos términos regulan el uso de la app Vitrina Local por parte de clientes y turistas. Al crear una cuenta los aceptas. Si no estás de acuerdo, puedes seguir explorando como invitado sin crear cuenta.',
+    `Estos términos regulan el uso de la app ${BRAND.clientesApp} por parte de clientes y turistas. Al crear una cuenta los aceptas. Si no estás de acuerdo, puedes seguir explorando como invitado sin crear cuenta.`,
   sections: [
     {
       heading: '1. Quiénes somos',
       paragraphs: [
-        'Vitrina Local es un directorio de restaurantes y emprendimientos locales operado por [NOMBRE DEL RESPONSABLE], identificado con [NIT/CÉDULA], con domicilio en [CIUDAD], Colombia. Contacto: [CORREO DE SOPORTE].',
+        `${BRAND.name} es un directorio de restaurantes y emprendimientos locales operado por [NOMBRE DEL RESPONSABLE], identificado con [NIT/CÉDULA], con domicilio en [CIUDAD], Colombia. Contacto: [CORREO DE SOPORTE].`,
       ],
     },
     {
-      heading: '2. Vitrina Local no vende productos',
+      heading: `2. ${BRAND.name} no vende productos`,
       paragraphs: [
         'La app muestra información de negocios independientes. No vendemos, no cobramos ni entregamos sus productos, y no somos parte de la compra que hagas.',
         'Cada negocio es el único responsable de sus productos, precios, disponibilidad, horarios, calidad y atención, y de cumplir con el Estatuto del Consumidor (Ley 1480 de 2011). Los precios que ves los publica el negocio y pueden cambiar.',
@@ -55,7 +56,7 @@ export const TERMINOS_CLIENTES: LegalDocument = {
     {
       heading: '7. Propiedad intelectual',
       paragraphs: [
-        'La marca, el diseño y el software de Vitrina Local son de [NOMBRE DEL RESPONSABLE]. Las fotos, videos y modelos 3D de cada negocio pertenecen a ese negocio o se usan con su autorización.',
+        `La marca, el diseño y el software de ${BRAND.name} son de [NOMBRE DEL RESPONSABLE]. Las fotos, videos y modelos 3D de cada negocio pertenecen a ese negocio o se usan con su autorización.`,
       ],
     },
     {

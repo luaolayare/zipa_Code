@@ -1,4 +1,4 @@
-import { Button, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
+import { BRAND, Button, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
@@ -36,7 +36,7 @@ export default function Login() {
 
   return (
     <Screen>
-      <Text style={styles.title}>{mode === 'entrar' ? 'Entra a Vitrina Local' : 'Crea tu cuenta'}</Text>
+      <Text style={styles.title}>{mode === 'entrar' ? `Entra a ${BRAND.name}` : 'Crea tu cuenta'}</Text>
       <Text style={styles.subtitle}>Guarda tus lugares favoritos y califica los negocios que visitas.</Text>
       {/* TODO fase 2: Continuar con Google y con Apple (Supabase Auth + expo-auth-session). */}
       {mode === 'crear' && <TextField label="Tu nombre" value={name} onChangeText={setName} autoComplete="name" />}

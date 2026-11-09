@@ -1,11 +1,11 @@
-# Vitrina Local
+# Zipa lo tiene
 
 Dos apps móviles hechas con Expo (React Native) y Supabase:
 
 | App | Carpeta | Para quién |
 | --- | --- | --- |
-| Vitrina Negocios | `apps/negocios` | Restaurantes y emprendimientos: registro y panel |
-| Vitrina Local | `apps/clientes` | Turistas y clientes: explorar, ver en 3D y calificar |
+| Zipa lo tiene Negocios | `apps/negocios` | Restaurantes y emprendimientos: registro y panel |
+| Zipa lo tiene | `apps/clientes` | Turistas y clientes: explorar, ver en 3D y calificar |
 
 ## Requisitos
 

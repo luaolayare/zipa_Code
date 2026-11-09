@@ -1,24 +1,14 @@
 import { colors, fonts } from '@zipa/shared';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Compass, Store, User, type LucideIcon } from 'lucide-react-native';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-// Enlace a la app de negocios (scheme de apps/negocios/app.json).
-const NEGOCIOS_URL = 'vitrinanegocios://';
+import { openNegociosApp } from '@/lib/negocios';
 
 const TABS: Record<string, { label: string; Icon: LucideIcon }> = {
   explorar: { label: 'Explorar', Icon: Compass },
   perfil: { label: 'Perfil', Icon: User },
 };
-
-async function openNegocios() {
-  try {
-    await Linking.openURL(NEGOCIOS_URL);
-  } catch {
-    // Pendiente: abrir la página de Vitrina Negocios en la tienda cuando esté publicada.
-    Alert.alert('Vitrina Negocios', 'Registra tu restaurante o emprendimiento desde la app Vitrina Negocios.');
-  }
-}
 
 /** Barra inferior: Explorar, ¿Tienes negocio? (abre la app de negocios) y Perfil. */
 export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
@@ -42,7 +32,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
   return (
     <View accessibilityRole="tablist" style={[styles.bar, { height: 72 + insets.bottom, paddingBottom: insets.bottom }]}>
       {explorar}
-      {tab('negocio', '¿Tienes negocio?', Store, false, openNegocios)}
+      {tab('negocio', '¿Tienes negocio?', Store, false, openNegociosApp)}
       {perfil}
     </View>
   );

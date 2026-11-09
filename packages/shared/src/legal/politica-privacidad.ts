@@ -1,3 +1,4 @@
+import { BRAND } from '../brand';
 import type { LegalDocument } from './tipos';
 
 // BORRADOR para revisión de un abogado. Los textos entre [CORCHETES] los completa el responsable.
@@ -9,7 +10,7 @@ export const POLITICA_PRIVACIDAD: LegalDocument = {
   FECHA: '2026-11-08',
   borrador: true,
   intro:
-    'Esta política explica cómo Vitrina Local trata los datos personales de quienes usan la app Vitrina Local (clientes y turistas) y la app Vitrina Negocios (restaurantes y emprendimientos), según la Ley 1581 de 2012 y sus decretos reglamentarios.',
+    `Esta política explica cómo ${BRAND.name} trata los datos personales de quienes usan la app ${BRAND.clientesApp} (clientes y turistas) y la app ${BRAND.negociosApp} (restaurantes y emprendimientos), según la Ley 1581 de 2012 y sus decretos reglamentarios.`,
   sections: [
     {
       heading: '1. Responsable del tratamiento',

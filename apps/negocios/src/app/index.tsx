@@ -1,4 +1,4 @@
-import { Button, Screen, colors, useAuth } from '@zipa/shared';
+import { BRAND, Button, Screen, colors, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 
@@ -7,7 +7,7 @@ export default function Inicio() {
   const { user } = useAuth();
   return (
     <Screen>
-      <Text style={styles.brand}>Vitrina Local · Negocios</Text>
+      <Text style={styles.brand}>{BRAND.negociosApp}</Text>
       <Text style={styles.title}>Que los turistas encuentren tu negocio.</Text>
       <Text style={styles.body}>
         Registra tu restaurante o emprendimiento, muestra tus productos en 3D y recibe reseñas de tus clientes. Son 5 pasos, unos 10 minutos.
