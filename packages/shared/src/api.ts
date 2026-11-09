@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
+import type { ConsentInput } from './legal';
 import type { Business, BusinessType, Category, Product, Review } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -58,9 +59,21 @@ export interface NewBusiness {
  */
 export function createApi(db: SupabaseClient | null) {
   const demoReviews = [...DEMO_REVIEWS];
+  const demoConsents: (ConsentInput & { userId: string; acceptedAt: string })[] = [];
 
   return {
     isDemo: db === null,
+
+    /** Guarda la aceptación de documentos legales de alguien que ya tiene sesión. */
+    async recordConsents(userId: string, consents: ConsentInput[]) {
+      if (!db) {
+        const acceptedAt = new Date().toISOString();
+        demoConsents.push(...consents.map((c) => ({ ...c, userId, acceptedAt })));
+        return;
+      }
+      const { error } = await db.from('consents').insert(consents.map((c) => ({ user_id: userId, document: c.document, version: c.version, app: c.app })));
+      if (error) throw error;
+    },
 
     async listBusinesses(): Promise<Business[]> {
       if (!db) return DEMO_BUSINESSES;

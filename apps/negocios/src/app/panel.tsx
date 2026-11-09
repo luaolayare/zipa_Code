@@ -1,7 +1,7 @@
 import { Button, Card, Screen, colors, useAuth, type Business } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { useRegistro } from '@/components/RegistroContext';
 
@@ -45,6 +45,11 @@ export default function Panel() {
         <Text style={styles.body}>Imprímelo para tus mesas o mostrador. Lleva directo a tu vitrina.</Text>
       </Card>
       <Button title="Cerrar sesión" variant="link" onPress={async () => { await signOut(); router.replace('/'); }} />
+      <View style={styles.legal}>
+        <Text style={styles.legalTitle} accessibilityRole="header">Información legal</Text>
+        <Button variant="link" title="Términos y condiciones" onPress={() => router.push('/legal/terminos')} style={styles.link} />
+        <Button variant="link" title="Política de privacidad" onPress={() => router.push('/legal/privacidad')} style={styles.link} />
+      </View>
     </Screen>
   );
 }
@@ -57,4 +62,7 @@ const styles = StyleSheet.create({
   review: { backgroundColor: colors.accentSoft, color: colors.accentText },
   h2: { fontSize: 17, fontWeight: '700', color: colors.text },
   body: { fontSize: 14, lineHeight: 20, color: colors.textMuted },
+  legal: { marginTop: 4, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, gap: 2 },
+  legalTitle: { fontSize: 13, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.7 },
+  link: { alignSelf: 'flex-start' },
 });

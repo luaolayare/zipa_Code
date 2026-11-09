@@ -2,6 +2,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { createApi, type Api } from './api';
+import type { ConsentInput } from './legal';
 
 export interface AppUser {
   id: string;
@@ -14,7 +15,8 @@ interface AuthValue {
   loading: boolean;
   api: Api;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  /** `consents`: lo que la persona aceptó. Un trigger de la base lo guarda en la tabla consents (migración 0003). */
+  signUp: (email: string, password: string, name: string, consents: ConsentInput[]) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -59,9 +61,14 @@ export function AuthProvider({ client, children }: { client: SupabaseClient | nu
       const { error } = await client.auth.signInWithPassword({ email, password });
       if (error) throw error;
     },
-    async signUp(email, password, name) {
-      if (!client) return setUser({ id: 'demo-user', email, name: name || nameFromEmail(email) });
-      const { error } = await client.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    async signUp(email, password, name, consents) {
+      if (!client) {
+        await api.recordConsents('demo-user', consents);
+        return setUser({ id: 'demo-user', email, name: name || nameFromEmail(email) });
+      }
+      // La aceptación viaja con el registro: si Supabase pide confirmar el correo,
+      // todavía no hay sesión para guardarla desde la app.
+      const { error } = await client.auth.signUp({ email, password, options: { data: { full_name: name, consents } } });
       if (error) throw error;
     },
     async signOut() {
