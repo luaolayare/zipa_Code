@@ -1,0 +1,13 @@
+{
+  "name": "zipa-code",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "clientes": "npm run start --workspace=clientes",
+    "negocios": "npm run start --workspace=negocios",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

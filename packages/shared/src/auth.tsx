@@ -1,0 +1,80 @@
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+
+import { createApi, type Api } from './api';
+
+export interface AppUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface AuthValue {
+  user: AppUser | null;
+  loading: boolean;
+  api: Api;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthValue | null>(null);
+
+const nameFromEmail = (email: string) => {
+  const n = email.split('@')[0].replace(/[._-]+/g, ' ');
+  return n.charAt(0).toUpperCase() + n.slice(1);
+};
+
+const toUser = (s: Session | null): AppUser | null =>
+  s?.user
+    ? {
+        id: s.user.id,
+        email: s.user.email ?? '',
+        name: (s.user.user_metadata?.full_name as string | undefined) ?? nameFromEmail(s.user.email ?? ''),
+      }
+    : null;
+
+/** Sesión compartida por ambas apps. Sin Supabase, simula el inicio de sesión. */
+export function AuthProvider({ client, children }: { client: SupabaseClient | null; children: ReactNode }) {
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(client !== null);
+  const api = useMemo(() => createApi(client), [client]);
+
+  useEffect(() => {
+    if (!client) return;
+    client.auth.getSession().then(({ data }) => {
+      setUser(toUser(data.session));
+      setLoading(false);
+    });
+    const { data } = client.auth.onAuthStateChange((_event, session) => setUser(toUser(session)));
+    return () => data.subscription.unsubscribe();
+  }, [client]);
+
+  const value: AuthValue = {
+    user,
+    loading,
+    api,
+    async signIn(email, password) {
+      if (!client) return setUser({ id: 'demo-user', email, name: nameFromEmail(email) });
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    },
+    async signUp(email, password, name) {
+      if (!client) return setUser({ id: 'demo-user', email, name: name || nameFromEmail(email) });
+      const { error } = await client.auth.signUp({ email, password, options: { data: { full_name: name } } });
+      if (error) throw error;
+    },
+    async signOut() {
+      if (!client) return setUser(null);
+      await client.auth.signOut();
+    },
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth debe usarse dentro de <AuthProvider>');
+  return ctx;
+}
