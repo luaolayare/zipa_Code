@@ -1,4 +1,4 @@
-import { Button, Screen, colors, useAuth } from '@zipa/shared';
+import { Button, DeleteAccountButton, Screen, colors, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -32,6 +32,9 @@ export default function Perfil() {
       {/* TODO: mis reseñas y lugares vistos */}
       <Button title="Cerrar sesión" variant="outline" onPress={signOut} />
       <Legal />
+      <View style={styles.danger}>
+        <DeleteAccountButton loses="tu perfil, tus reseñas y tus reportes" onDeleted={() => router.replace('/')} />
+      </View>
     </Screen>
   );
 }
@@ -42,4 +45,5 @@ const styles = StyleSheet.create({
   legal: { marginTop: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, gap: 2 },
   legalTitle: { fontSize: 13, fontWeight: '700', color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.7 },
   link: { alignSelf: 'flex-start' },
+  danger: { marginTop: 12 },
 });

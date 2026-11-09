@@ -1,4 +1,4 @@
-import { Button, Card, Screen, colors, useAuth, type Business } from '@zipa/shared';
+import { Button, Card, DeleteAccountButton, Screen, colors, useAuth, type Business } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -50,6 +50,12 @@ export default function Panel() {
         <Button variant="link" title="Términos y condiciones" onPress={() => router.push('/legal/terminos')} style={styles.link} />
         <Button variant="link" title="Política de privacidad" onPress={() => router.push('/legal/privacidad')} style={styles.link} />
       </View>
+      {!!user && (
+        <DeleteAccountButton
+          loses="tu cuenta, tu negocio, sus productos, fotos y videos, y las reseñas que ha recibido"
+          onDeleted={() => router.replace('/')}
+        />
+      )}
     </Screen>
   );
 }

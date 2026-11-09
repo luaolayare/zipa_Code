@@ -2,6 +2,25 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
+import { OffensiveTextError, findOffensiveWords } from './moderation';
+
+export type ReportTargetType = 'review' | 'business' | 'user';
+export type ReportReason = 'ofensivo' | 'falso' | 'spam' | 'datos_personales' | 'otro';
+
+export const REPORT_REASONS: { id: ReportReason; label: string }[] = [
+  { id: 'ofensivo', label: 'Es ofensivo, acosa o discrimina' },
+  { id: 'falso', label: 'Es falso o engañoso' },
+  { id: 'spam', label: 'Es publicidad o spam' },
+  { id: 'datos_personales', label: 'Muestra datos personales de alguien' },
+  { id: 'otro', label: 'Otro motivo' },
+];
+
+export interface ReportInput {
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: ReportReason;
+  details?: string;
+}
 import type { Business, BusinessType, Category, Product, Review } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -58,11 +77,62 @@ export interface NewBusiness {
  * con null usa datos de ejemplo en memoria.
  */
 export function createApi(db: SupabaseClient | null) {
-  const demoReviews = [...DEMO_REVIEWS];
+  let demoReviews = [...DEMO_REVIEWS];
   const demoConsents: (ConsentInput & { userId: string; acceptedAt: string })[] = [];
+  const demoReports: (ReportInput & { reporterId: string })[] = [];
+  const demoBlocks = new Set<string>(); // `${bloqueador}:${bloqueado}`
 
   return {
     isDemo: db === null,
+
+    /**
+     * Elimina la cuenta y todo lo asociado (perfil, reseñas, negocio, productos, aceptaciones,
+     * reportes, bloqueos y archivos). Lo hace la Edge Function eliminar-cuenta con permisos de servidor.
+     */
+    async deleteAccount(userId: string) {
+      if (!db) {
+        demoReviews = demoReviews.filter((r) => r.userId !== userId);
+        return;
+      }
+      const { error } = await db.functions.invoke('eliminar-cuenta', { method: 'POST' });
+      if (error) throw new Error('No pudimos eliminar tu cuenta. Intenta de nuevo o escríbenos a soporte.');
+    },
+
+    /** Reporta una reseña, un negocio o un usuario para que el equipo lo revise. */
+    async report(reporterId: string, input: ReportInput) {
+      if (!db) {
+        demoReports.push({ ...input, reporterId });
+        return;
+      }
+      const { error } = await db.from('reports').insert({
+        reporter_id: reporterId,
+        target_type: input.targetType,
+        target_id: input.targetId,
+        reason: input.reason,
+        details: input.details?.trim() || null,
+      });
+      // 23505 = ya lo había reportado: para quien reporta es lo mismo.
+      if (error && error.code !== '23505') throw error;
+    },
+
+    /** Deja de ver las reseñas de esa persona. */
+    async blockUser(blockerId: string, blockedId: string) {
+      if (!db) {
+        demoBlocks.add(`${blockerId}:${blockedId}`);
+        return;
+      }
+      const { error } = await db.from('blocks').insert({ blocker_id: blockerId, blocked_id: blockedId });
+      if (error && error.code !== '23505') throw error;
+    },
+
+    async unblockUser(blockerId: string, blockedId: string) {
+      if (!db) {
+        demoBlocks.delete(`${blockerId}:${blockedId}`);
+        return;
+      }
+      const { error } = await db.from('blocks').delete().eq('blocker_id', blockerId).eq('blocked_id', blockedId);
+      if (error) throw error;
+    },
 
     /** Guarda la aceptación de documentos legales de alguien que ya tiene sesión. */
     async recordConsents(userId: string, consents: ConsentInput[]) {
@@ -96,8 +166,10 @@ export function createApi(db: SupabaseClient | null) {
       return (data ?? []).map(toProduct);
     },
 
-    async listReviews(businessId: string): Promise<Review[]> {
-      if (!db) return demoReviews.filter((r) => r.businessId === businessId);
+    /** Reseñas del negocio. Con `viewerId`, sin las de personas que esa persona bloqueó. */
+    async listReviews(businessId: string, viewerId?: string): Promise<Review[]> {
+      if (!db) return demoReviews.filter((r) => r.businessId === businessId && !demoBlocks.has(`${viewerId}:${r.userId}`));
+      // En la base, la vista reviews_public ya oculta las de usuarios bloqueados (migración 0004).
       const { data, error } = await db
         .from('reviews_public')
         .select('*')
@@ -108,11 +180,14 @@ export function createApi(db: SupabaseClient | null) {
     },
 
     async createReview(businessId: string, userId: string, authorName: string, stars: Review['stars'], text: string) {
+      if (findOffensiveWords(text).length) throw new OffensiveTextError();
       if (!db) {
         demoReviews.unshift({ id: String(Date.now()), businessId, userId, authorName, stars, text, reply: null, createdAt: new Date().toISOString() });
         return;
       }
       const { error } = await db.from('reviews').insert({ business_id: businessId, user_id: userId, stars, text });
+      // La base aplica el mismo filtro (trigger) por si alguien publica sin pasar por la app.
+      if (error?.message?.includes('texto_ofensivo')) throw new OffensiveTextError();
       if (error) throw error;
     },
 

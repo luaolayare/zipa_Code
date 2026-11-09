@@ -37,7 +37,7 @@ export default function Calificar() {
         ))}
       </View>
       <TextField label="Cuéntanos más" value={text} onChangeText={setText} multiline numberOfLines={5} style={{ minHeight: 120, textAlignVertical: 'top', paddingTop: 12 }} />
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
       <Button title="Publicar reseña" onPress={submit} loading={loading} />
     </Screen>
   );

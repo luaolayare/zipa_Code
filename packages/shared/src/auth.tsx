@@ -18,6 +18,8 @@ interface AuthValue {
   /** `consents`: lo que la persona aceptó. Un trigger de la base lo guarda en la tabla consents (migración 0003). */
   signUp: (email: string, password: string, name: string, consents: ConsentInput[]) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Borra la cuenta y todo lo asociado, y cierra la sesión. */
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -74,6 +76,13 @@ export function AuthProvider({ client, children }: { client: SupabaseClient | nu
     async signOut() {
       if (!client) return setUser(null);
       await client.auth.signOut();
+    },
+    async deleteAccount() {
+      if (!user) return;
+      await api.deleteAccount(user.id);
+      if (!client) return setUser(null);
+      // La cuenta ya no existe en el servidor; solo falta limpiar la sesión guardada en el celular.
+      await client.auth.signOut({ scope: 'local' });
     },
   };
 
