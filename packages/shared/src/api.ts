@@ -16,6 +16,10 @@ const toBusiness = (r: any): Business => ({
   status: r.status,
   rating: r.rating == null ? null : Number(r.rating),
   reviewCount: r.review_count ?? 0,
+  specialty: r.specialty ?? null,
+  priceLevel: r.price_level ?? null,
+  distanceM: null, // pendiente: calcular con la ubicación del cliente
+  productCount: r.product_count ?? 0,
 });
 
 const toProduct = (r: any): Product => ({
@@ -103,7 +107,7 @@ export function createApi(db: SupabaseClient | null) {
       if (!db) return null;
       const { data, error } = await db.from('businesses').select('*').eq('owner_id', ownerId).maybeSingle();
       if (error) throw error;
-      return data ? toBusiness({ ...data, rating: null, review_count: 0 }) : null;
+      return data ? toBusiness({ ...data, rating: null, review_count: 0, product_count: 0 }) : null;
     },
 
     async registerBusiness(ownerId: string, input: NewBusiness): Promise<string> {

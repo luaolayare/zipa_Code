@@ -15,6 +15,10 @@ export interface Business {
   status: BusinessStatus;
   rating: number | null; // promedio de reseñas
   reviewCount: number;
+  specialty: string | null; // lo que vende, en palabras del negocio: "Comida callejera", "Artesanías wayuu"
+  priceLevel: 1 | 2 | 3 | null; // $, $$ o $$$
+  distanceM: number | null; // distancia al cliente en metros (se calculará con la ubicación)
+  productCount: number; // productos con modelo 3D
 }
 
 export interface Product {

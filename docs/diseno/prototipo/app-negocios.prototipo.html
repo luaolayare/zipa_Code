@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vitrina Local para negocios</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#962A13}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+.nb-scroll::-webkit-scrollbar{display:none}
+.nb-h{font-family:'Space Grotesk',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F4EF; font-family: 'DM Sans', system-ui, sans-serif; color: #14211F; display: flex; flex-direction: column">
+
+<!-- ============ INICIO NEGOCIO ============ -->
+<sc-if value="{{isStart}}" hint-placeholder-val="{{ true }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="background: #14211F; color: #FFFFFF; padding: 24px 24px 28px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: #F2B134; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l2-6h14l2 6M4 10h16v10H4z"></path></svg>
+        </div>
+        <div class="nb-h" style="font-size: 18px; font-weight: 700">Vitrina Local <span style="color: #F2B134">Negocios</span></div>
+      </div>
+    </div>
+    <h1 class="nb-h" style="margin: 16px 0 0; font-size: 34px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em">Que los turistas encuentren tu negocio.</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #D5DDDB">Registra tu restaurante o emprendimiento, muestra tus productos en 3D y recibe reseñas de tus clientes.</p>
+  </div>
+  <div style="padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <sc-for list="{{benefits}}" as="b" hint-placeholder-count="3">
+        <div style="display: flex; gap: 12px; align-items: flex-start">
+          <div style="width: 28px; height: 28px; border-radius: 999px; background: #DDEBEA; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F3D3E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+          </div>
+          <div style="font-size: 15px; line-height: 1.45"><b>{{b.title}}</b> {{b.text}}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; font-size: 14px; line-height: 1.45; color: #3F4B49">Registro en 5 pasos, unos 10 minutos. Solo necesitas tu celular.</div>
+    <button type="button" onClick="{{startReg}}" style="height: 54px; border-radius: 14px; border: 0; background: #F2B134; color: #14211F; font-size: 17px; font-weight: 700">Registrar mi negocio</button>
+    <button type="button" onClick="{{goPanelDemo}}" style="height: 48px; border-radius: 14px; border: 1px solid #14211F; background: transparent; color: #14211F; font-size: 15px; font-weight: 700">Ya tengo cuenta</button>
+    <a href="Main.dc.html" style="text-align: center; font-size: 14px; font-weight: 700; padding: 10px">Ir a la app de clientes</a>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ ENCABEZADO DE PASOS ============ -->
+<sc-if value="{{inWizard}}" hint-placeholder-val="{{ false }}">
+<div style="flex-shrink: 0; padding: 14px 20px 12px; background: #F6F4EF; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #E2DDD3">
+  <div style="display: flex; align-items: center; gap: 12px">
+    <button type="button" onClick="{{prevStep}}" aria-label="Paso anterior" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #E2DDD3; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 12px; font-weight: 700; color: #55605D; text-transform: uppercase; letter-spacing: 0.06em">Paso {{stepNum}} de 5</div>
+      <div class="nb-h" style="font-size: 18px; font-weight: 700">{{stepTitle}}</div>
+    </div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px" aria-hidden="true">
+    <sc-for list="{{stepBars}}" as="sb" hint-placeholder-count="5">
+      <div style="height: 6px; border-radius: 999px; background: {{sb.bg}}"></div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PASO 1: CUENTA ============ -->
+<sc-if value="{{isAccount}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3F4B49">Esta es la cuenta del dueño o encargado. Con ella administras tu negocio.</p>
+  <button type="button" onClick="{{accGoogle}}" style="height: 52px; border-radius: 14px; border: 1px solid #D6D0C5; background: #FFFFFF; color: #14211F; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M20 12.2h-8M20 12.2A8 8 0 1 1 17.7 6.4"></path></svg>
+    Continuar con Google
+  </button>
+  <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #55605D">
+    <div style="flex: 1; height: 1px; background: #E2DDD3"></div>o con tus datos<div style="flex: 1; height: 1px; background: #E2DDD3"></div>
+  </div>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Tu nombre
+    <input type="text" value="{{f.accName}}" onChange="{{on.accName}}" placeholder="Ej: Inés Pérez" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Correo electrónico
+    <input type="email" value="{{f.accEmail}}" onChange="{{on.accEmail}}" placeholder="negocio@correo.com" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Contraseña
+    <input type="password" value="{{f.accPass}}" onChange="{{on.accPass}}" placeholder="Mínimo 6 caracteres" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <sc-if value="{{hasError}}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size: 14px; font-weight: 600; color: #A12E15">{{error}}</div></sc-if>
+  <button type="button" onClick="{{nextAccount}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Crear cuenta y seguir</button>
+</div>
+</sc-if>
+
+<!-- ============ PASO 2: DATOS DEL NEGOCIO ============ -->
+<sc-if value="{{isInfo}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Nombre del negocio
+    <input type="text" value="{{f.bizName}}" onChange="{{on.bizName}}" placeholder="Ej: Arepas Mamá Inés" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 14px; font-weight: 700">¿Qué tipo de negocio es?</div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px" role="group" aria-label="Tipo de negocio">
+      <sc-for list="{{typeOpts}}" as="o" hint-placeholder-count="2">
+        <button type="button" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="padding: 12px; border-radius: 14px; border: 2px solid {{o.border}}; background: {{o.bg}}; text-align: left; display: flex; flex-direction: column; gap: 2px; color: #14211F">
+          <span style="font-size: 15px; font-weight: 700">{{o.label}}</span>
+          <span style="font-size: 12px; color: #55605D; line-height: 1.35">{{o.hint}}</span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 14px; font-weight: 700">Categoría</div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap" role="group" aria-label="Categoría">
+      <sc-for list="{{catOpts}}" as="o" hint-placeholder-count="3">
+        <button type="button" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid {{o.border}}; background: {{o.bg}}; color: {{o.fg}}; font-size: 14px; font-weight: 700">{{o.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Dirección
+    <input type="text" value="{{f.bizAddr}}" onChange="{{on.bizAddr}}" placeholder="Ej: Calle del Arsenal #8-12" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Horario
+    <input type="text" value="{{f.bizHours}}" onChange="{{on.bizHours}}" placeholder="Ej: Lunes a sábado, 8 a. m. a 9 p. m." style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">WhatsApp del negocio
+    <input type="tel" value="{{f.bizPhone}}" onChange="{{on.bizPhone}}" placeholder="Ej: 300 123 4567" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <sc-if value="{{hasError}}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size: 14px; font-weight: 600; color: #A12E15">{{error}}</div></sc-if>
+  <button type="button" onClick="{{nextInfo}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Seguir</button>
+</div>
+</sc-if>
+
+<!-- ============ PASO 3: VERIFICACIÓN ============ -->
+<sc-if value="{{isVerify}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3F4B49">Para que los turistas confíen, solo publicamos negocios reales. Revisamos tus datos en menos de 24 horas.</p>
+  <button type="button" onClick="{{uploadPhoto}}" style="padding: 16px; border-radius: 16px; border: 2px dashed {{photoBorder}}; background: #FFFFFF; display: flex; gap: 14px; align-items: center; text-align: left; color: #14211F">
+    <div style="width: 52px; height: 52px; border-radius: 14px; background: {{photoIconBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+      <sc-if value="{{photoDone}}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></sc-if>
+      <sc-if value="{{photoPending}}" hint-placeholder-val="{{ true }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></sc-if>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 15px; font-weight: 700">Foto de tu local o puesto</span>
+      <span style="font-size: 13px; color: #55605D; line-height: 1.35">{{photoText}}</span>
+    </div>
+  </button>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Cédula o NIT del responsable
+    <input type="text" value="{{f.bizId}}" onChange="{{on.bizId}}" inputmode="numeric" placeholder="Solo lo vemos nosotros" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <div style="background: #DDEBEA; color: #0F3D3E; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.45">No necesitas Cámara de Comercio para empezar. Los emprendimientos informales también pueden registrarse.</div>
+  <sc-if value="{{hasError}}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size: 14px; font-weight: 600; color: #A12E15">{{error}}</div></sc-if>
+  <button type="button" onClick="{{nextVerify}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Seguir</button>
+</div>
+</sc-if>
+
+<!-- ============ PASO 4: PRODUCTOS EN 3D ============ -->
+<sc-if value="{{isProducts}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3F4B49">Sube al menos un {{itemWord}}. Graba un video de 20 segundos dando la vuelta alrededor y la app lo convierte en 3D.</p>
+
+  <sc-for list="{{products}}" as="p" hint-placeholder-count="0">
+    <div style="display: flex; gap: 12px; align-items: center; background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 14px; padding: 10px">
+      <div style="width: 48px; height: 48px; border-radius: 12px; background: #E9EFEE; display: flex; align-items: center; justify-content: center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F3D3E" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"></path><path d="M12 12l9-5M12 12v10M12 12L3 7"></path></svg>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 15px; font-weight: 700">{{p.name}}</div>
+        <div style="font-size: 13px; color: #55605D">{{p.price}} · Modelo 3D listo</div>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+    <div class="nb-h" style="font-size: 16px; font-weight: 700">{{addTitle}}</div>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Nombre
+      <input type="text" value="{{f.prodName}}" onChange="{{on.prodName}}" placeholder="{{prodPlaceholder}}" style="height: 46px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+    </label>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">Precio
+      <input type="text" value="{{f.prodPrice}}" onChange="{{on.prodPrice}}" inputmode="numeric" placeholder="Ej: 7.000" style="height: 46px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+    </label>
+
+    <sc-if value="{{recIdle}}" hint-placeholder-val="{{ true }}">
+      <button type="button" onClick="{{startRec}}" style="height: 48px; border-radius: 12px; border: 0; background: #C2381B; color: #FFFFFF; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="#FFFFFF"></circle></svg>
+        Grabar video del {{itemWord}}
+      </button>
+    </sc-if>
+    <sc-if value="{{recBusy}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #14211F; border-radius: 12px; padding: 14px; color: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-size: 14px; font-weight: 700">{{recMsg}}</div>
+        <div style="height: 8px; border-radius: 999px; background: #3A4644; overflow: hidden"><div style="height: 8px; width: {{recPct}}%; background: #F2B134"></div></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{recDone}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="height: 190px; border-radius: 12px; background: #E9EFEE; display: flex; align-items: center; justify-content: center; perspective: 800px; overflow: hidden">
+          <div style="width: 240px; height: 240px; position: relative; transform-style: preserve-3d; transform: rotateX(60deg) rotateZ({{spin}}deg) scale(0.6)">
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plateEdge}}; transform: translateZ(-4px)"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plate}}; box-shadow: inset 0 0 0 14px {{m3d.rim}}"></div>
+            <sc-for list="{{m3d.layers}}" as="l" hint-placeholder-count="6">
+              <div style="position: absolute; left: {{l.left}}px; top: {{l.top}}px; width: {{l.w}}px; height: {{l.h}}px; border-radius: {{l.r}}; background: {{l.c}}; transform: translateZ({{l.z}}px)"></div>
+            </sc-for>
+          </div>
+        </div>
+        <button type="button" onClick="{{addProduct}}" style="height: 48px; border-radius: 12px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 15px; font-weight: 700">Se ve bien, agregarlo</button>
+        <button type="button" onClick="{{redoRec}}" style="height: 40px; border: 0; background: transparent; color: #0F3D3E; font-size: 14px; font-weight: 700; text-decoration: underline">Grabar de nuevo</button>
+      </div>
+    </sc-if>
+  </div>
+  <sc-if value="{{hasError}}" hint-placeholder-val="{{ false }}"><div role="alert" style="font-size: 14px; font-weight: 600; color: #A12E15">{{error}}</div></sc-if>
+  <button type="button" onClick="{{nextProducts}}" style="height: 52px; border-radius: 14px; border: 0; background: #F2B134; color: #14211F; font-size: 16px; font-weight: 700">Ver cómo quedó</button>
+</div>
+</sc-if>
+
+<!-- ============ PASO 5: VISTA PREVIA ============ -->
+<sc-if value="{{isPreview}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+  <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3F4B49">Así verán tu negocio los clientes en la app.</p>
+  <div style="border-radius: 22px; background: #E9EFEE; padding: 14px">
+    <div style="background: #FFFFFF; border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 1px #E2DDD3">
+      <div style="height: 120px; background: {{coverColor}}; position: relative; display: flex; align-items: center; justify-content: center">
+        <div class="nb-h" style="width: 64px; height: 64px; border-radius: 18px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700">{{initials}}</div>
+        <div style="position: absolute; left: 10px; bottom: 10px; font-size: 11px; font-weight: 700; background: #F2B134; color: #14211F; padding: 4px 8px; border-radius: 999px">{{productCount}} en 3D</div>
+      </div>
+      <div style="padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 5px">
+        <div style="font-size: 16px; font-weight: 700">{{bizNameShown}}</div>
+        <div style="font-size: 12px; color: #55605D">{{catLabel}} · {{addrShown}}</div>
+        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap">
+          <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{typeBg}}; color: {{typeFg}}">{{typeLabel}}</span>
+          <span style="font-size: 12px; color: #55605D">Nuevo · aún sin reseñas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+    <div style="display: flex; justify-content: space-between; gap: 10px"><span style="color: #55605D">Horario</span><span style="font-weight: 600; text-align: right">{{hoursShown}}</span></div>
+    <div style="display: flex; justify-content: space-between; gap: 10px"><span style="color: #55605D">WhatsApp</span><span style="font-weight: 600">{{phoneShown}}</span></div>
+    <div style="display: flex; justify-content: space-between; gap: 10px"><span style="color: #55605D">{{shelfLabel}}</span><span style="font-weight: 600">{{productNames}}</span></div>
+  </div>
+  <button type="button" onClick="{{publish}}" style="height: 54px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Enviar a revisión y publicar</button>
+  <div style="font-size: 12px; color: #55605D; line-height: 1.4; text-align: center">Al publicar aceptas las condiciones para negocios de Vitrina Local.</div>
+</div>
+</sc-if>
+
+<!-- ============ PANEL DEL NEGOCIO ============ -->
+<sc-if value="{{isPanel}}" hint-placeholder-val="{{ false }}">
+<div class="nb-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="background: #14211F; color: #FFFFFF; padding: 20px 20px 22px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 13px; color: #D5DDDB; font-weight: 600">Panel de tu negocio</div>
+    <h1 class="nb-h" style="margin: 0; font-size: 26px; font-weight: 700">{{bizNameShown}}</h1>
+    <div role="status" style="align-self: flex-start; display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: {{statusBg}}; color: {{statusFg}}">
+      <span style="width: 8px; height: 8px; border-radius: 999px; background: {{statusFg}}"></span>{{statusText}}
+    </div>
+  </div>
+  <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+    <sc-if value="{{inReview}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FDEFD0; color: #7A4B00; border-radius: 14px; padding: 12px 14px; font-size: 14px; line-height: 1.45">Estamos revisando tus datos. Te avisamos por WhatsApp cuando tu negocio sea visible para los clientes.</div>
+    </sc-if>
+    <sc-if value="{{isLive}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 class="nb-h" style="margin: 0; font-size: 18px; font-weight: 700">Esta semana</h2>
+          <span style="font-size: 12px; color: #55605D">Datos de ejemplo</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <sc-for list="{{stats}}" as="st" hint-placeholder-count="3">
+            <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 2px">
+              <div class="nb-h" style="font-size: 24px; font-weight: 700">{{st.value}}</div>
+              <div style="font-size: 12px; color: #55605D; line-height: 1.3">{{st.label}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 class="nb-h" style="margin: 0; font-size: 18px; font-weight: 700">{{shelfLabel}}</h2>
+        <button type="button" onClick="{{addMore}}" style="height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid #0F3D3E; background: #FFFFFF; color: #0F3D3E; font-size: 13px; font-weight: 700">Agregar</button>
+      </div>
+      <sc-for list="{{products}}" as="p" hint-placeholder-count="1">
+        <div style="display: flex; gap: 12px; align-items: center; background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 14px; padding: 10px">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: #E9EFEE; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F3D3E" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"></path></svg>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 15px; font-weight: 700">{{p.name}}</div>
+            <div style="font-size: 13px; color: #55605D">{{p.price}}</div>
+          </div>
+          <span style="font-size: 12px; font-weight: 700; color: #166534">En 3D</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isLive}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <h2 class="nb-h" style="margin: 0; font-size: 18px; font-weight: 700">Reseñas de clientes</h2>
+      <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; justify-content: space-between"><span style="font-size: 14px; font-weight: 700">Emma, turista de Francia</span><span style="font-size: 13px; color: #8A5A00; font-weight: 700">★★★★★</span></div>
+        <div style="font-size: 14px; line-height: 1.45; color: #2E3A38">Vi el producto en 3D en la app y vine directo. Muy amables.</div>
+        <sc-if value="{{hasReply}}" hint-placeholder-val="{{ false }}">
+          <div style="background: #F6F4EF; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.45"><b>Tu respuesta:</b> {{replyShown}}</div>
+        </sc-if>
+        <sc-if value="{{canReply}}" hint-placeholder-val="{{ true }}">
+          <sc-if value="{{replyOpen}}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700">Tu respuesta
+                <textarea value="{{f.reply}}" onChange="{{on.reply}}" rows="3" placeholder="Gracias por visitarnos…" style="border: 1px solid #D6D0C5; border-radius: 12px; padding: 10px; font-size: 14px; font-weight: 400; resize: none; color: #14211F; background: #FFFFFF"></textarea>
+              </label>
+              <button type="button" onClick="{{sendReply}}" style="height: 44px; border-radius: 12px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 14px; font-weight: 700">Publicar respuesta</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{replyClosed}}" hint-placeholder-val="{{ true }}">
+            <button type="button" onClick="{{openReply}}" style="align-self: flex-start; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid #E2DDD3; background: #FFFFFF; color: #14211F; font-size: 13px; font-weight: 700">Responder</button>
+          </sc-if>
+        </sc-if>
+      </div>
+    </div>
+
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; gap: 14px; align-items: center">
+      <svg width="64" height="64" viewBox="0 0 21 21" role="img" aria-label="Código QR de ejemplo" style="flex-shrink: 0">
+        <rect width="21" height="21" fill="#FFFFFF"></rect>
+        <path fill="#14211F" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM9 0h1v2H9zM11 1h2v1h-2zM8 3h2v2H8zM11 4h1v3h-1zM9 8h3v1H9zM0 9h2v1H0zM3 8h2v2H3zM14 9h2v1h-2zM17 8h1v3h-1zM19 9h2v1h-2zM8 11h1v2H8zM10 10h2v2h-2zM13 12h2v1h-2zM16 12h3v1h-3zM9 14h2v1H9zM12 14h1v3h-1zM14 15h3v1h-3zM18 14h2v2h-2zM9 17h2v2H9zM14 18h2v3h-2zM17 17h1v1h-1zM19 18h2v1h-2zM10 20h3v1h-3zM17 20h2v1h-2z"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 15px; font-weight: 700">Tu QR para mesas y mostrador</div>
+        <div style="font-size: 13px; color: #55605D; line-height: 1.4">Imprímelo. Lleva directo a tu vitrina y a dejar reseña.</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <a href="Main.dc.html" style="text-align: center; font-size: 14px; font-weight: 700; padding: 10px">Ver la app de clientes</a>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+function shade(hex, f) {
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.min(255, Math.round(((n >> 16) & 255) * f));
+  var g = Math.min(255, Math.round(((n >> 8) & 255) * f));
+  var b = Math.min(255, Math.round((n & 255) * f));
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+var PLATE = { plate: '#FFFFFF', rim: '#F1ECE6', plateEdge: '#D8D0C8' };
+var STAND = { plate: '#E6E0D6', rim: '#DCD4C6', plateEdge: '#B9AF9F' };
+var MODELS = {
+  food: { base: PLATE, parts: [
+    { x: 0, y: -6, w: 150, h: 150, c: '#D9963E', z: 12 },
+    { x: -14, y: -20, w: 92, h: 92, c: '#EDB765', z: 15 },
+    { x: 72, y: 68, w: 40, h: 40, c: '#C2451E', z: 6 }
+  ]},
+  craft: { base: STAND, parts: ['#C2381B', '#F2B134', '#0F6E6E', '#C2381B', '#2B2B2B', '#F2B134', '#0F6E6E'].map(function (c, k) {
+    return { x: 0, y: 0, w: 124, h: 124, c: c, z0: k * 13, z: 13 };
+  }).concat([{ x: 0, y: 0, w: 106, h: 106, c: '#3A1A10', z0: 91, z: 1 }]) },
+  cafe: { base: STAND, parts: [
+    { x: 0, y: 0, w: 100, h: 64, c: '#5A3A22', z0: 0, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 104, h: 68, c: '#F2E6D0', z0: 24, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 100, h: 64, c: '#5A3A22', z0: 48, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 96, h: 40, c: '#43291A', z0: 72, z: 10, r: '8px' }
+  ]}
+};
+function build3d(key) {
+  var m = MODELS[key];
+  var layers = [];
+  m.parts.forEach(function (p) {
+    var z0 = p.z0 || 0;
+    var count = Math.max(1, Math.round(p.z / 3));
+    for (var i = 0; i <= count; i++) {
+      layers.push({ left: 120 + p.x - p.w / 2, top: 120 + p.y - p.h / 2, w: p.w, h: p.h, r: p.r || '50%',
+        c: i === count ? p.c : shade(p.c, 0.72 + 0.14 * (i / count)), z: z0 + (p.z * i) / count + 1 });
+    }
+  });
+  return { plate: m.base.plate, rim: m.base.rim, plateEdge: m.base.plateEdge, layers: layers };
+}
+var CAT_LABEL = { food: 'Comer', craft: 'Artesanías', cafe: 'Café y dulces' };
+var STEPS = ['account', 'info', 'verify', 'products', 'preview'];
+var STEP_TITLES = { account: 'Crea tu cuenta', info: 'Datos del negocio', verify: 'Verificación', products: 'Tus productos en 3D', preview: 'Vista previa' };
+var FIELDS = ['accName', 'accEmail', 'accPass', 'bizName', 'bizAddr', 'bizHours', 'bizPhone', 'bizId', 'prodName', 'prodPrice', 'reply'];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var f = {};
+    FIELDS.forEach(function (k) { f[k] = ''; });
+    this.state = { screen: 'start', f: f, error: '', type: 'emp', cat: 'food', photo: false, products: [],
+      rec: 0, recPct: 0, spin: 0, live: false, replyOpen: false, replied: '' };
+  }
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () {
+      if (self.state.rec === 3) self.setState({ spin: (self.state.spin + 1.5) % 360 });
+    }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.timer); clearTimeout(this.recTimer); clearTimeout(this.liveTimer); }
+  setF(k, v) { var f = Object.assign({}, this.state.f); f[k] = v; this.setState({ f: f }); }
+  go(screen) { this.setState({ screen: screen, error: '' }); }
+  runRec() {
+    var self = this;
+    this.setState({ rec: 1, recPct: 0 });
+    var tick = function () {
+      var s = self.state;
+      var pct = s.recPct + 5;
+      if (pct >= 100) {
+        if (s.rec === 1) self.setState({ rec: 2, recPct: 0 });
+        else { self.setState({ rec: 3, recPct: 100 }); return; }
+      } else self.setState({ recPct: pct });
+      self.recTimer = setTimeout(tick, 90);
+    };
+    this.recTimer = setTimeout(tick, 90);
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var f = s.f;
+    var on = {};
+    FIELDS.forEach(function (k) { on[k] = function (e) { self.setF(k, e.target.value); }; });
+    var stepIdx = STEPS.indexOf(s.screen);
+    var fail = function (msg) { self.setState({ error: msg }); };
+    var isFood = s.cat === 'food';
+    var itemWord = isFood ? 'plato' : 'producto';
+    var name = f.bizName.trim() || 'Tu negocio';
+    var initials = name.split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+    var price = function (p) { var d = String(p).replace(/[^0-9]/g, ''); return d ? '$' + Number(d).toLocaleString('es-CO') : 'Sin precio'; };
+
+    return {
+      f: f, on: on, error: s.error, hasError: !!s.error,
+      isStart: s.screen === 'start', inWizard: stepIdx !== -1,
+      isAccount: s.screen === 'account', isInfo: s.screen === 'info', isVerify: s.screen === 'verify',
+      isProducts: s.screen === 'products', isPreview: s.screen === 'preview', isPanel: s.screen === 'panel',
+      stepNum: stepIdx + 1, stepTitle: STEP_TITLES[s.screen] || '',
+      stepBars: STEPS.map(function (x, i) { return { bg: i <= stepIdx ? '#0F3D3E' : '#DCD6CC' }; }),
+      benefits: [
+        { title: 'Aparece ante turistas', text: 'que buscan dónde comer y qué comprar en la zona.' },
+        { title: 'Muestra tus productos en 3D', text: 'grabando un video corto con tu celular.' },
+        { title: 'Recibe y responde reseñas', text: 'para ganar la confianza de nuevos clientes.' }
+      ],
+      startReg: function () { self.go('account'); },
+      goPanelDemo: function () {
+        var nf = Object.assign({}, s.f, { bizName: s.f.bizName || 'Arepas Mamá Inés', bizAddr: s.f.bizAddr || 'Calle del Arsenal #8-12' });
+        self.setState({ screen: 'panel', live: true, f: nf, products: s.products.length ? s.products : [{ name: 'Arepa de huevo', price: '$7.000' }] });
+      },
+      prevStep: function () { self.go(stepIdx <= 0 ? 'start' : STEPS[stepIdx - 1]); },
+      accGoogle: function () { var nf = Object.assign({}, s.f, { accName: 'Luis', accEmail: 'luis@gmail.com' }); self.setState({ f: nf, screen: 'info', error: '' }); },
+      nextAccount: function () {
+        if (!f.accName.trim()) return fail('Escribe tu nombre.');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.accEmail.trim())) return fail('Escribe un correo válido.');
+        if (f.accPass.length < 6) return fail('La contraseña debe tener al menos 6 caracteres.');
+        self.go('info');
+      },
+      typeOpts: [['emp', 'Emprendimiento', 'Negocio pequeño o nuevo, puesto, venta desde casa'], ['cons', 'Negocio establecido', 'Restaurante o tienda con trayectoria']].map(function (o) {
+        var sel = s.type === o[0];
+        return { label: o[1], hint: o[2], pressed: sel ? 'true' : 'false', border: sel ? '#0F3D3E' : '#E2DDD3', bg: sel ? '#E9EFEE' : '#FFFFFF', pick: function () { self.setState({ type: o[0] }); } };
+      }),
+      catOpts: ['food', 'craft', 'cafe'].map(function (k) {
+        var sel = s.cat === k;
+        return { label: CAT_LABEL[k], pressed: sel ? 'true' : 'false', border: sel ? '#0F3D3E' : '#E2DDD3', bg: sel ? '#0F3D3E' : '#FFFFFF', fg: sel ? '#FFFFFF' : '#14211F', pick: function () { self.setState({ cat: k }); } };
+      }),
+      nextInfo: function () {
+        if (!f.bizName.trim()) return fail('Escribe el nombre del negocio.');
+        if (!f.bizAddr.trim()) return fail('Escribe la dirección para que los clientes te encuentren.');
+        self.go('verify');
+      },
+      uploadPhoto: function () { self.setState({ photo: true }); },
+      photoDone: s.photo, photoPending: !s.photo,
+      photoText: s.photo ? 'Foto cargada: fachada.jpg' : 'Toca para tomar o subir una foto',
+      photoBorder: s.photo ? '#166534' : '#C9C2B6', photoIconBg: s.photo ? '#166534' : '#ECE7DE',
+      nextVerify: function () {
+        if (!s.photo) return fail('Sube una foto de tu local o puesto.');
+        if (f.bizId.replace(/[^0-9]/g, '').length < 6) return fail('Escribe un número de cédula o NIT válido.');
+        self.go('products');
+      },
+      itemWord: itemWord,
+      addTitle: s.products.length ? 'Agregar otro ' + itemWord : 'Tu primer ' + itemWord,
+      prodPlaceholder: isFood ? 'Ej: Arepa de huevo' : (s.cat === 'craft' ? 'Ej: Mochila wayuu' : 'Ej: Café de la Sierra 500 g'),
+      products: s.products,
+      recIdle: s.rec === 0, recBusy: s.rec === 1 || s.rec === 2, recDone: s.rec === 3, recPct: s.recPct,
+      recMsg: s.rec === 1 ? 'Grabando: da la vuelta alrededor del ' + itemWord + '…' : 'Creando el modelo 3D…',
+      startRec: function () {
+        if (!f.prodName.trim()) return fail('Primero escribe el nombre del ' + itemWord + '.');
+        self.setState({ error: '' }); self.runRec();
+      },
+      redoRec: function () { self.runRec(); },
+      m3d: build3d(s.cat), spin: s.spin.toFixed(1),
+      addProduct: function () {
+        var list = s.products.concat([{ name: f.prodName.trim(), price: price(f.prodPrice) }]);
+        var nf = Object.assign({}, s.f, { prodName: '', prodPrice: '' });
+        self.setState({ products: list, f: nf, rec: 0, recPct: 0, error: '' });
+      },
+      nextProducts: function () {
+        if (!s.products.length) return fail('Agrega al menos un ' + itemWord + ' en 3D.');
+        self.go('preview');
+      },
+      coverColor: s.cat === 'food' ? '#C2381B' : (s.cat === 'craft' ? '#0F6E6E' : '#5A3A22'),
+      initials: initials, bizNameShown: name, productCount: s.products.length,
+      catLabel: CAT_LABEL[s.cat], addrShown: f.bizAddr.trim() || 'Sin dirección',
+      typeLabel: s.type === 'emp' ? 'Emprendimiento local' : 'Clásico de la zona',
+      typeBg: s.type === 'emp' ? '#FDEFD0' : '#DDEBEA', typeFg: s.type === 'emp' ? '#7A4B00' : '#0F3D3E',
+      hoursShown: f.bizHours.trim() || 'Sin horario', phoneShown: f.bizPhone.trim() || 'Sin número',
+      shelfLabel: isFood ? 'Menú en 3D' : 'Vitrina en 3D',
+      productNames: s.products.map(function (p) { return p.name; }).join(', '),
+      publish: function () {
+        self.setState({ screen: 'panel', live: false });
+        clearTimeout(self.liveTimer);
+        self.liveTimer = setTimeout(function () { self.setState({ live: true }); }, 4000);
+      },
+      inReview: !s.live, isLive: s.live,
+      statusText: s.live ? 'Publicado: visible para clientes' : 'En revisión',
+      statusBg: s.live ? '#DDEBEA' : '#FDEFD0', statusFg: s.live ? '#0F3D3E' : '#7A4B00',
+      stats: [{ value: '128', label: 'Visitas al perfil' }, { value: '64', label: 'Vistas en 3D' }, { value: '21', label: 'Escaneos del QR' }],
+      addMore: function () { self.setState({ screen: 'products', rec: 0, error: '' }); },
+      replyOpen: s.replyOpen, replyClosed: !s.replyOpen, canReply: !s.replied, hasReply: !!s.replied, replyShown: s.replied,
+      openReply: function () { self.setState({ replyOpen: true }); },
+      sendReply: function () { var t = f.reply.trim(); if (!t) return; self.setState({ replied: t, replyOpen: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vitrina Local, prototipo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#C2381B}a:hover{color:#962A13}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+.vl-scroll::-webkit-scrollbar{display:none}
+.vl-h{font-family:'Space Grotesk',system-ui,sans-serif}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F6F4EF; font-family: 'DM Sans', system-ui, sans-serif; color: #14211F; display: flex; flex-direction: column">
+
+<!-- ============ BIENVENIDA ============ -->
+<sc-if value="{{isWelcome}}" hint-placeholder-val="{{ true }}">
+<div style="flex: 1; background: #0F3D3E; color: #FFFFFF; padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 22px; position: relative; overflow: hidden">
+  <div style="position: absolute; right: -70px; top: 120px; width: 260px; height: 260px; border-radius: 50%; border: 36px solid #145052"></div>
+  <div style="position: absolute; right: 30px; top: 210px; width: 90px; height: 90px; border-radius: 22px; background: #F2B134; transform: rotate(14deg); display: flex; align-items: center; justify-content: center">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"></path><path d="M12 12l9-5M12 12v10M12 12L3 7"></path></svg>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px; position: relative">
+    <div style="width: 36px; height: 36px; border-radius: 10px; background: #F2B134; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l2-6h14l2 6M4 10h16v10H4z"></path></svg>
+    </div>
+    <div class="vl-h" style="font-size: 20px; font-weight: 700">Vitrina Local</div>
+  </div>
+  <div style="flex: 1"></div>
+  <div style="display: flex; flex-direction: column; gap: 12px; position: relative">
+    <h1 class="vl-h" style="margin: 0; font-size: 40px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em">Lo mejor de Cartagena, hecho aquí.</h1>
+    <p style="margin: 0; font-size: 16px; line-height: 1.5; color: #CFE1DF">Restaurantes y emprendimientos de la zona en un solo lugar. Mira en 3D lo que vas a pedir o comprar, y cuéntale a otros viajeros cómo te fue.</p>
+  </div>
+  <div style="background: #145052; border-radius: 16px; padding: 14px; display: flex; gap: 12px; align-items: center; position: relative">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F2B134" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 7h4v4H7zM13 13h4v4h-4z"></path></svg>
+    <div style="font-size: 14px; line-height: 1.4; color: #E6F0EF">Llegaste por el QR de tu hotel. Te mostramos lo que hay cerca de ti.</div>
+  </div>
+  <button type="button" onClick="{{goLogin}}" style="height: 56px; border-radius: 16px; border: 0; background: #F2B134; color: #14211F; font-size: 17px; font-weight: 700; position: relative">Empezar a explorar</button>
+  <a href="Negocio.dc.html" style="position: relative; text-align: center; font-size: 14px; font-weight: 700; color: #F2B134; padding: 6px">¿Tienes un negocio? Regístralo aquí</a>
+</div>
+</sc-if>
+
+<!-- ============ INICIAR SESIÓN ============ -->
+<sc-if value="{{isLogin}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; padding: 16px 24px 28px; display: flex; flex-direction: column; gap: 18px">
+  <button type="button" onClick="{{backFromLogin}}" aria-label="Volver" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #E2DDD3; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+  </button>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="width: 44px; height: 44px; border-radius: 12px; background: #F2B134; display: flex; align-items: center; justify-content: center">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l2-6h14l2 6M4 10h16v10H4z"></path></svg>
+    </div>
+    <h1 class="vl-h" style="margin: 0; font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">Entra a Vitrina Local</h1>
+    <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #3F4B49">Guarda tus lugares favoritos y califica los negocios que visitas.</p>
+  </div>
+  <sc-if value="{{loginReason}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="background: #FDEFD0; color: #7A4B00; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600">Inicia sesión para publicar tu reseña.</div>
+  </sc-if>
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <button type="button" onClick="{{loginGoogle}}" style="height: 52px; border-radius: 14px; border: 1px solid #D6D0C5; background: #FFFFFF; color: #14211F; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M20 12.2h-8M20 12.2A8 8 0 1 1 17.7 6.4"></path></svg>
+      Continuar con Google
+    </button>
+    <button type="button" onClick="{{loginApple}}" style="height: 52px; border-radius: 14px; border: 0; background: #14211F; color: #FFFFFF; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3c-1.5.2-3 1.4-3 3.2M12 7.5c-1.4-1-3.8-1.2-5.3.4C4.6 10.200 5.300 15 7.200 18c1 1.500 2.100 2.500 3.300 2 1.100-.4 1.800-.4 3 0 1.200.5 2.300-.5 3.300-2 .6-.9 1-1.800 1.300-2.700-1.600-.7-2.600-2.200-2.600-3.900 0-1.600.8-2.900 2.100-3.700-1.300-1.400-3.300-1.600-4.700-.2z"></path></svg>
+      Continuar con Apple
+    </button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #55605D">
+    <div style="flex: 1; height: 1px; background: #E2DDD3"></div>
+    o con tu correo
+    <div style="flex: 1; height: 1px; background: #E2DDD3"></div>
+  </div>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">
+    Correo electrónico
+    <input type="email" value="{{loginEmail}}" onChange="{{onEmail}}" placeholder="tucorreo@ejemplo.com" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700">
+    Contraseña
+    <input type="password" value="{{loginPass}}" onChange="{{onPass}}" placeholder="Mínimo 6 caracteres" style="height: 48px; border: 1px solid #D6D0C5; border-radius: 12px; padding: 0 14px; font-size: 15px; font-weight: 400; background: #FFFFFF; color: #14211F">
+  </label>
+  <sc-if value="{{hasLoginError}}" hint-placeholder-val="{{ false }}">
+    <div role="alert" style="font-size: 14px; font-weight: 600; color: #A12E15">{{loginError}}</div>
+  </sc-if>
+  <button type="button" onClick="{{loginEmailSubmit}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Entrar o crear cuenta</button>
+  <button type="button" onClick="{{continueGuest}}" style="height: 44px; border: 0; background: transparent; color: #0F3D3E; font-size: 15px; font-weight: 700; text-decoration: underline">Seguir como invitado</button>
+</div>
+</sc-if>
+
+<!-- ============ INICIO ============ -->
+<sc-if value="{{isHome}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="background: #0F3D3E; color: #FFFFFF; padding: 20px 20px 22px; border-radius: 0 0 28px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #CFE1DF">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2B134" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+      Cartagena · Centro histórico
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-size: 15px; color: #F2B134; font-weight: 700">Hola, {{greetName}}</div>
+      <h1 class="vl-h" style="margin: 0; font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">¿Qué quieres descubrir hoy?</h1>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border-radius: 14px; padding: 0 6px 0 14px; height: 48px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#55605D" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="search" aria-label="Buscar restaurante o emprendimiento" value="{{query}}" onChange="{{onQuery}}" placeholder="Busca un restaurante o emprendimiento" style="border: 0; outline: none; background: transparent; font-size: 15px; flex: 1; min-width: 0; color: #14211F">
+      <sc-if value="{{isSearching}}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{clearQuery}}" aria-label="Borrar búsqueda" style="width: 36px; height: 36px; border-radius: 999px; border: 0; background: #ECE7DE; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="padding: 20px; display: flex; flex-direction: column; gap: 22px">
+    <sc-if value="{{isSearching}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="font-size: 14px; color: #3F4B49; font-weight: 600">{{resultsLabel}}</div>
+      <sc-for list="{{results}}" as="p" hint-placeholder-count="2">
+        <button type="button" onClick="{{p.open}}" style="text-align: left; padding: 10px; border: 1px solid #E2DDD3; background: #FFFFFF; border-radius: 20px; display: flex; gap: 12px; align-items: center; color: #14211F">
+          <div style="width: 64px; height: 64px; border-radius: 14px; background: {{p.cover}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: {{p.coverInner}}; border: 4px solid rgba(255,255,255,0.85)"></div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+            <div style="font-size: 15px; font-weight: 700">{{p.name}}</div>
+            <div style="font-size: 12px; color: #55605D">{{p.catLabel}} · {{p.dist}}</div>
+            <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#E09A00" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>
+              {{p.ratingTxt}}
+              <span style="font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 999px; background: {{p.tagBg}}; color: {{p.tagFg}}">{{p.tagLabel}}</span>
+            </div>
+          </div>
+        </button>
+      </sc-for>
+      <sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}">
+        <div style="background: #FFFFFF; border: 1px dashed #D6D0C5; border-radius: 16px; padding: 20px; text-align: center; display: flex; flex-direction: column; gap: 6px">
+          <div style="font-size: 15px; font-weight: 700">No encontramos ese nombre</div>
+          <div style="font-size: 13px; color: #55605D; line-height: 1.4">Revisa cómo está escrito o explora por categorías.</div>
+        </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{notSearching}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 22px">
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px" role="group" aria-label="Categorías">
+      <sc-for list="{{cats}}" as="c" hint-placeholder-count="4">
+        <button type="button" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="height: 84px; border-radius: 18px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 700">
+          <sc-if value="{{c.isAll}}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.fg}}" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="2"></rect><rect x="13" y="4" width="7" height="7" rx="2"></rect><rect x="4" y="13" width="7" height="7" rx="2"></rect><rect x="13" y="13" width="7" height="7" rx="2"></rect></svg></sc-if>
+          <sc-if value="{{c.isFood}}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.fg}}" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 0-3 3-3 6s1 4 3 4v8"></path></svg></sc-if>
+          <sc-if value="{{c.isCraft}}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.fg}}" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9h12l-1 12H7z"></path><path d="M9 9V6a3 3 0 0 1 6 0v3"></path><path d="M7 14h10"></path></svg></sc-if>
+          <sc-if value="{{c.isCafe}}" hint-placeholder-val="{{ false }}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{c.fg}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17M8 3v3M12 3v3"></path></svg></sc-if>
+          {{c.label}}
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h2 class="vl-h" style="margin: 0; font-size: 20px; font-weight: 700">Lo más destacado</h2>
+        <div style="font-size: 13px; color: #55605D">{{topSubtitle}}</div>
+      </div>
+      <sc-for list="{{topList}}" as="t" hint-placeholder-count="3">
+        <button type="button" onClick="{{t.open}}" style="text-align: left; padding: 12px; border: 0; background: #0F3D3E; border-radius: 18px; display: flex; gap: 12px; align-items: center; color: #FFFFFF">
+          <div class="vl-h" style="width: 40px; height: 40px; border-radius: 12px; background: #F2B134; color: #14211F; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0">{{t.rank}}</div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+            <div style="font-size: 11px; font-weight: 700; color: #F2B134; text-transform: uppercase; letter-spacing: 0.06em">{{t.badge}}</div>
+            <div style="font-size: 15px; font-weight: 700">{{t.name}}</div>
+            <div style="font-size: 12px; color: #CFE1DF">{{t.cat}} · {{t.nReviews}} reseñas</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 700; flex-shrink: 0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#F2B134" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>
+            {{t.ratingTxt}}
+          </div>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{hasEmp}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 class="vl-h" style="margin: 0; font-size: 20px; font-weight: 700">Emprendimientos del barrio</h2>
+        <span style="font-size: 13px; color: #55605D; font-weight: 600">{{empCount}}</span>
+      </div>
+      <div class="vl-scroll" style="display: flex; gap: 12px; overflow-x: auto; margin: 0 -20px; padding: 0 20px 4px">
+        <sc-for list="{{empPlaces}}" as="p" hint-placeholder-count="3">
+          <button type="button" onClick="{{p.open}}" style="flex: 0 0 210px; text-align: left; padding: 0; border: 0; background: #FFFFFF; border-radius: 20px; overflow: hidden; color: #14211F; box-shadow: 0 1px 0 #E2DDD3, 0 0 0 1px #E2DDD3">
+            <div style="height: 120px; background: {{p.cover}}; position: relative; display: flex; align-items: center; justify-content: center">
+              <div style="width: 64px; height: 64px; border-radius: 50%; background: {{p.coverInner}}; border: 6px solid rgba(255,255,255,0.85)"></div>
+              <div style="position: absolute; left: 10px; bottom: 10px; font-size: 11px; font-weight: 700; background: #F2B134; color: #14211F; padding: 4px 8px; border-radius: 999px">{{p.n3d}} en 3D</div>
+            </div>
+            <div style="padding: 12px; display: flex; flex-direction: column; gap: 4px">
+              <div style="font-size: 15px; font-weight: 700; line-height: 1.25">{{p.name}}</div>
+              <div style="font-size: 12px; color: #55605D">{{p.cat}} · {{p.dist}}</div>
+              <div style="font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 4px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#E09A00" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>
+                {{p.ratingTxt}} <span style="font-weight: 500; color: #55605D">({{p.nReviews}})</span>
+              </div>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{hasCons}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 class="vl-h" style="margin: 0; font-size: 20px; font-weight: 700">Clásicos de la zona</h2>
+      <sc-for list="{{consPlaces}}" as="p" hint-placeholder-count="2">
+        <button type="button" onClick="{{p.open}}" style="text-align: left; padding: 10px; border: 1px solid #E2DDD3; background: #FFFFFF; border-radius: 20px; display: flex; gap: 12px; align-items: center; color: #14211F">
+          <div style="width: 76px; height: 76px; border-radius: 14px; background: {{p.cover}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+            <div style="width: 38px; height: 38px; border-radius: 50%; background: {{p.coverInner}}; border: 4px solid rgba(255,255,255,0.85)"></div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+            <div style="font-size: 15px; font-weight: 700">{{p.name}}</div>
+            <div style="font-size: 12px; color: #55605D">{{p.cat}} · {{p.dist}} · {{p.price}}</div>
+            <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 700">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#E09A00" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>
+              {{p.ratingTxt}}
+              <span style="font-size: 11px; font-weight: 700; background: #DDEBEA; color: #0F3D3E; padding: 3px 7px; border-radius: 999px">{{p.n3d}} en 3D</span>
+            </div>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+    </sc-if>
+    </div>
+    </sc-if>
+    <div style="font-size: 12px; color: #55605D; text-align: center">Negocios, productos y reseñas son datos de ejemplo.</div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ NEGOCIO ============ -->
+<sc-if value="{{isPlace}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="background: {{place.cover}}; padding: 14px 20px 24px; display: flex; flex-direction: column; gap: 18px; flex-shrink: 0">
+    <button type="button" onClick="{{goHome}}" aria-label="Volver" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+    <div style="display: flex; gap: 14px; align-items: center">
+      <div style="width: 64px; height: 64px; border-radius: 18px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0" class="vl-h">
+        <span style="font-size: 22px; font-weight: 700; color: #14211F">{{place.initials}}</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; color: #FFFFFF">
+        <h1 class="vl-h" style="margin: 0; font-size: 24px; line-height: 1.1; font-weight: 700">{{place.name}}</h1>
+        <div style="font-size: 13px; color: rgba(255,255,255,0.88)">{{place.cat}} · {{place.dist}} · {{place.price}}</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding: 18px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+    <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="background: #DDEBEA; color: #0F3D3E; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600">Gracias. Tu reseña ya es visible para otros viajeros.</div>
+    </sc-if>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+      <span style="font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: {{place.tagBg}}; color: {{place.tagFg}}">{{place.tagLabel}}</span>
+      <span style="font-size: 13px; color: #166534; font-weight: 600">{{place.hours}}</span>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center; background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 18px; padding: 14px">
+      <div class="vl-h" style="font-size: 34px; font-weight: 700">{{place.ratingTxt}}</div>
+      <div style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+        <div style="font-size: 14px; font-weight: 700">Calificación de clientes</div>
+        <div style="font-size: 13px; color: #55605D">{{place.nReviews}} reseñas</div>
+      </div>
+      <button type="button" onClick="{{openReview}}" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 0; background: #0F3D3E; font-size: 14px; font-weight: 700; color: #FFFFFF">Calificar</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <h2 class="vl-h" style="margin: 0; font-size: 20px; font-weight: 700">{{place.shelfTitle}}</h2>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{place.items}}" as="it" hint-placeholder-count="2">
+          <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column">
+            <div style="height: 110px; background: {{it.thumb}}; display: flex; align-items: center; justify-content: center; position: relative">
+              <div style="width: 56px; height: 56px; border-radius: {{it.thumbShape}}; background: {{it.thumbInner}}; border: 5px solid #FFFFFF"></div>
+              <div style="position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 8px; background: #F2B134; display: flex; align-items: center; justify-content: center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5v10l-9 5-9-5V7z"></path></svg>
+              </div>
+            </div>
+            <div style="padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1">
+              <div style="font-size: 14px; font-weight: 700; line-height: 1.25">{{it.name}}</div>
+              <div style="font-size: 14px; font-weight: 700; color: #C2381B">{{it.price}}</div>
+              <div style="flex: 1"></div>
+              <button type="button" onClick="{{it.open}}" style="margin-top: 6px; height: 40px; border-radius: 10px; border: 1px solid #0F3D3E; background: #FFFFFF; color: #0F3D3E; font-size: 13px; font-weight: 700">Ver en 3D</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <h2 class="vl-h" style="margin: 0; font-size: 20px; font-weight: 700">Lo que dicen los clientes</h2>
+      <sc-for list="{{place.reviews}}" as="rv" hint-placeholder-count="2">
+        <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <div style="font-size: 14px; font-weight: 700">{{rv.who}}</div>
+            <div style="font-size: 13px; color: #8A5A00; font-weight: 700">{{rv.starsTxt}}</div>
+          </div>
+          <div style="font-size: 14px; line-height: 1.45; color: #2E3A38">{{rv.text}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PRODUCTO / PLATO EN 3D ============ -->
+<sc-if value="{{isItem}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="position: relative; height: 380px; flex-shrink: 0; background: #E9EFEE; overflow: hidden">
+    <button type="button" onClick="{{backToPlace}}" aria-label="Volver" style="position: absolute; top: 14px; left: 14px; z-index: 5; width: 44px; height: 44px; border-radius: 999px; border: 0; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+    <div style="position: absolute; top: 22px; right: 16px; z-index: 5; font-size: 12px; font-weight: 700; background: #F2B134; color: #14211F; padding: 6px 10px; border-radius: 999px">Vista 3D</div>
+    <div onPointerDown="{{dragStart}}" onPointerMove="{{dragMove}}" onPointerUp="{{dragEnd}}" onPointerLeave="{{dragEnd}}" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 900px; touch-action: none; cursor: grab">
+      <div style="position: absolute; width: 250px; height: 70px; border-radius: 50%; background: rgba(15,61,62,0.18); top: 238px; left: 70px; filter: blur(10px)"></div>
+      <div style="width: 240px; height: 240px; position: relative; transform-style: preserve-3d; transform: rotateX(60deg) rotateZ({{angle}}deg); margin-top: -10px">
+        <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plateEdge}}; transform: translateZ(-4px)"></div>
+        <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plate}}; box-shadow: inset 0 0 0 14px {{m3d.rim}}"></div>
+        <sc-for list="{{m3d.layers}}" as="l" hint-placeholder-count="10">
+          <div style="position: absolute; left: {{l.left}}px; top: {{l.top}}px; width: {{l.w}}px; height: {{l.h}}px; border-radius: {{l.r}}; background: {{l.c}}; transform: translateZ({{l.z}}px)"></div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 13px; color: #3F4B49; font-weight: 600">Arrastra para girar</div>
+  </div>
+
+  <div style="padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; gap: 10px; align-items: center">
+      <button type="button" onClick="{{toggleAuto}}" aria-pressed="{{autoPressed}}" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid #E2DDD3; background: #FFFFFF; font-size: 13px; font-weight: 700; color: #14211F; flex-shrink: 0">{{autoLabel}}</button>
+      <label style="flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #55605D; font-weight: 600">
+        Girar
+        <input type="range" min="0" max="359" value="{{angleInt}}" onChange="{{onRange}}" style="width: 100%; accent-color: #0F3D3E">
+      </label>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div style="font-size: 13px; color: #55605D; font-weight: 600">{{place.name}}</div>
+      <h1 class="vl-h" style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em">{{item.name}}</h1>
+      <div style="font-size: 14px; color: #2E3A38; line-height: 1.45">{{item.desc}}</div>
+      <div class="vl-h" style="font-size: 20px; font-weight: 700; margin-top: 4px; color: #C2381B">{{item.price}}</div>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 6px">
+      <sc-for list="{{item.tags}}" as="t" hint-placeholder-count="3">
+        <span style="font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E2DDD3">{{t.label}}</span>
+      </sc-for>
+    </div>
+    <button type="button" onClick="{{openAR}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"></path><circle cx="12" cy="12" r="3.5"></circle></svg>
+      {{arLabel}}
+    </button>
+    <button type="button" onClick="{{openReview}}" style="height: 48px; border-radius: 14px; border: 1px solid #14211F; background: transparent; color: #14211F; font-size: 15px; font-weight: 700">{{rateLabel}}</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ REALIDAD AUMENTADA (simulada) ============ -->
+<sc-if value="{{isAR}}" hint-placeholder-val="{{ false }}">
+<div style="flex: 1; position: relative; overflow: hidden; background: #2A1C14">
+  <div style="position: absolute; left: -40px; right: -40px; top: 300px; bottom: -60px; background: repeating-linear-gradient(92deg, #6E4A33 0px, #7A5339 26px, #664430 30px, #7C553B 58px); transform: perspective(500px) rotateX(38deg); transform-origin: top"></div>
+  <div style="position: absolute; left: 0; right: 0; top: 0; height: 300px; background: #3B2A20"></div>
+  <div style="position: absolute; left: 30px; top: 150px; width: 70px; height: 150px; border-radius: 10px 10px 4px 4px; background: #4A372B"></div>
+  <div style="position: absolute; right: 36px; top: 210px; width: 44px; height: 92px; border-radius: 6px; background: rgba(210,230,240,0.25); border: 2px solid rgba(230,240,245,0.4)"></div>
+  <div onPointerDown="{{dragStart}}" onPointerMove="{{dragMove}}" onPointerUp="{{dragEnd}}" onPointerLeave="{{dragEnd}}" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 800px; touch-action: none">
+    <div style="position: absolute; width: 290px; height: 90px; border-radius: 50%; background: rgba(0,0,0,0.35); top: 520px; left: 50px; filter: blur(12px)"></div>
+    <div style="width: 240px; height: 240px; position: relative; transform-style: preserve-3d; transform: translateY(120px) rotateX(64deg) rotateZ({{angle}}deg) scale(1.2)">
+      <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plateEdge}}; transform: translateZ(-4px)"></div>
+      <div style="position: absolute; inset: 0; border-radius: 50%; background: {{m3d.plate}}; box-shadow: inset 0 0 0 14px {{m3d.rim}}"></div>
+      <sc-for list="{{m3d.layers}}" as="l" hint-placeholder-count="10">
+        <div style="position: absolute; left: {{l.left}}px; top: {{l.top}}px; width: {{l.w}}px; height: {{l.h}}px; border-radius: {{l.r}}; background: {{l.c}}; transform: translateZ({{l.z}}px)"></div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; align-items: center">
+    <div style="font-size: 12px; font-weight: 700; color: #FFFFFF; background: rgba(0,0,0,0.55); padding: 7px 11px; border-radius: 999px">Cámara (simulación)</div>
+    <button type="button" onClick="{{closeAR}}" aria-label="Cerrar cámara" style="width: 44px; height: 44px; border-radius: 999px; border: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </button>
+  </div>
+  <div style="position: absolute; top: 80px; left: 24px; right: 24px; text-align: center; color: #FFFFFF; display: flex; flex-direction: column; gap: 4px">
+    <div class="vl-h" style="font-size: 20px; font-weight: 700">{{item.name}}</div>
+    <div style="font-size: 13px; color: #F1E6DC">Tamaño real · {{item.price}}</div>
+  </div>
+  <div style="position: absolute; bottom: 22px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 13px; color: #FFFFFF; text-align: center; background: rgba(0,0,0,0.55); padding: 10px; border-radius: 12px">Apunta a una superficie y arrastra para girar</div>
+    <button type="button" onClick="{{closeAR}}" style="height: 52px; border-radius: 14px; border: 0; background: #F2B134; color: #14211F; font-size: 16px; font-weight: 700">Volver</button>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ CALIFICAR ============ -->
+<sc-if value="{{isReview}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+  <button type="button" onClick="{{backToPlace}}" aria-label="Volver" style="width: 44px; height: 44px; border-radius: 999px; border: 1px solid #E2DDD3; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+  </button>
+  <div style="display: flex; flex-direction: column; gap: 4px">
+    <div style="font-size: 13px; color: #55605D; font-weight: 600">{{place.name}}</div>
+    <h1 class="vl-h" style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em">¿Cómo te fue?</h1>
+    <div style="font-size: 14px; color: #2E3A38; line-height: 1.45">Tu opinión ayuda a otros viajeros y al negocio a mejorar.</div>
+  </div>
+  <div style="display: flex; gap: 8px" role="group" aria-label="Calificación">
+    <sc-for list="{{starBtns}}" as="s" hint-placeholder-count="5">
+      <button type="button" onClick="{{s.pick}}" aria-label="{{s.aria}}" style="width: 52px; height: 52px; border-radius: 14px; border: 1px solid #E2DDD3; background: #FFFFFF; display: flex; align-items: center; justify-content: center">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="{{s.fill}}" stroke="#B07A00" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"></path></svg>
+      </button>
+    </sc-for>
+  </div>
+  <label style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 700">
+    Cuéntanos más
+    <textarea value="{{draftText}}" onChange="{{onText}}" rows="5" placeholder="¿Qué compraste o pediste? ¿Era como en la vista 3D?" style="border: 1px solid #E2DDD3; border-radius: 14px; padding: 12px; font-size: 15px; font-weight: 400; resize: none; background: #FFFFFF; color: #14211F"></textarea>
+  </label>
+  <button type="button" onClick="{{submitReview}}" style="height: 52px; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Publicar reseña</button>
+  <div style="font-size: 12px; color: #55605D; line-height: 1.4">Al publicar, el negocio puede responder tu comentario.</div>
+</div>
+</sc-if>
+
+<!-- ============ MI NEGOCIO ============ -->
+<sc-if value="{{isBiz}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column">
+  <div style="background: #0F3D3E; color: #FFFFFF; padding: 22px 20px 24px; border-radius: 0 0 28px 28px; display: flex; flex-direction: column; gap: 6px">
+    <div style="font-size: 13px; color: #CFE1DF; font-weight: 600">Para restaurantes y emprendedores</div>
+    <h1 class="vl-h" style="margin: 0; font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em">Pon tu vitrina en 3D con tu celular</h1>
+  </div>
+  <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <sc-for list="{{bizSteps}}" as="st" hint-placeholder-count="3">
+        <div style="display: flex; gap: 12px; align-items: flex-start; background: #FFFFFF; border: 1px solid {{st.border}}; border-radius: 16px; padding: 14px">
+          <div style="width: 32px; height: 32px; border-radius: 999px; background: {{st.dotBg}}; color: {{st.dotFg}}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0">{{st.num}}</div>
+          <div style="display: flex; flex-direction: column; gap: 3px">
+            <div style="font-size: 15px; font-weight: 700">{{st.title}}</div>
+            <div style="font-size: 13px; color: #55605D; line-height: 1.4">{{st.text}}</div>
+            <div style="font-size: 12px; font-weight: 700; color: {{st.statusColor}}">{{st.status}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{bizRecording}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #14211F; border-radius: 16px; padding: 16px; color: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-size: 14px; font-weight: 700">{{bizMsg}}</div>
+        <div style="height: 8px; border-radius: 999px; background: #3A4644; overflow: hidden">
+          <div style="height: 8px; width: {{bizPct}}%; background: #F2B134"></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{bizDone}}" hint-placeholder-val="{{ false }}">
+      <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; overflow: hidden">
+        <div style="height: 220px; background: #E9EFEE; display: flex; align-items: center; justify-content: center; perspective: 800px">
+          <div style="width: 240px; height: 240px; position: relative; transform-style: preserve-3d; transform: rotateX(60deg) rotateZ({{spin}}deg) scale(0.68)">
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: {{bizModel.plateEdge}}; transform: translateZ(-4px)"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: {{bizModel.plate}}; box-shadow: inset 0 0 0 14px {{bizModel.rim}}"></div>
+            <sc-for list="{{bizModel.layers}}" as="l" hint-placeholder-count="6">
+              <div style="position: absolute; left: {{l.left}}px; top: {{l.top}}px; width: {{l.w}}px; height: {{l.h}}px; border-radius: {{l.r}}; background: {{l.c}}; transform: translateZ({{l.z}}px)"></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="padding: 14px; display: flex; flex-direction: column; gap: 4px">
+          <div style="font-size: 15px; font-weight: 700">Mochila wayuu, lista en 3D</div>
+          <div style="font-size: 13px; color: #55605D">Ya aparece en tu vitrina con el sello 3D.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <button type="button" onClick="{{runBiz}}" style="height: 52px; border-radius: 14px; border: 0; background: #F2B134; color: #14211F; font-size: 16px; font-weight: 700">{{bizBtn}}</button>
+
+    <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; gap: 14px; align-items: center">
+      <svg width="64" height="64" viewBox="0 0 21 21" role="img" aria-label="Código QR de ejemplo" style="flex-shrink: 0">
+        <rect width="21" height="21" fill="#FFFFFF"></rect>
+        <path fill="#14211F" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM9 0h1v2H9zM11 1h2v1h-2zM8 3h2v2H8zM11 4h1v3h-1zM9 8h3v1H9zM0 9h2v1H0zM3 8h2v2H3zM14 9h2v1h-2zM17 8h1v3h-1zM19 9h2v1h-2zM8 11h1v2H8zM10 10h2v2h-2zM13 12h2v1h-2zM16 12h3v1h-3zM9 14h2v1H9zM12 14h1v3h-1zM14 15h3v1h-3zM18 14h2v2h-2zM9 17h2v2H9zM14 18h2v3h-2zM17 17h1v1h-1zM19 18h2v1h-2zM10 20h3v1h-3zM17 20h2v1h-2z"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 15px; font-weight: 700">Tu QR de mesa o mostrador</div>
+        <div style="font-size: 13px; color: #55605D; line-height: 1.4">El cliente escanea, ve tus productos en 3D y al final te deja su reseña.</div>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ PERFIL ============ -->
+<sc-if value="{{isProfile}}" hint-placeholder-val="{{ false }}">
+<div class="vl-scroll" style="flex: 1; overflow-y: auto; padding: 24px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+  <sc-if value="{{loggedIn}}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; gap: 14px; align-items: center">
+        <div class="vl-h" style="width: 64px; height: 64px; border-radius: 50%; background: #0F3D3E; color: #F2B134; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; flex-shrink: 0">{{userInitial}}</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+          <h1 class="vl-h" style="margin: 0; font-size: 24px; font-weight: 700">{{userName}}</h1>
+          <div style="font-size: 13px; color: #55605D">{{userEmail}}</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 2px">
+          <div class="vl-h" style="font-size: 26px; font-weight: 700">{{myCount}}</div>
+          <div style="font-size: 13px; color: #55605D">Reseñas escritas</div>
+        </div>
+        <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 2px">
+          <div class="vl-h" style="font-size: 26px; font-weight: 700">{{visitedCount}}</div>
+          <div style="font-size: 13px; color: #55605D">Lugares vistos</div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <h2 class="vl-h" style="margin: 0; font-size: 18px; font-weight: 700">Mis reseñas</h2>
+        <sc-for list="{{myReviews}}" as="rv" hint-placeholder-count="1">
+          <div style="background: #FFFFFF; border: 1px solid #E2DDD3; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; justify-content: space-between; gap: 8px">
+              <div style="font-size: 14px; font-weight: 700">{{rv.placeName}}</div>
+              <div style="font-size: 13px; color: #8A5A00; font-weight: 700">{{rv.starsTxt}}</div>
+            </div>
+            <div style="font-size: 14px; line-height: 1.45; color: #2E3A38">{{rv.text}}</div>
+          </div>
+        </sc-for>
+        <sc-if value="{{noMyReviews}}" hint-placeholder-val="{{ true }}">
+          <div style="font-size: 14px; color: #55605D; line-height: 1.45">Aún no has calificado ningún lugar. Entra a un negocio y toca "Calificar".</div>
+        </sc-if>
+      </div>
+      <button type="button" onClick="{{logout}}" style="height: 48px; border-radius: 14px; border: 1px solid #A12E15; background: #FFFFFF; color: #A12E15; font-size: 15px; font-weight: 700">Cerrar sesión</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{isGuest}}" hint-placeholder-val="{{ true }}">
+    <div style="display: flex; flex-direction: column; gap: 14px; padding-top: 40px; text-align: center; align-items: center">
+      <div style="width: 72px; height: 72px; border-radius: 50%; background: #ECE7DE; display: flex; align-items: center; justify-content: center">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#14211F" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"></path></svg>
+      </div>
+      <h1 class="vl-h" style="margin: 0; font-size: 24px; font-weight: 700">Estás como invitado</h1>
+      <p style="margin: 0; font-size: 15px; color: #3F4B49; line-height: 1.5">Inicia sesión para calificar negocios y guardar tu historial.</p>
+      <button type="button" onClick="{{goLogin}}" style="height: 52px; width: 100%; border-radius: 14px; border: 0; background: #0F3D3E; color: #FFFFFF; font-size: 16px; font-weight: 700">Iniciar sesión</button>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<!-- ============ BARRA INFERIOR ============ -->
+<sc-if value="{{showNav}}" hint-placeholder-val="{{ false }}">
+<nav aria-label="Secciones" style="flex-shrink: 0; height: 72px; border-top: 1px solid #E2DDD3; background: #FFFFFF; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+  <button type="button" onClick="{{goHome}}" aria-current="{{navHomeCurrent}}" style="border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 700; color: {{navHomeColor}}">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{navHomeColor}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M15.5 8.5l-2 5-5 2 2-5z"></path></svg>
+    Explorar
+  </button>
+  <a href="Negocio.dc.html" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 700; color: #55605D">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#55605D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h16v10H4zM3 10l2-6h14l2 6"></path><path d="M10 20v-5h4v5"></path></svg>
+    ¿Tienes negocio?
+  </a>
+  <button type="button" onClick="{{goProfile}}" aria-current="{{navProfileCurrent}}" style="border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: 700; color: {{navProfileColor}}">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{navProfileColor}}" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"></path></svg>
+    Perfil
+  </button>
+</nav>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+function shade(hex, f) {
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.min(255, Math.round(((n >> 16) & 255) * f));
+  var g = Math.min(255, Math.round(((n >> 8) & 255) * f));
+  var b = Math.min(255, Math.round((n & 255) * f));
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+var PLATE = { plate: '#FFFFFF', rim: '#F1ECE6', plateEdge: '#D8D0C8' };
+var BOWL = { plate: '#3D5A6C', rim: '#4E6F82', plateEdge: '#2C4250' };
+var CLAY = { plate: '#8C4A2F', rim: '#A35A3A', plateEdge: '#6A3622' };
+var STAND = { plate: '#E6E0D6', rim: '#DCD4C6', plateEdge: '#B9AF9F' };
+
+function bands(w, h, colors, step, z0) {
+  return colors.map(function (c, k) { return { x: 0, y: 0, w: w - k * (h || 0), h: w - k * (h || 0), c: c, z0: z0 + k * step, z: step }; });
+}
+
+var MODELS = {
+  bandeja: { base: PLATE, parts: [
+    { x: -45, y: -42, w: 92, h: 72, c: '#F5F1E6', z: 9 },
+    { x: 42, y: -45, w: 80, h: 64, c: '#6B3A2A', z: 9 },
+    { x: 55, y: 35, w: 72, h: 34, c: '#B7652B', z: 12, r: '40%' },
+    { x: -42, y: 42, w: 62, h: 56, c: '#FFFFFF', z: 3 },
+    { x: -40, y: 40, w: 24, h: 24, c: '#F2B705', z: 9 },
+    { x: 4, y: 6, w: 46, h: 30, c: '#7FA33A', z: 9 },
+    { x: 4, y: 72, w: 62, h: 22, c: '#E0A030', z: 6, r: '40%' },
+    { x: -80, y: 4, w: 34, h: 34, c: '#F0D49A', z: 6 }
+  ]},
+  arepa: { base: PLATE, parts: [
+    { x: 0, y: -6, w: 150, h: 150, c: '#D9963E', z: 12 },
+    { x: -14, y: -20, w: 92, h: 92, c: '#EDB765', z: 15 },
+    { x: 72, y: 68, w: 40, h: 40, c: '#C2451E', z: 6 },
+    { x: -74, y: 70, w: 36, h: 26, c: '#F4F1E8', z: 6 }
+  ]},
+  cazuela: { base: CLAY, parts: [
+    { x: 0, y: 0, w: 196, h: 196, c: '#D9772B', z: 3 },
+    { x: -40, y: -20, w: 42, h: 22, c: '#F08A5D', z: 10, r: '50% 50% 20% 20%' },
+    { x: 30, y: 32, w: 42, h: 22, c: '#F08A5D', z: 10, r: '50% 50% 20% 20%' },
+    { x: 22, y: -46, w: 42, h: 22, c: '#F08A5D', z: 10, r: '50% 50% 20% 20%' },
+    { x: -30, y: 46, w: 28, h: 28, c: '#F5E9D3', z: 8 },
+    { x: -8, y: 40, w: 18, h: 12, c: '#4E8A2E', z: 11 },
+    { x: 52, y: -6, w: 18, h: 12, c: '#4E8A2E', z: 11 }
+  ]},
+  pescado: { base: PLATE, parts: [
+    { x: -6, y: -14, w: 172, h: 78, c: '#B9772F', z: 10, r: '50% 38% 38% 50%' },
+    { x: 88, y: -14, w: 34, h: 50, c: '#A5672A', z: 7, r: '20% 50% 50% 20%' },
+    { x: -74, y: -24, w: 10, h: 10, c: '#222222', z: 13 },
+    { x: -40, y: 62, w: 46, h: 40, c: '#E9B949', z: 6 },
+    { x: 14, y: 66, w: 46, h: 40, c: '#E9B949', z: 6 },
+    { x: 18, y: -74, w: 76, h: 46, c: '#EFE2C4', z: 8 },
+    { x: 70, y: 32, w: 30, h: 30, c: '#9BC53D', z: 7 }
+  ]},
+  mochila: { base: STAND, parts: bands(124, 0, ['#C2381B', '#F2B134', '#0F6E6E', '#C2381B', '#2B2B2B', '#F2B134', '#0F6E6E'], 13, 0).concat([
+    { x: 0, y: 0, w: 106, h: 106, c: '#3A1A10', z0: 91, z: 1 },
+    { x: 0, y: -66, w: 16, h: 10, c: '#C2381B', z0: 70, z: 50, r: '4px' },
+    { x: 0, y: 66, w: 16, h: 10, c: '#C2381B', z0: 70, z: 50, r: '4px' }
+  ])},
+  sombrero: { base: STAND, parts: [
+    { x: 0, y: 0, w: 230, h: 230, c: '#EDE0C2', z0: 0, z: 3 },
+    { x: 0, y: 0, w: 214, h: 214, c: '#1F1A17', z0: 4, z: 1 },
+    { x: 0, y: 0, w: 194, h: 194, c: '#EDE0C2', z0: 5, z: 1 },
+    { x: 0, y: 0, w: 172, h: 172, c: '#1F1A17', z0: 6, z: 1 },
+    { x: 0, y: 0, w: 150, h: 150, c: '#EDE0C2', z0: 7, z: 1 }
+  ].concat(bands(108, 4, ['#1F1A17', '#EDE0C2', '#1F1A17', '#EDE0C2', '#1F1A17', '#EDE0C2'], 9, 8)).concat([
+    { x: 0, y: 0, w: 84, h: 84, c: '#1F1A17', z0: 62, z: 1 }
+  ])},
+  cafe: { base: STAND, parts: [
+    { x: 0, y: 0, w: 100, h: 64, c: '#5A3A22', z0: 0, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 104, h: 68, c: '#F2E6D0', z0: 24, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 100, h: 64, c: '#5A3A22', z0: 48, z: 24, r: '10px' },
+    { x: 0, y: 0, w: 96, h: 40, c: '#43291A', z0: 72, z: 10, r: '8px' }
+  ]},
+  taza: { base: STAND, parts: [
+    { x: 0, y: 0, w: 170, h: 170, c: '#FFFFFF', z0: 0, z: 3 },
+    { x: 0, y: 0, w: 96, h: 96, c: '#FFFFFF', z0: 3, z: 42, top: '#5B3A21' },
+    { x: 58, y: 0, w: 30, h: 14, c: '#FFFFFF', z0: 16, z: 18, r: '40%' }
+  ]},
+  cocadas: { base: PLATE, parts: [
+    { x: 0, y: 0, w: 52, h: 52, c: '#F3E3C3', z: 12 },
+    { x: 0, y: -58, w: 48, h: 48, c: '#C9884A', z: 10 },
+    { x: 55, y: -20, w: 48, h: 48, c: '#E9C9A0', z: 10 },
+    { x: 36, y: 46, w: 48, h: 48, c: '#F3E3C3', z: 10 },
+    { x: -36, y: 46, w: 48, h: 48, c: '#C9884A', z: 10 },
+    { x: -55, y: -20, w: 48, h: 48, c: '#E9C9A0', z: 10 }
+  ]}
+};
+
+function build3d(key) {
+  var m = MODELS[key];
+  var layers = [];
+  m.parts.forEach(function (p) {
+    var z0 = p.z0 || 0;
+    var count = Math.max(1, Math.round(p.z / 3));
+    for (var i = 0; i <= count; i++) {
+      var top = i === count;
+      layers.push({
+        left: 120 + p.x - p.w / 2,
+        top: 120 + p.y - p.h / 2,
+        w: p.w, h: p.h, r: p.r || '50%',
+        c: top ? (p.top || p.c) : shade(p.c, 0.72 + 0.14 * (i / count)),
+        z: z0 + (count === 0 ? 0 : (p.z * i) / count) + 1
+      });
+    }
+  });
+  return { plate: m.base.plate, rim: m.base.rim, plateEdge: m.base.plateEdge, layers: layers };
+}
+
+var PLACES = [
+  { id: 'p1', kind: 'food', origin: 'emp', name: 'Arepas Mamá Inés', initials: 'MI', cat: 'Comida callejera', dist: '200 m', price: '$', hours: 'Abierto · cierra 9:00 p. m.', cover: '#C2381B', coverInner: '#F2B134',
+    items: [
+      { id: 'i1', name: 'Arepa de huevo', model: 'arepa', price: '$7.000', desc: 'Arepa frita rellena de huevo y carne, con hogao y suero.', tags: ['Para picar', 'Hecha al momento'] },
+      { id: 'i2', name: 'Mojarra del día', model: 'pescado', price: '$22.000', desc: 'Con arroz de coco, patacones y limón. Solo fines de semana.', tags: ['Fin de semana', 'Casero'] }
+    ],
+    reviews: [ { who: 'Tom, turista de Canadá', stars: 5, text: 'No sabía qué era una arepa de huevo. Con la vista 3D entendí y ahora vuelvo cada día.' } ],
+    baseCount: 38, baseRating: 4.8 },
+  { id: 'p2', kind: 'craft', origin: 'emp', name: 'Tejidos Kaashi', initials: 'TK', cat: 'Artesanías wayuu', dist: '300 m', price: '$$', hours: 'Abierto · cierra 7:00 p. m.', cover: '#0F6E6E', coverInner: '#C2381B',
+    items: [
+      { id: 'i3', name: 'Mochila wayuu', model: 'mochila', price: '$180.000', desc: 'Tejida a mano en una sola pieza. Cada diseño es único.', tags: ['Hecho a mano', 'Pieza única', 'Envío al hotel'] },
+      { id: 'i4', name: 'Sombrero vueltiao', model: 'sombrero', price: '$120.000', desc: 'Fibra de caña flecha trenzada, 19 vueltas.', tags: ['Hecho a mano', 'Tradicional'] }
+    ],
+    reviews: [ { who: 'Julia, turista de Alemania', stars: 5, text: 'Pude ver la mochila por todos lados antes de ir a la tienda. Llegué directo a comprarla.' } ],
+    baseCount: 24, baseRating: 4.9 },
+  { id: 'p3', kind: 'cafe', origin: 'emp', name: 'Café Sierra Viva', initials: 'SV', cat: 'Café de origen', dist: '450 m', price: '$$', hours: 'Abierto · cierra 8:00 p. m.', cover: '#5A3A22', coverInner: '#F2E6D0',
+    items: [
+      { id: 'i5', name: 'Café de la Sierra, 500 g', model: 'cafe', price: '$38.000', desc: 'Tostión media, cultivado por familias de la Sierra Nevada.', tags: ['Para llevar', 'Buen regalo'] },
+      { id: 'i6', name: 'Tinto campesino', model: 'taza', price: '$5.000', desc: 'Café filtrado con panela, servido en taza de barro.', tags: ['Para tomar aquí'] }
+    ],
+    reviews: [ { who: 'Mariana', stars: 4, text: 'Muy buen café y te explican de dónde viene. El lugar es pequeño.' } ],
+    baseCount: 19, baseRating: 4.7 },
+  { id: 'p4', kind: 'food', origin: 'cons', name: 'La Fogata de Doña Rosa', initials: 'DR', cat: 'Comida típica', dist: '350 m', price: '$$', hours: 'Abierto · cierra 10:00 p. m.', cover: '#9A3412', coverInner: '#F5F1E6',
+    items: [
+      { id: 'i7', name: 'Bandeja paisa', model: 'bandeja', price: '$38.000', desc: 'Arroz, fríjoles, chicharrón, huevo, aguacate, maduro y arepa.', tags: ['Plato fuerte', 'Para compartir'] },
+      { id: 'i8', name: 'Arepa de la casa', model: 'arepa', price: '$9.000', desc: 'Arepa asada con queso costeño.', tags: ['Entrada'] }
+    ],
+    reviews: [ { who: 'Laura, turista de México', stars: 5, text: 'Vi la bandeja en 3D antes de pedir y llegó tal cual. Enorme, alcanza para dos.' } ],
+    baseCount: 212, baseRating: 4.7 },
+  { id: 'p5', kind: 'food', origin: 'cons', name: 'Mar y Coco', initials: 'MC', cat: 'Mariscos', dist: '600 m', price: '$$$', hours: 'Abierto · cierra 11:00 p. m.', cover: '#0F3D3E', coverInner: '#D9772B',
+    items: [
+      { id: 'i9', name: 'Cazuela de mariscos', model: 'cazuela', price: '$56.000', desc: 'Camarón, calamar y pescado en salsa de coco, en olla de barro.', tags: ['Del mar', 'Especialidad'] },
+      { id: 'i10', name: 'Mojarra frita', model: 'pescado', price: '$48.000', desc: 'Con arroz de coco, patacones y limón.', tags: ['Del mar', 'Típico de la costa'] }
+    ],
+    reviews: [ { who: 'Sofía', stars: 4, text: 'La cazuela es muy buena. En 3D se ve más pequeña de lo que llega.' } ],
+    baseCount: 486, baseRating: 4.5 },
+  { id: 'p6', kind: 'craft', origin: 'cons', name: 'Galería Manos de Bolívar', initials: 'MB', cat: 'Artesanías del Caribe', dist: '500 m', price: '$$$', hours: 'Abierto · cierra 8:00 p. m.', cover: '#7A4B00', coverInner: '#EDE0C2',
+    items: [
+      { id: 'i11', name: 'Sombrero vueltiao fino', model: 'sombrero', price: '$260.000', desc: 'Caña flecha de 23 vueltas, tejido más fino y flexible.', tags: ['Hecho a mano', 'Edición fina'] },
+      { id: 'i12', name: 'Mochila arhuaca', model: 'mochila', price: '$320.000', desc: 'Lana tejida por artesanas de la Sierra Nevada.', tags: ['Hecho a mano', 'Pieza única'] }
+    ],
+    reviews: [ { who: 'Pedro', stars: 4, text: 'Productos de muy buena calidad, precios altos pero lo vale.' } ],
+    baseCount: 132, baseRating: 4.6 },
+  { id: 'p7', kind: 'cafe', origin: 'emp', name: 'Dulces de Palenque', initials: 'DP', cat: 'Dulces típicos', dist: '150 m', price: '$', hours: 'Abierto · cierra 6:00 p. m.', cover: '#B45309', coverInner: '#F3E3C3',
+    items: [
+      { id: 'i13', name: 'Cocadas surtidas', model: 'cocadas', price: '$3.000 c/u', desc: 'De coco, arequipe y guayaba, hechas cada mañana.', tags: ['Para llevar', 'Receta tradicional'] }
+    ],
+    reviews: [ { who: 'Emma, turista de Francia', stars: 5, text: 'Las mejores cocadas que probé en Cartagena, y la señora es encantadora.' } ],
+    baseCount: 56, baseRating: 4.9 }
+];
+
+var CAT_LABEL = { food: 'Comer', craft: 'Artesanías', cafe: 'Café y dulces' };
+function norm(t) { return String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
+
+var THUMB = {
+  bandeja: ['#F3EEE6', '#B7652B', '50%'], arepa: ['#F3EEE6', '#D9963E', '50%'], cazuela: ['#F3EEE6', '#D9772B', '50%'],
+  pescado: ['#E9EFEE', '#B9772F', '50%'], mochila: ['#E9EFEE', '#C2381B', '18px'], sombrero: ['#F3EEE6', '#1F1A17', '50%'],
+  cafe: ['#F3EEE6', '#5A3A22', '8px'], taza: ['#E9EFEE', '#5B3A21', '50%'], cocadas: ['#F3EEE6', '#C9884A', '50%']
+};
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: 'welcome', cat: 'all', placeId: 'p1', itemId: 'i1', angle: 20, auto: true,
+      stars: 0, draftText: '', extra: {}, toast: false, bizStep: 0, bizPct: 0, spin: 0,
+      user: null, loginEmail: '', loginPass: '', loginError: '', loginReason: false, afterLogin: 'home', query: '', visited: {} };
+    this.drag = null;
+  }
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () {
+      var s = self.state;
+      var rotating = (s.screen === 'item' || s.screen === 'ar') && s.auto && !self.drag;
+      var spinning = s.screen === 'biz' && s.bizStep === 3;
+      if (rotating || spinning) {
+        self.setState({ angle: rotating ? (s.angle + 1.2) % 360 : s.angle, spin: spinning ? (s.spin + 1.5) % 360 : s.spin });
+      }
+    }, 40);
+  }
+  componentWillUnmount() {
+    clearInterval(this.timer);
+    clearTimeout(this.bizTimer);
+  }
+  runBizSim() {
+    var self = this;
+    if (this.state.bizStep === 3) { this.setState({ bizStep: 0, bizPct: 0 }); return; }
+    this.setState({ bizStep: 1, bizPct: 0 });
+    var tick = function () {
+      var s = self.state;
+      var pct = s.bizPct + 4;
+      if (pct >= 100) {
+        if (s.bizStep === 1) { self.setState({ bizStep: 2, bizPct: 0 }); }
+        else { self.setState({ bizStep: 3, bizPct: 100 }); return; }
+      } else { self.setState({ bizPct: pct }); }
+      self.bizTimer = setTimeout(tick, 90);
+    };
+    this.bizTimer = setTimeout(tick, 90);
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var go = function (patch) { return function () { self.setState(patch); }; };
+
+    var places = PLACES.map(function (p) {
+      var added = s.extra[p.id] || [];
+      var all = added.concat(p.reviews);
+      var count = p.baseCount + added.length;
+      var sum = p.baseRating * p.baseCount + added.reduce(function (a, x) { return a + x.stars; }, 0);
+      var isEmp = p.origin === 'emp';
+      return Object.assign({}, p, {
+        ratingTxt: (sum / count).toFixed(1).replace('.', ','),
+        nReviews: count,
+        n3d: p.items.length,
+        tagLabel: isEmp ? 'Emprendimiento local' : 'Clásico de la zona',
+        tagBg: isEmp ? '#FDEFD0' : '#DDEBEA',
+        tagFg: isEmp ? '#7A4B00' : '#0F3D3E',
+        shelfTitle: p.kind === 'food' ? 'Menú en 3D' : 'Vitrina en 3D',
+        catLabel: CAT_LABEL[p.kind],
+        rating: sum / count,
+        open: function () {
+          var v = Object.assign({}, self.state.visited); v[p.id] = true;
+          self.setState({ screen: 'place', placeId: p.id, toast: false, visited: v });
+        },
+        reviews: all.map(function (rv) {
+          return Object.assign({}, rv, { starsTxt: '★★★★★'.slice(0, rv.stars) + '☆☆☆☆☆'.slice(0, 5 - rv.stars) });
+        }),
+        items: p.items.map(function (it) {
+          var th = THUMB[it.model];
+          return Object.assign({}, it, {
+            thumb: th[0], thumbInner: th[1], thumbShape: th[2],
+            open: go({ screen: 'item', itemId: it.id, angle: 20, auto: true })
+          });
+        })
+      });
+    });
+    var place = places.filter(function (p) { return p.id === s.placeId; })[0];
+    var itemRaw = place.items.filter(function (it) { return it.id === s.itemId; })[0] || place.items[0];
+    var item = Object.assign({}, itemRaw, { tags: itemRaw.tags.map(function (t) { return { label: t }; }) });
+    var isFood = place.kind === 'food';
+
+    var cats = [['all', 'Todo'], ['food', 'Comer'], ['craft', 'Artesanías'], ['cafe', 'Café']].map(function (c) {
+      var on = s.cat === c[0];
+      return { label: c[1], pressed: on ? 'true' : 'false', bg: on ? '#0F3D3E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#14211F', border: on ? '#0F3D3E' : '#E2DDD3',
+        isAll: c[0] === 'all', isFood: c[0] === 'food', isCraft: c[0] === 'craft', isCafe: c[0] === 'cafe', pick: go({ cat: c[0] }) };
+    });
+    var filtered = places.filter(function (p) { return s.cat === 'all' || p.kind === s.cat; });
+    var empPlaces = filtered.filter(function (p) { return p.origin === 'emp'; });
+    var consPlaces = filtered.filter(function (p) { return p.origin === 'cons'; });
+
+    var q = norm(s.query);
+    var isSearching = q.length > 0;
+    var results = isSearching ? places.filter(function (p) { return norm(p.name).indexOf(q) !== -1; }) : [];
+    var byRating = function (a, b) { return b.rating - a.rating || b.nReviews - a.nReviews; };
+    var topList;
+    if (s.cat === 'all') {
+      topList = ['food', 'craft', 'cafe'].map(function (k) {
+        var best = places.filter(function (p) { return p.kind === k; }).sort(byRating)[0];
+        return Object.assign({}, best, { rank: '1', badge: 'Mejor en ' + CAT_LABEL[k] });
+      });
+    } else {
+      topList = filtered.slice().sort(byRating).slice(0, 3).map(function (p, i) {
+        return Object.assign({}, p, { rank: String(i + 1), badge: 'Puesto ' + (i + 1) + ' en ' + CAT_LABEL[s.cat] });
+      });
+    }
+    topList = topList.map(function (p) { return Object.assign({}, p, { cat: p.cat }); });
+
+    var user = s.user;
+    var myReviews = [];
+    places.forEach(function (p) {
+      (s.extra[p.id] || []).forEach(function (rv) {
+        myReviews.push({ placeName: p.name, text: rv.text, starsTxt: '★★★★★'.slice(0, rv.stars) + '☆☆☆☆☆'.slice(0, 5 - rv.stars) });
+      });
+    });
+    var loginAs = function (u) {
+      var next = self.state.afterLogin || 'home';
+      self.setState({ user: u, screen: next, loginError: '', loginReason: false, loginPass: '' });
+    };
+
+    var starBtns = [1, 2, 3, 4, 5].map(function (n) {
+      return { aria: n + (n === 1 ? ' estrella' : ' estrellas'), fill: n <= s.stars ? '#E09A00' : '#FFFFFF', pick: go({ stars: n }) };
+    });
+
+    var stepDefs = [
+      { title: 'Graba un video de 20 segundos', text: 'Da una vuelta alrededor de tu plato o producto con el celular. Sin equipos especiales.' },
+      { title: 'La app crea el modelo 3D', text: 'Se procesa en la nube y queda listo en minutos.' },
+      { title: 'Aparece en tu vitrina', text: 'Revisa cómo quedó, ponle precio y publícalo con el sello 3D.' }
+    ];
+    var bizSteps = stepDefs.map(function (d, i) {
+      var n = i + 1;
+      var done = s.bizStep > n || s.bizStep === 3;
+      var active = s.bizStep === n && s.bizStep !== 3;
+      return Object.assign({}, d, {
+        num: done ? '✓' : String(n),
+        dotBg: done ? '#166534' : (active ? '#0F3D3E' : '#ECE7DE'),
+        dotFg: done || active ? '#FFFFFF' : '#14211F',
+        border: active ? '#0F3D3E' : '#E2DDD3',
+        status: done ? 'Listo' : (active ? 'En curso…' : ''),
+        statusColor: done ? '#166534' : '#0F3D3E'
+      });
+    });
+
+    return {
+      isWelcome: s.screen === 'welcome', isHome: s.screen === 'home', isPlace: s.screen === 'place', isItem: s.screen === 'item',
+      isAR: s.screen === 'ar', isReview: s.screen === 'review', isBiz: s.screen === 'biz',
+      isLogin: s.screen === 'login', isProfile: s.screen === 'profile',
+      showNav: s.screen === 'home' || s.screen === 'biz' || s.screen === 'place' || s.screen === 'profile',
+      navHomeColor: (s.screen === 'home' || s.screen === 'place') ? '#0F3D3E' : '#55605D',
+      navBizColor: s.screen === 'biz' ? '#0F3D3E' : '#55605D',
+      navProfileColor: s.screen === 'profile' ? '#0F3D3E' : '#55605D',
+      navHomeCurrent: (s.screen === 'home' || s.screen === 'place') ? 'page' : 'false',
+      navBizCurrent: s.screen === 'biz' ? 'page' : 'false',
+      navProfileCurrent: s.screen === 'profile' ? 'page' : 'false',
+      greetName: user ? user.name : 'viajero',
+      query: s.query, isSearching: isSearching, notSearching: !isSearching,
+      results: results, noResults: isSearching && results.length === 0,
+      resultsLabel: results.length + (results.length === 1 ? ' resultado' : ' resultados') + ' para «' + s.query.trim() + '»',
+      topList: topList,
+      topSubtitle: s.cat === 'all' ? 'El mejor calificado de cada categoría' : 'Los mejor calificados en ' + CAT_LABEL[s.cat],
+      loggedIn: !!user, isGuest: !user,
+      userName: user ? user.name : '', userEmail: user ? user.email : '', userInitial: user ? user.name.charAt(0).toUpperCase() : '',
+      myReviews: myReviews, myCount: myReviews.length, noMyReviews: myReviews.length === 0,
+      visitedCount: Object.keys(s.visited).length,
+      loginEmail: s.loginEmail, loginPass: s.loginPass, loginError: s.loginError, hasLoginError: !!s.loginError, loginReason: s.loginReason,
+      onQuery: function (e) { self.setState({ query: e.target.value }); },
+      clearQuery: go({ query: '' }),
+      onEmail: function (e) { self.setState({ loginEmail: e.target.value }); },
+      onPass: function (e) { self.setState({ loginPass: e.target.value }); },
+      goLogin: go({ screen: 'login', afterLogin: 'home', loginReason: false, loginError: '' }),
+      goProfile: go({ screen: 'profile' }),
+      backFromLogin: function () { var a = self.state.afterLogin; self.setState({ screen: a === 'review' ? 'place' : (self.state.user === null && a === 'home' ? 'welcome' : 'home'), loginReason: false }); },
+      loginGoogle: function () { loginAs({ name: 'Luis', email: 'luis@gmail.com (Google)' }); },
+      loginApple: function () { loginAs({ name: 'Luis', email: 'cuenta de Apple' }); },
+      loginEmailSubmit: function () {
+        var st = self.state;
+        var email = st.loginEmail.trim();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { self.setState({ loginError: 'Escribe un correo válido, por ejemplo nombre@correo.com.' }); return; }
+        if (st.loginPass.length < 6) { self.setState({ loginError: 'La contraseña debe tener al menos 6 caracteres.' }); return; }
+        var n = email.split('@')[0].replace(/[._-]+/g, ' ');
+        loginAs({ name: n.charAt(0).toUpperCase() + n.slice(1), email: email });
+      },
+      continueGuest: go({ screen: 'home', loginReason: false, loginError: '' }),
+      logout: go({ user: null, screen: 'home' }),
+      cats: cats, empPlaces: empPlaces, consPlaces: consPlaces,
+      hasEmp: empPlaces.length > 0, hasCons: consPlaces.length > 0,
+      empCount: empPlaces.length + (empPlaces.length === 1 ? ' negocio' : ' negocios'),
+      place: place, item: item,
+      m3d: build3d(itemRaw.model), bizModel: build3d('mochila'),
+      arLabel: isFood ? 'Ver en mi mesa' : 'Ver en mi espacio',
+      rateLabel: isFood ? 'Ya lo probé: calificar' : 'Ya lo compré: calificar',
+      angle: s.angle.toFixed(1), angleInt: Math.round(s.angle) % 360, spin: s.spin.toFixed(1),
+      autoLabel: s.auto ? 'Pausar giro' : 'Girar solo', autoPressed: s.auto ? 'true' : 'false',
+      toast: s.toast, starBtns: starBtns, draftText: s.draftText,
+      bizSteps: bizSteps, bizRecording: s.bizStep === 1 || s.bizStep === 2, bizDone: s.bizStep === 3,
+      bizPct: s.bizPct, bizMsg: s.bizStep === 1 ? 'Grabando: sigue girando alrededor del producto…' : 'Creando el modelo 3D…',
+      bizBtn: s.bizStep === 0 ? 'Probar: digitalizar un producto' : (s.bizStep === 3 ? 'Digitalizar otro' : 'Procesando…'),
+      goHome: go({ screen: 'home', toast: false }),
+      goBiz: go({ screen: 'biz' }),
+      backToPlace: go({ screen: 'place' }),
+      openAR: go({ screen: 'ar', auto: true }),
+      closeAR: go({ screen: 'item' }),
+      openReview: function () {
+        if (!self.state.user) { self.setState({ screen: 'login', afterLogin: 'review', loginReason: true, loginError: '', stars: 0, draftText: '' }); return; }
+        self.setState({ screen: 'review', stars: 0, draftText: '' });
+      },
+      toggleAuto: function () { self.setState({ auto: !self.state.auto }); },
+      onRange: function (e) { self.setState({ angle: Number(e.target.value), auto: false }); },
+      onText: function (e) { self.setState({ draftText: e.target.value }); },
+      submitReview: function () {
+        var st = self.state;
+        var stars = st.stars || 5;
+        var text = st.draftText.trim() || 'Muy recomendado.';
+        var extra = Object.assign({}, st.extra);
+        extra[st.placeId] = [{ who: (st.user ? st.user.name : 'Tú') + ' (tú)', stars: stars, text: text }].concat(extra[st.placeId] || []);
+        self.setState({ extra: extra, screen: 'place', toast: true });
+      },
+      runBiz: function () { if (self.state.bizStep === 1 || self.state.bizStep === 2) return; self.runBizSim(); },
+      dragStart: function (e) { self.drag = { x: e.clientX }; self.setState({ auto: false }); },
+      dragMove: function (e) {
+        if (!self.drag) return;
+        var dx = e.clientX - self.drag.x;
+        self.drag.x = e.clientX;
+        self.setState({ angle: ((self.state.angle - dx * 0.9) % 360 + 360) % 360 });
+      },
+      dragEnd: function () { self.drag = null; }
+    };
+  }
+}
+</script>
+</body>
+</html>
