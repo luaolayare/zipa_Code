@@ -10,10 +10,13 @@
     "negocios": "npm run start --workspace=negocios",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "negocios:tunel": "npm run start --workspace=negocios -- --tunnel",
-    "clientes:tunel": "npm run start --workspace=clientes -- --tunnel"
+    "clientes:tunel": "npm run start --workspace=clientes -- --tunnel",
+    "negocios:web": "npm run start --workspace=negocios -- --web",
+    "clientes:web": "npm run start --workspace=clientes -- --web"
   },
   "overrides": {
-    "react": "19.3.0"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@expo/ngrok": "^4.1.3"
