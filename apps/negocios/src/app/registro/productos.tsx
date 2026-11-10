@@ -14,7 +14,8 @@ export default function Productos() {
   const [error, setError] = useState('');
   const word = draft.category === 'comer' ? 'plato' : 'producto';
 
-  // TODO fase 1: grabar con expo-camera, subir el video y generar el modelo 3D en el servidor.
+  // TODO fase 1: grabar con expo-camera SIN SONIDO (mute: true; la app no pide micrófono),
+  // subir el video y generar el modelo 3D en el servidor.
   const add = () => {
     if (!name.trim()) return setError(`Escribe el nombre del ${word}.`);
     const digits = price.replace(/\D/g, '');
@@ -32,7 +33,7 @@ export default function Productos() {
   return (
     <Screen>
       <StepHeader step={4} title="Tus productos en 3D" />
-      <Text style={styles.body}>Graba un video de 20 segundos dando la vuelta alrededor del {word} y la app lo convierte en 3D.</Text>
+      <Text style={styles.body}>Graba un video de unos 20 segundos dando la vuelta alrededor del {word}. Con ese video creamos una vista 3D. Antes de publicarla podrás revisar cómo quedó.</Text>
       {draft.products.map((p, i) => (
         <Card key={i}>
           <Text style={styles.strong}>{p.name}</Text>

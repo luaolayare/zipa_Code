@@ -21,8 +21,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -33,9 +32,9 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Zipa lo tiene Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y para grabar el video de tus productos que convertimos en 3D.",
+          "cameraPermission": "Zipa lo tiene Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y para grabar sin sonido el video de tus productos con el que creamos la vista 3D.",
           "photosPermission": "Zipa lo tiene Negocios accede a tus fotos solo cuando eliges una foto de tu local o un video de un producto que ya tienes guardado.",
-          "microphonePermission": "Zipa lo tiene Negocios usa el micrófono porque la cámara graba los videos de tus productos con sonido. El audio no se publica."
+          "microphonePermission": false
         }
       ]
     ],

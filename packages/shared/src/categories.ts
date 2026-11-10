@@ -53,3 +53,9 @@ export const businessCover = (b: Business) => {
   const [cover, inner] = DEMO_COVERS[b.id] ?? CATEGORY_COVERS[b.category];
   return { cover, inner };
 };
+
+/**
+ * Reseñas mínimas para aparecer en "Lo más destacado". Con 1 o 2 reseñas, llamar
+ * a un negocio "el mejor" sería engañoso.
+ */
+export const MIN_REVIEWS_FOR_RANKING = 5;

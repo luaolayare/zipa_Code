@@ -1,4 +1,4 @@
-import { BRAND, CATEGORIES, categoryLabel, colors, fonts, normalize, useAuth, type Business, type Category } from '@zipa/shared';
+import { BRAND, CATEGORIES, MIN_REVIEWS_FOR_RANKING, categoryLabel, colors, fonts, normalize, useAuth, type Business, type Category } from '@zipa/shared';
 import { useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Coffee, LayoutGrid, MapPin, Search, ShoppingBag, Utensils, X, type LucideIcon } from 'lucide-react-native';
@@ -48,12 +48,14 @@ export default function Explorar() {
   const clasicos = filtered.filter((b) => b.type === 'establecido');
 
   // Lo más destacado: el mejor de cada categoría, o el top 3 de la categoría elegida.
+  // Solo entran negocios con suficientes reseñas para que "el mejor" signifique algo.
   const top = useMemo(() => {
+    const rankable = all.filter((b) => b.rating != null && b.reviewCount >= MIN_REVIEWS_FOR_RANKING);
     if (cat !== 'todo') {
-      return all.filter((b) => b.category === cat).sort(byRating).slice(0, 3)
+      return rankable.filter((b) => b.category === cat).sort(byRating).slice(0, 3)
         .map((b, i) => ({ b, rank: i + 1, badge: `Puesto ${i + 1} en ${categoryLabel(cat)}` }));
     }
-    return CATEGORIES.map((c) => all.filter((b) => b.category === c.id).sort(byRating)[0])
+    return CATEGORIES.map((c) => rankable.filter((b) => b.category === c.id).sort(byRating)[0])
       .filter((b): b is Business => !!b)
       .map((b) => ({ b, rank: 1, badge: `Mejor en ${categoryLabel(b.category)}` }));
   }, [all, cat]);

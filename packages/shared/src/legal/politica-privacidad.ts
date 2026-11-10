@@ -26,7 +26,7 @@ export const POLITICA_PRIVACIDAD: LegalDocument = {
         'De los clientes: las reseñas y calificaciones que publicas, los negocios que visitas en la app y los reportes que envías.',
         'De los negocios: nombre y datos del negocio (tipo, categoría, dirección, horario, WhatsApp), cédula o NIT del responsable, una foto del local o puesto para verificarlo, fotos y videos de los productos, y los modelos 3D que se generan a partir de esos videos.',
         'Datos técnicos: modelo y sistema operativo del celular, versión de la app, registros de errores y, si lo autorizas, tu ubicación aproximada para mostrarte negocios cercanos. La ubicación no se guarda en tu perfil.',
-        'Permisos del celular: la cámara y el micrófono solo se usan cuando tú tomas una foto o grabas un video desde la app. No recogemos datos sensibles en los términos del artículo 5 de la Ley 1581 de 2012.',
+        'Permisos del celular: la cámara solo se usa cuando tú tomas una foto o grabas un video desde la app. Los videos se graban sin sonido, así que la app no usa el micrófono. No recogemos datos sensibles en los términos del artículo 5 de la Ley 1581 de 2012.',
       ],
     },
     {

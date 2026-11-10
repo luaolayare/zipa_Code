@@ -1,5 +1,5 @@
 import { BRAND, colors, fonts } from '@zipa/shared';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Box, ScanQrCode, Store } from 'lucide-react-native';
 import { useCallback } from 'react';
@@ -11,6 +11,7 @@ import { openNegociosApp } from '@/lib/negocios';
 // Bienvenida. El turista llega aquí, normalmente desde el QR de su hotel o de un negocio.
 export default function Welcome() {
   const insets = useSafeAreaInsets();
+  const { origen, lugar } = useLocalSearchParams<{ origen?: string; lugar?: string }>();
 
   // Texto claro sobre el fondo verde; al salir vuelve a oscuro.
   useFocusEffect(
@@ -40,14 +41,19 @@ export default function Welcome() {
       <View style={styles.copy}>
         <Text style={styles.title}>Lo mejor de {BRAND.city}, hecho aquí.</Text>
         <Text style={styles.subtitle}>
-          Restaurantes y emprendimientos de la zona en un solo lugar. Mira en 3D lo que vas a pedir o comprar, y cuéntale a otros viajeros cómo te fue.
+          Restaurantes y emprendimientos de la zona en un solo lugar. Mira en 3D muchos de los platos y productos antes de pedir o comprar, y cuéntale a otros viajeros cómo te fue.
         </Text>
       </View>
 
-      <View style={styles.qrCard}>
-        <ScanQrCode size={28} color={colors.accent} strokeWidth={2} />
-        <Text style={styles.qrText}>Llegaste por el QR de tu hotel. Te mostramos lo que hay cerca de ti.</Text>
-      </View>
+      {/* Solo si la app se abrió desde un QR impreso: vitrinalocal://?origen=qr&lugar=Hotel%20X (scheme de app.json) */}
+      {origen === 'qr' && (
+        <View style={styles.qrCard}>
+          <ScanQrCode size={28} color={colors.accent} strokeWidth={2} />
+          <Text style={styles.qrText}>
+            {lugar ? `Llegaste por el QR de ${lugar}.` : 'Llegaste por un código QR.'} Estos son los negocios de la zona.
+          </Text>
+        </View>
+      )}
 
       <Pressable accessibilityRole="button" onPress={() => router.push('/login')} style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
         <Text style={styles.ctaText}>Empezar a explorar</Text>

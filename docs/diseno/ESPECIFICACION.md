@@ -195,3 +195,25 @@ Bloques en `prototipo/app-negocios.prototipo.html`:
 ## 5. Textos
 
 Todos los textos de la interfaz están en el prototipo, en español de Colombia. Copiarlos literalmente.
+
+---
+
+## 6. Textos corregidos (aprobados el 10 de noviembre de 2026)
+
+Estos textos del prototipo prometían algo que no se puede garantizar. Al portar las pantallas,
+usar SIEMPRE la versión corregida, no la del prototipo.
+
+| Prototipo | Usar en la app |
+| --- | --- |
+| "Registro en 5 pasos, unos 10 minutos. Solo necesitas tu celular." | "Son 5 pasos. Ten a mano tu cédula o NIT." |
+| "Para que los turistas confíen, solo publicamos negocios reales. Revisamos tus datos en menos de 24 horas." | "Para que los turistas confíen, revisamos cada negocio antes de publicarlo." |
+| "Graba un video de 20 segundos dando la vuelta alrededor y la app lo convierte en 3D." | "Graba un video de unos 20 segundos dando la vuelta alrededor del {plato/producto}. Con ese video creamos una vista 3D. Antes de publicarla podrás revisar cómo quedó." |
+| "Se procesa en la nube y queda listo en minutos." | "Se procesa en la nube. Lo verás en tu panel cuando esté listo." |
+| "Estamos revisando tus datos. Te avisamos por WhatsApp cuando tu negocio sea visible para los clientes." | "Estamos revisando tus datos. Aquí verás cuando tu negocio quede publicado." |
+| Píldora "En revisión: te avisamos por WhatsApp" | "En revisión: aquí verás cuando quede publicado" |
+| "Llegaste por el QR de tu hotel. Te mostramos lo que hay cerca de ti." (siempre visible) | Solo si la app se abrió desde un QR (`?origen=qr&lugar=...`): "Llegaste por el QR de {lugar}. Estos son los negocios de la zona." |
+| "Mira en 3D lo que vas a pedir o comprar" | "Mira en 3D muchos de los platos y productos antes de pedir o comprar" |
+| "Tamaño real" (realidad aumentada) | "Tamaño aproximado" |
+| Estadísticas fijas del panel (128 / 64 / 21) | Cifras reales; sin datos: "Aún no hay datos" |
+| "Lo más destacado" con cualquier número de reseñas | Solo negocios con al menos `MIN_REVIEWS_FOR_RANKING` (5) reseñas |
+| Grabación de video con sonido | Video sin sonido (`mute`): la app no pide permiso de micrófono |

@@ -7,7 +7,7 @@ import { useRegistro } from '@/components/RegistroContext';
 
 const STATUS_TEXT: Record<Business['status'], string> = {
   borrador: 'Borrador: termina el registro',
-  en_revision: 'En revisión: te avisamos por WhatsApp',
+  en_revision: 'En revisión: aquí verás cuando quede publicado',
   publicado: 'Publicado: visible para clientes',
   rechazado: 'Rechazado: revisa tus datos',
 };

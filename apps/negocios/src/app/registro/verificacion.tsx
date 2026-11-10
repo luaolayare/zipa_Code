@@ -48,7 +48,7 @@ export default function Verificacion() {
   return (
     <Screen>
       <StepHeader step={3} title="Verificación" />
-      <Text style={styles.body}>Para que los turistas confíen, revisamos tus datos en menos de 24 horas.</Text>
+      <Text style={styles.body}>Para que los turistas confíen, revisamos cada negocio antes de publicarlo.</Text>
       <Card>
         <Text style={styles.strong}>Foto de tu local o puesto</Text>
         {draft.photoUri ? (

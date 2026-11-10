@@ -10,7 +10,7 @@ export default function Inicio() {
       <Text style={styles.brand}>{BRAND.negociosApp}</Text>
       <Text style={styles.title}>Que los turistas encuentren tu negocio.</Text>
       <Text style={styles.body}>
-        Registra tu restaurante o emprendimiento, muestra tus productos en 3D y recibe reseñas de tus clientes. Son 5 pasos, unos 10 minutos.
+        Registra tu restaurante o emprendimiento, muestra tus productos en 3D y recibe reseñas de tus clientes. Son 5 pasos. Ten a mano tu cédula o NIT.
       </Text>
       <Button title="Registrar mi negocio" variant="accent" onPress={() => router.push('/registro/cuenta')} />
       <Button title={user ? 'Ir a mi panel' : 'Ya tengo cuenta'} variant="outline" onPress={() => router.push(user ? '/panel' : '/registro/cuenta')} />
