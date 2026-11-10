@@ -4,7 +4,21 @@ import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
 
-export type ReportTargetType = 'review' | 'business' | 'user';
+/** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
+export const normalizeIdNumber = (raw: string) => raw.replace(/[^0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+/** true si parece una cédula o un NIT válido (misma regla que la base de datos). */
+export const isValidIdNumber = (raw: string) => /^[0-9]{6,12}(-[0-9])?$/.test(normalizeIdNumber(raw));
+
+/** Compilación de producción sin las variables de Supabase. */
+export class MissingBackendError extends Error {
+  constructor() {
+    super('Faltan EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_ANON_KEY en esta compilación.');
+    this.name = 'MissingBackendError';
+  }
+}
+
+export type ReportTargetType ='review' | 'business' | 'user';
 export type ReportReason = 'ofensivo' | 'falso' | 'spam' | 'datos_personales' | 'otro';
 
 export const REPORT_REASONS: { id: ReportReason; label: string }[] = [
@@ -77,6 +91,10 @@ export interface NewBusiness {
  * con null usa datos de ejemplo en memoria.
  */
 export function createApi(db: SupabaseClient | null) {
+  // Los datos de ejemplo solo existen en desarrollo. Una compilación de producción sin Supabase
+  // es un error de configuración: nunca debe mostrar negocios, precios ni reseñas inventados.
+  if (!db && !__DEV__) throw new MissingBackendError();
+
   let demoReviews = [...DEMO_REVIEWS];
   const demoConsents: (ConsentInput & { userId: string; acceptedAt: string })[] = [];
   const demoReports: (ReportInput & { reporterId: string })[] = [];
@@ -207,6 +225,27 @@ export function createApi(db: SupabaseClient | null) {
         .single();
       if (error) throw error;
       return data.id as string;
+    },
+
+    /**
+     * Guarda la verificación: la foto va al bucket privado "verificaciones" en la carpeta del dueño
+     * y la cédula/NIT a business_verifications (solo la ve el dueño). La foto se borra al terminar
+     * la revisión (Edge Function revisar-negocio).
+     */
+    async saveVerification(ownerId: string, businessId: string, photo: { uri: string; mimeType?: string | null }, idNumber: string) {
+      const cleanId = normalizeIdNumber(idNumber);
+      if (!db) return;
+      const mime = photo.mimeType ?? 'image/jpeg';
+      const ext = mime.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
+      const path = `${ownerId}/${businessId}/local-${Date.now()}.${ext}`;
+      const body = await (await fetch(photo.uri)).arrayBuffer();
+      const { error: uploadError } = await db.storage.from('verificaciones').upload(path, body, { contentType: mime, upsert: false });
+      if (uploadError) throw new Error('No pudimos subir la foto de tu local. Revisa tu conexión e intenta de nuevo.');
+      const { error } = await db.from('business_verifications').upsert({ business_id: businessId, photo_path: path, id_number: cleanId });
+      if (error) {
+        await db.storage.from('verificaciones').remove([path]); // no dejar fotos sueltas
+        throw error;
+      }
     },
 
     async submitForReview(businessId: string) {

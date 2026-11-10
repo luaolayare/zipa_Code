@@ -14,9 +14,11 @@ export interface RegistroDraft {
   address: string;
   hours: string;
   whatsapp: string;
-  photoUri: string | null; // foto del local o puesto
+  photoUri: string | null; // foto del local o puesto (archivo local hasta enviar el registro)
+  photoMimeType: string | null;
   idNumber: string; // cédula o NIT, solo visible para el equipo de revisión
   products: DraftProduct[];
+  businessId: string | null; // id ya creado en la base, para no duplicarlo si hay que reintentar el envío
 }
 
 const empty: RegistroDraft = {
@@ -27,8 +29,10 @@ const empty: RegistroDraft = {
   hours: '',
   whatsapp: '',
   photoUri: null,
+  photoMimeType: null,
   idNumber: '',
   products: [],
+  businessId: null,
 };
 
 const Ctx = createContext<{ draft: RegistroDraft; update: (p: Partial<RegistroDraft>) => void; reset: () => void } | null>(null);

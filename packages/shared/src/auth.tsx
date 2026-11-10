@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { createApi, type Api } from './api';
 import type { ConsentInput } from './legal';
+import { MissingConfigView } from './ui/MissingConfigView';
 
 export interface AppUser {
   id: string;
@@ -38,8 +39,20 @@ const toUser = (s: Session | null): AppUser | null =>
       }
     : null;
 
-/** Sesión compartida por ambas apps. Sin Supabase, simula el inicio de sesión. */
+/**
+ * Sesión compartida por ambas apps.
+ * Sin Supabase: en desarrollo simula el inicio de sesión con datos de ejemplo;
+ * en producción muestra un error en vez de la app.
+ */
 export function AuthProvider({ client, children }: { client: SupabaseClient | null; children: ReactNode }) {
+  if (!client && !__DEV__) {
+    console.error('Zipa lo tiene: compilación de producción sin variables de Supabase (ver .env.example).');
+    return <MissingConfigView />;
+  }
+  return <AuthProviderInner client={client}>{children}</AuthProviderInner>;
+}
+
+function AuthProviderInner({ client, children }: { client: SupabaseClient | null; children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(client !== null);
   const api = useMemo(() => createApi(client), [client]);

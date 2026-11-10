@@ -16,5 +16,5 @@ Son **dos apps móviles** (iOS y Android), sin panel web: todo se hace desde el 
 ## Reglas del proyecto
 - Textos de la interfaz en español (Colombia).
 - Lógica y UI reutilizable van en `packages/shared`; cada app solo tiene sus pantallas.
-- Sin variables de Supabase, las apps funcionan con datos de ejemplo (`demo.ts`).
+- Sin variables de Supabase, las apps usan datos de ejemplo (`demo.ts`) **solo en desarrollo** (`__DEV__`). En producción muestran un error: nunca datos inventados.
 - Antes de terminar una tarea: `npm run typecheck` desde la raíz.

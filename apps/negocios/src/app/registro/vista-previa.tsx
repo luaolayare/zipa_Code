@@ -8,16 +8,18 @@ import { StepHeader } from '@/components/StepHeader';
 
 // Paso 5: el negocio ve su tarjeta tal como la verán los clientes y la envía a revisión.
 export default function VistaPrevia() {
-  const { draft } = useRegistro();
+  const { draft, update } = useRegistro();
   const { api, user } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const publish = async () => {
     if (!user) return router.replace('/registro/cuenta');
+    if (!draft.photoUri) return router.replace('/registro/verificacion');
     setLoading(true);
     try {
-      const id = await api.registerBusiness(user.id, {
+      // Si un intento anterior ya creó el negocio, se reutiliza en vez de crear otro.
+      const id = draft.businessId ?? await api.registerBusiness(user.id, {
         name: draft.name.trim(),
         type: draft.type,
         category: draft.category,
@@ -25,7 +27,10 @@ export default function VistaPrevia() {
         hours: draft.hours.trim() || undefined,
         whatsapp: draft.whatsapp.trim() || undefined,
       });
-      // TODO: guardar verificación (foto + cédula/NIT) y productos.
+      if (!draft.businessId) update({ businessId: id });
+      // Foto al espacio privado y cédula/NIT a la tabla privada, antes de pedir la revisión.
+      await api.saveVerification(user.id, id, { uri: draft.photoUri, mimeType: draft.photoMimeType }, draft.idNumber);
+      // TODO: guardar productos (videos y modelos 3D).
       await api.submitForReview(id);
       router.replace('/panel');
     } catch (e) {
@@ -45,7 +50,7 @@ export default function VistaPrevia() {
         <Text style={styles.tag}>{businessTypeLabel(draft.type)} · Nuevo</Text>
         <Text style={styles.body}>{draft.products.length} en 3D: {draft.products.map((p) => p.name).join(', ')}</Text>
       </Card>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+      {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
       <Button title="Enviar a revisión y publicar" onPress={publish} loading={loading} />
     </Screen>
   );

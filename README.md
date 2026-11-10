@@ -24,7 +24,7 @@ npm run clientes     # inicia la app de clientes
 Escanea el QR que aparece en la terminal con la cámara (iPhone) o con Expo Go (Android).
 Tu computador y tu celular deben estar en la misma red wifi.
 
-Sin configurar Supabase, las apps funcionan con **datos de ejemplo**.
+Sin configurar Supabase, las apps funcionan con **datos de ejemplo** mientras desarrollas. Una compilación de producción (APK o tienda) sin Supabase muestra un error en vez de datos inventados.
 
 ## Conectar Supabase
 
