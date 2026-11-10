@@ -1,6 +1,6 @@
-import { Button, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
+import { Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { StepHeader } from '@/components/StepHeader';
@@ -18,6 +18,8 @@ export default function Cuenta() {
   const [missingConsent, setMissingConsent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null); // correo de confirmación enviado
+  const [alreadyAccepted, setAlreadyAccepted] = useState<boolean | null>(null); // null = consultando
 
   const consent = (
     <ConsentCheckbox
@@ -36,14 +38,31 @@ export default function Cuenta() {
     return false;
   };
 
-  // Ya tiene sesión (por ejemplo, la creó en la app de clientes): acepta los términos de negocios y sigue.
+  // Con sesión: si ya tiene negocio va al panel; si no, sigue el registro.
+  // Los términos de negocios solo se piden si aún no aceptó la versión vigente
+  // (por ejemplo, si la cuenta se creó en la app de clientes).
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    (async () => {
+      try {
+        if (await api.myBusiness(user.id)) return router.replace('/panel');
+        const ok = await api.hasAccepted(user.id, consentsFor('negocios'));
+        if (alive) setAlreadyAccepted(ok);
+      } catch {
+        if (alive) setAlreadyAccepted(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [api, user]);
+
   if (user) {
     const next = async () => {
-      if (!requireConsent()) return;
+      if (!alreadyAccepted && !requireConsent()) return;
       setError('');
       setLoading(true);
       try {
-        await api.recordConsents(user.id, consentsFor('negocios'));
+        if (!alreadyAccepted) await api.recordConsents(user.id, consentsFor('negocios'));
         router.push('/registro/datos');
       } catch (e) {
         setError(e instanceof Error ? e.message : 'No pudimos guardar tu aceptación. Intenta de nuevo.');
@@ -55,9 +74,18 @@ export default function Cuenta() {
       <Screen>
         <StepHeader step={1} title="Tu cuenta" />
         <Text style={styles.body}>Entraste como {user.email}.</Text>
-        {consent}
+        {alreadyAccepted === false && consent}
         {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
-        <Button title="Seguir" onPress={next} loading={loading} />
+        <Button title="Seguir" onPress={next} loading={loading || alreadyAccepted === null} />
+      </Screen>
+    );
+  }
+
+  if (sentTo) {
+    return (
+      <Screen>
+        <StepHeader step={1} title="Confirma tu correo" />
+        <CheckEmailView email={sentTo} onContinue={() => { setSentTo(null); setHasAccount(true); setPassword(''); }} />
       </Screen>
     );
   }
@@ -72,9 +100,10 @@ export default function Cuenta() {
     try {
       if (hasAccount) {
         await signIn(email.trim(), password);
-        router.replace('/panel');
+        // La sesión cambia y esta pantalla pasa al caso "ya tiene sesión", que decide a dónde seguir.
       } else {
-        await signUp(email.trim(), password, name.trim(), consentsFor('negocios'));
+        const { needsEmailConfirmation } = await signUp(email.trim(), password, name.trim(), consentsFor('negocios'));
+        if (needsEmailConfirmation) return setSentTo(email.trim());
         router.push('/registro/datos');
       }
     } catch (e) {

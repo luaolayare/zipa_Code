@@ -11,6 +11,7 @@ export * from './moderation';
 export { confirmAsync } from './ui/confirm';
 export { ReportView } from './ui/ReportView';
 export { DeleteAccountButton } from './ui/DeleteAccountButton';
+export { CheckEmailView } from './ui/CheckEmailView';
 export { LegalDocumentView } from './ui/LegalDocumentView';
 export { ConsentCheckbox } from './ui/ConsentCheckbox';
 export { Button } from './ui/Button';

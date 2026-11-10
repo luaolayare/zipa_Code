@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Coffee, LayoutGrid, MapPin, Search, ShoppingBag, Utensils, X, type LucideIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BusinessRow } from '@/components/BusinessRow';
@@ -26,10 +26,16 @@ export default function Explorar() {
   const [all, setAll] = useState<Business[]>([]);
   const [query, setQuery] = useState('');
   const [cat, setCat] = useState<Category | 'todo'>('todo');
+  const [status, setStatus] = useState<'cargando' | 'listo' | 'error'>('cargando');
 
-  useEffect(() => {
-    api.listBusinesses().then(setAll).catch(() => setAll([]));
+  const load = useCallback(() => {
+    setStatus('cargando');
+    api.listBusinesses()
+      .then((list) => { setAll(list); setStatus('listo'); })
+      .catch(() => setStatus('error'));
   }, [api]);
+
+  useEffect(() => { load(); }, [load]);
 
   // Texto claro sobre la cabecera verde; al salir de la pantalla vuelve a oscuro.
   useFocusEffect(
@@ -107,6 +113,21 @@ export default function Explorar() {
                   <Text style={styles.emptyText}>Revisa cómo está escrito o explora por categorías.</Text>
                 </View>
               )}
+            </View>
+          ) : status === 'error' ? (
+            <View style={styles.empty} accessibilityRole="alert">
+              <Text style={styles.emptyTitle}>No pudimos cargar los negocios</Text>
+              <Text style={styles.emptyText}>Revisa tu conexión a internet.</Text>
+              <Pressable accessibilityRole="button" onPress={load} style={styles.retry}>
+                <Text style={styles.retryText}>Intentar de nuevo</Text>
+              </Pressable>
+            </View>
+          ) : status === 'cargando' ? (
+            <ActivityIndicator color={colors.primary} style={styles.loading} accessibilityLabel="Cargando negocios" />
+          ) : all.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>Pronto verás negocios aquí</Text>
+              <Text style={styles.emptyText}>Estamos sumando restaurantes y emprendimientos de {BRAND.city}. Vuelve en unos días.</Text>
             </View>
           ) : (
             <>
@@ -202,4 +223,7 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
 
   demo: { fontSize: 12, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
+  loading: { marginVertical: 40 },
+  retry: { marginTop: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  retryText: { fontSize: 15, fontFamily: fonts.bold, color: '#FFFFFF' },
 });

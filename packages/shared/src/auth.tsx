@@ -17,13 +17,27 @@ interface AuthValue {
   api: Api;
   signIn: (email: string, password: string) => Promise<void>;
   /** `consents`: lo que la persona aceptó. Un trigger de la base lo guarda en la tabla consents (migración 0003). */
-  signUp: (email: string, password: string, name: string, consents: ConsentInput[]) => Promise<void>;
+  signUp: (email: string, password: string, name: string, consents: ConsentInput[]) => Promise<{ needsEmailConfirmation: boolean }>;
   signOut: () => Promise<void>;
   /** Borra la cuenta y todo lo asociado, y cierra la sesión. */
   deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
+
+/** Mensajes de Supabase Auth (en inglés) en palabras claras para la persona. */
+export function authErrorMessage(error: { message?: string; code?: string; status?: number }): string {
+  const code = error.code ?? '';
+  const msg = (error.message ?? '').toLowerCase();
+  if (code === 'invalid_credentials' || msg.includes('invalid login credentials')) return 'El correo o la contraseña no coinciden.';
+  if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) return 'Aún no confirmas tu correo. Abre el enlace que te enviamos y vuelve a entrar.';
+  if (code === 'user_already_exists' || msg.includes('already registered')) return 'Ya existe una cuenta con ese correo. Entra con tu contraseña.';
+  if (code === 'weak_password' || msg.includes('password should be')) return 'La contraseña es muy débil. Usa al menos 8 caracteres, con letras y números.';
+  if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || error.status === 429) return 'Hiciste muchos intentos seguidos. Espera unos minutos y vuelve a intentar.';
+  if (code === 'email_address_invalid' || (msg.includes('invalid') && msg.includes('email'))) return 'Ese correo no es válido. Revisa cómo está escrito.';
+  if (msg.includes('network') || msg.includes('fetch')) return 'No hay conexión. Revisa tu internet e intenta de nuevo.';
+  return 'No pudimos completar la operación. Intenta de nuevo en unos minutos.';
+}
 
 const nameFromEmail = (email: string) => {
   const n = email.split('@')[0].replace(/[._-]+/g, ' ');
@@ -74,17 +88,20 @@ function AuthProviderInner({ client, children }: { client: SupabaseClient | null
     async signIn(email, password) {
       if (!client) return setUser({ id: 'demo-user', email, name: nameFromEmail(email) });
       const { error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) throw new Error(authErrorMessage(error));
     },
     async signUp(email, password, name, consents) {
       if (!client) {
         await api.recordConsents('demo-user', consents);
-        return setUser({ id: 'demo-user', email, name: name || nameFromEmail(email) });
+        setUser({ id: 'demo-user', email, name: name || nameFromEmail(email) });
+        return { needsEmailConfirmation: false };
       }
       // La aceptación viaja con el registro: si Supabase pide confirmar el correo,
       // todavía no hay sesión para guardarla desde la app.
-      const { error } = await client.auth.signUp({ email, password, options: { data: { full_name: name, consents } } });
-      if (error) throw error;
+      const { data, error } = await client.auth.signUp({ email, password, options: { data: { full_name: name, consents } } });
+      if (error) throw new Error(authErrorMessage(error));
+      // Sin sesión = Supabase envió un correo de confirmación y la cuenta se activa al abrir el enlace.
+      return { needsEmailConfirmation: !data.session };
     },
     async signOut() {
       if (!client) return setUser(null);

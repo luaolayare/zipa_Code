@@ -1,4 +1,4 @@
-import { BRAND, Button, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
+import { BRAND, Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
@@ -13,6 +13,7 @@ export default function Login() {
   const [missingConsent, setMissingConsent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null); // correo de confirmación enviado
 
   const submit = async () => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) return setError('Escribe un correo válido.');
@@ -24,8 +25,12 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      if (mode === 'entrar') await signIn(email.trim(), password);
-      else await signUp(email.trim(), password, name.trim(), consentsFor('clientes'));
+      if (mode === 'entrar') {
+        await signIn(email.trim(), password);
+      } else {
+        const { needsEmailConfirmation } = await signUp(email.trim(), password, name.trim(), consentsFor('clientes'));
+        if (needsEmailConfirmation) return setSentTo(email.trim());
+      }
       router.replace('/explorar');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos iniciar sesión.');
@@ -33,6 +38,14 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  if (sentTo) {
+    return (
+      <Screen>
+        <CheckEmailView email={sentTo} onContinue={() => { setSentTo(null); setMode('entrar'); setPassword(''); }} />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

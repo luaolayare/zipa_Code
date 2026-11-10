@@ -152,6 +152,14 @@ export function createApi(db: SupabaseClient | null) {
       if (error) throw error;
     },
 
+    /** true si la persona ya aceptó la versión vigente de todos esos documentos. */
+    async hasAccepted(userId: string, consents: ConsentInput[]): Promise<boolean> {
+      if (!db) return consents.every((c) => demoConsents.some((d) => d.userId === userId && d.document === c.document && d.version === c.version));
+      const { data, error } = await db.from('consents').select('document, version').eq('user_id', userId);
+      if (error) throw error;
+      return consents.every((c) => (data ?? []).some((d) => d.document === c.document && d.version === c.version));
+    },
+
     /** Guarda la aceptación de documentos legales de alguien que ya tiene sesión. */
     async recordConsents(userId: string, consents: ConsentInput[]) {
       if (!db) {
