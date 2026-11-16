@@ -69,3 +69,6 @@ jobs:
 
       - name: Verificar el esquema (tablas, RLS, vistas, triggers, bucket, filtro)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/ci/verificar_esquema.sql
+
+      - name: Probar permisos de la API (anon, turista y dueña)
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/ci/probar_permisos.sql
