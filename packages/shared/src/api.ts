@@ -66,6 +66,8 @@ const toProduct = (r: any): Product => ({
   modelUrl: r.model_url,
   photoUrl: r.photo_url ?? null,
   videoPath: r.video_path ?? null,
+  videoStatus: r.video_status ?? null,
+  videoNote: r.video_note ?? null,
   status: r.status,
 });
 
@@ -286,16 +288,41 @@ export function createApi(db: SupabaseClient | null) {
       return (data ?? []).map(toReview);
     },
 
-    async createReview(businessId: string, userId: string, authorName: string, stars: Review['stars'], text: string) {
+    /**
+     * Crea o edita la reseña de esta persona para el negocio: hay UNA por persona y negocio
+     * (migración 0011). Calificar de nuevo reemplaza estrellas y texto.
+     */
+    async saveMyReview(businessId: string, userId: string, authorName: string, stars: Review['stars'], text: string) {
       if (findOffensiveWords(text).length) throw new OffensiveTextError();
       if (!db) {
-        demoReviews.unshift({ id: String(Date.now()), businessId, userId, authorName, stars, text, reply: null, createdAt: new Date().toISOString() });
+        demoReviews = [
+          { id: String(Date.now()), businessId, userId, authorName, stars, text, reply: null, createdAt: new Date().toISOString() },
+          ...demoReviews.filter((r) => !(r.businessId === businessId && r.userId === userId)),
+        ];
         return;
       }
-      const { error } = await db.from('reviews').insert({ business_id: businessId, user_id: userId, stars, text });
+      const { error } = await db.rpc('guardar_mi_resena', { p_business: businessId, p_stars: stars, p_text: text });
       // La base aplica el mismo filtro (trigger) por si alguien publica sin pasar por la app.
       if (error?.message?.includes('texto_ofensivo')) throw new OffensiveTextError();
+      if (error) throw new Error(error.message.includes('No puedes calificar') ? 'No puedes calificar este negocio.' : 'No pudimos guardar tu reseña. Revisa tu conexión e intenta de nuevo.');
+    },
+
+    /** La reseña que esta persona ya dejó en el negocio, si existe. */
+    async getMyReview(businessId: string, userId: string): Promise<Review | null> {
+      if (!db) return demoReviews.find((r) => r.businessId === businessId && r.userId === userId) ?? null;
+      const { data, error } = await db.from('reviews_public').select('*').eq('business_id', businessId).eq('user_id', userId).maybeSingle();
       if (error) throw error;
+      return data ? toReview(data) : null;
+    },
+
+    /**
+     * Enlace temporal (1 hora) para reproducir el video de un producto. Solo funciona si el equipo
+     * aprobó el video y el negocio está publicado, o si quien lo pide es su dueño o el equipo.
+     */
+    async videoUrl(path: string): Promise<string | null> {
+      if (!db) return null;
+      const { data, error } = await db.storage.from('videos').createSignedUrl(path, 3600);
+      return error ? null : data.signedUrl;
     },
 
     async myBusiness(ownerId: string): Promise<Business | null> {
@@ -363,6 +390,8 @@ export function createApi(db: SupabaseClient | null) {
           modelUrl: existing?.modelUrl ?? null,
           photoUrl: input.photo?.uri ?? existing?.photoUrl ?? null,
           videoPath: input.video?.uri ?? existing?.videoPath ?? null,
+          videoStatus: input.video ? 'pendiente' : existing?.videoStatus ?? null,
+          videoNote: input.video ? null : existing?.videoNote ?? null,
           status: 'procesando',
         };
         demoProducts = [...demoProducts.filter((x) => x.id !== p.id), p];

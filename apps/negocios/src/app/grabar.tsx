@@ -78,7 +78,7 @@ export default function Grabar() {
       <CameraView ref={camera} style={StyleSheet.absoluteFill} mode="video" mute videoQuality="720p" onCameraReady={() => setReady(true)} />
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <View style={styles.top}>
-          <View style={styles.badge}><Text style={styles.badgeText}>{recording ? `Grabando · ${remaining} s` : 'Video para 3D · sin sonido'}</Text></View>
+          <View style={styles.badge}><Text style={styles.badgeText}>{recording ? `Grabando · ${remaining} s` : 'Video del producto · sin sonido'}</Text></View>
           {!recording && (
             <Pressable accessibilityRole="button" accessibilityLabel="Cerrar sin grabar" onPress={() => close(null)} style={styles.close}>
               <X size={24} color="#FFFFFF" />

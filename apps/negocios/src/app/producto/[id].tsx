@@ -1,5 +1,5 @@
 // Agregar o editar un producto desde el panel. id = "nuevo" para uno nuevo.
-import { Button, confirmAsync, useAuth, type Business } from '@zipa/shared';
+import { Button, confirmAsync, useAuth, type Business, type Product } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -15,7 +15,7 @@ export default function ProductoScreen() {
   const { api, user } = useAuth();
   const [business, setBusiness] = useState<Business | null>(null);
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
-  const [has3d, setHas3d] = useState(false);
+  const [saved, setSaved] = useState<Product | null>(null); // producto guardado (para mostrar el estado del video)
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ export default function ProductoScreen() {
           const p = (await api.myProducts(b.id)).find((x) => x.id === id);
           if (!p) return router.back();
           setForm({ name: p.name, price: p.priceCop ? String(p.priceCop) : '', description: p.description ?? '', photo: null, photoUrl: p.photoUrl, video: null, hasSavedVideo: !!p.videoPath });
-          setHas3d(!!p.modelUrl);
+          setSaved(p);
         }
       } catch {
         setError('No pudimos cargar el producto.');
@@ -82,7 +82,21 @@ export default function ProductoScreen() {
         <BackButton />
         <Text style={[type.h1, { flex: 1 }]} numberOfLines={1}>{isNew ? `Nuevo ${word}` : `Editar ${word}`}</Text>
       </View>
-      {has3d && <Notice tone="success">Este {word} ya tiene vista 3D. Si grabas un video nuevo, prepararemos una vista 3D nueva.</Notice>}
+      {saved?.videoPath && !form.video && saved.videoStatus === 'pendiente' && (
+        <Notice tone="warn">Tu video está en revisión. Cuando el equipo lo apruebe, los clientes lo verán en tu vitrina.</Notice>
+      )}
+      {saved?.videoPath && !form.video && saved.videoStatus === 'aprobado' && (
+        <Notice tone="success">Tu video está aprobado y los clientes ya lo ven. Si grabas otro, volverá a revisión.</Notice>
+      )}
+      {saved?.videoPath && !form.video && saved.videoStatus === 'rechazado' && (
+        <Notice tone="danger">
+          <View style={{ gap: 6 }}>
+            <Text style={[type.strong, { color: '#A12E15' }]}>No aprobamos este video.</Text>
+            {!!saved.videoNote && <Text style={type.body}>Motivo: {saved.videoNote}</Text>}
+            <Text style={type.small}>Graba uno nuevo y toca «Guardar cambios».</Text>
+          </View>
+        </Notice>
+      )}
       <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} category={business.category} />
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title={saving || (isNew ? `Agregar ${word}` : 'Guardar cambios')} onPress={save} loading={!!saving} />

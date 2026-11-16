@@ -42,7 +42,7 @@ export async function pickVideo(): Promise<MediaResult> {
 // La pantalla /grabar devuelve el video a quien la abrió.
 let pending: ((file: LocalFile | null) => void) | null = null;
 
-/** Abre la cámara de 3D y espera el video grabado (null si la persona sale sin grabar). */
+/** Abre la cámara para el video del producto y espera el video grabado (null si la persona sale sin grabar). */
 export function recordVideo(): Promise<LocalFile | null> {
   pending?.(null);
   return new Promise((resolve) => {

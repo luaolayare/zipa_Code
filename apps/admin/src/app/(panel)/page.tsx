@@ -6,7 +6,10 @@ type Metrics = { usuarios: number; resenas: number; reportes_pendientes: number;
 
 export default async function Resumen() {
   const { supabase } = await requireAdmin();
-  const { data, error } = await supabase.rpc('admin_metrics');
+  const [{ data, error }, { count: videos }] = await Promise.all([
+    supabase.rpc('admin_metrics'),
+    supabase.from('products').select('id', { count: 'exact', head: true }).eq('video_status', 'pendiente'),
+  ]);
   const m = data as Metrics | null;
   const estado = (k: string) => m?.negocios_por_estado?.[k] ?? 0;
 
@@ -25,6 +28,11 @@ export default async function Resumen() {
           <p className="overline">Por revisar</p>
           <p className="stat-number">{estado('en_revision')}</p>
           <p className="stat-label">{estado('en_revision') === 1 ? 'negocio espera' : 'negocios esperan'} tu revisión →</p>
+        </Link>
+        <Link href="/videos" className="card link">
+          <p className="overline">Videos</p>
+          <p className="stat-number">{videos ?? 0}</p>
+          <p className="stat-label">{videos === 1 ? 'video espera' : 'videos esperan'} aprobación →</p>
         </Link>
         <Link href="/reportes" className="card link">
           <p className="overline">Reportes</p>

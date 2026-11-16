@@ -10,9 +10,10 @@ import { supabaseBrowser } from '@/lib/supabase/client';
  * sesión de quien decide: comprueba is_admin() (MFA incluido), cambia el estado, borra la foto
  * del local y deja constancia en la bitácora.
  */
-export function Decision({ businessId, name }: { businessId: string; name: string }) {
+export function Decision({ businessId, name, pendingVideos }: { businessId: string; name: string; pendingVideos: string[] }) {
   const router = useRouter();
   const [rechazando, setRechazando] = useState(false);
+  const [conVideos, setConVideos] = useState(true); // aprobar también los videos pendientes
   const [nota, setNota] = useState('');
   const [loading, setLoading] = useState<'' | 'publicado' | 'rechazado'>('');
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null);
@@ -32,11 +33,16 @@ export function Decision({ businessId, name }: { businessId: string; name: strin
       let texto = 'No se pudo guardar la decisión.';
       try {
         const body = await (error as { context?: Response }).context?.json();
-        if (body?.error) texto = body.error;
+        const detalle = body?.error ?? body?.message;
+        if (detalle) texto = `${texto} (${detalle})`;
       } catch {}
       return setMsg({ tipo: 'error', texto });
     }
     void data;
+    // Si así se eligió, se aprueban también sus videos pendientes (cada uno queda en la bitácora).
+    if (decision === 'publicado' && conVideos) {
+      for (const id of pendingVideos) await supabaseBrowser().rpc('admin_revisar_video', { p_product: id, p_decision: 'aprobado' });
+    }
     // De vuelta a la fila de revisión, con el aviso de lo que se hizo.
     router.push(`/negocios?hecho=${decision}&nombre=${encodeURIComponent(name)}`);
     router.refresh();
@@ -48,6 +54,12 @@ export function Decision({ businessId, name }: { businessId: string; name: strin
       <p className="muted small">Al decidir, la foto del local se borra (ya no se necesita). La cédula o NIT se conserva como soporte.</p>
       {!rechazando ? (
         <div className="actions">
+          {pendingVideos.length > 0 && (
+            <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontWeight: 600, width: '100%' }}>
+              <input type="checkbox" checked={conVideos} onChange={(e) => setConVideos(e.target.checked)} style={{ width: 20, height: 20 }} />
+              Aprobar también {pendingVideos.length === 1 ? 'su video' : `sus ${pendingVideos.length} videos`} (revísalos abajo)
+            </label>
+          )}
           <button className="btn primary" onClick={() => decidir('publicado')} disabled={!!loading}>{loading === 'publicado' ? 'Publicando…' : 'Aprobar y publicar'}</button>
           <button className="btn danger" onClick={() => setRechazando(true)} disabled={!!loading}>No aprobar</button>
         </div>

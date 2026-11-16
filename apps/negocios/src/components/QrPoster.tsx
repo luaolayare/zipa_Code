@@ -20,7 +20,7 @@ export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: stri
         <Text style={styles.brandText}>{BRAND.name}</Text>
       </View>
       <Text style={styles.name} numberOfLines={2}>{name}</Text>
-      <Text style={styles.call}>{comer ? 'Escanea y mira el menú en 3D' : 'Escanea y mira nuestros productos en 3D'}</Text>
+      <Text style={styles.call}>{comer ? 'Escanea y mira nuestro menú' : 'Escanea y mira nuestros productos'}</Text>
       <View style={styles.qrBox}>
         <QRCode value={qrLink(businessId)} size={210} color={colors.dark} backgroundColor="#FFFFFF" ecl="M" />
       </View>

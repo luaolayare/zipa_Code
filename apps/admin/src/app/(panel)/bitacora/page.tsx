@@ -9,6 +9,8 @@ const ACCION: Record<string, string> = {
   borrar_resena: 'Borró una reseña',
   reporte_revisado: 'Marcó un reporte como revisado',
   reporte_descartado: 'Descartó un reporte',
+  aprobar_video: 'Aprobó un video',
+  rechazar_video: 'No aprobó un video',
 };
 
 export default async function Bitacora() {

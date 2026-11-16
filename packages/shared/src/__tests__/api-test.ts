@@ -36,10 +36,20 @@ describe('createApi en modo demo', () => {
 
   it('rechaza reseñas con palabras ofensivas y publica las normales', async () => {
     const api = createApi(null);
-    await expect(api.createReview('b1', 'u-prueba', 'Prueba', 4, 'son unos malparidos')).rejects.toBeInstanceOf(OffensiveTextError);
-    await api.createReview('b1', 'u-prueba', 'Prueba', 5, 'Deliciosa la arepa');
+    await expect(api.saveMyReview('b1', 'u-prueba', 'Prueba', 4, 'son unos malparidos')).rejects.toBeInstanceOf(OffensiveTextError);
+    await api.saveMyReview('b1', 'u-prueba', 'Prueba', 5, 'Deliciosa la arepa');
     const reviews = await api.listReviews('b1');
     expect(reviews.some((r) => r.text === 'Deliciosa la arepa')).toBe(true);
+  });
+
+  it('una persona tiene UNA reseña por negocio: calificar otra vez la reemplaza', async () => {
+    const api = createApi(null);
+    await api.saveMyReview('b1', 'u-una', 'Una', 2, 'Regular');
+    await api.saveMyReview('b1', 'u-una', 'Una', 5, 'Volví y mejoró');
+    const mias = (await api.listReviews('b1')).filter((r) => r.userId === 'u-una');
+    expect(mias).toHaveLength(1);
+    expect(mias[0]).toMatchObject({ stars: 5, text: 'Volví y mejoró' });
+    expect(await api.getMyReview('b1', 'u-una')).toMatchObject({ stars: 5 });
   });
 
   it('oculta las reseñas de una persona bloqueada y las muestra al desbloquear', async () => {

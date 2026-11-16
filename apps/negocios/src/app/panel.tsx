@@ -59,7 +59,8 @@ export default function Panel() {
   const comer = business.category === 'comer';
   const word = comer ? 'plato' : 'producto';
   const rating = reviews.length ? reviews.reduce((s, r) => s + r.stars, 0) / reviews.length : null;
-  const in3d = products.filter((p) => p.modelUrl).length;
+  const conVideo = products.filter((p) => p.videoStatus === 'aprobado').length;
+  const videosRechazados = products.filter((p) => p.videoStatus === 'rechazado').length;
 
   const resume = () => {
     reset();
@@ -112,7 +113,7 @@ export default function Panel() {
           <View style={styles.stats}>
             <Stat value={rating == null ? '—' : formatRating(rating)} label={rating == null ? 'Calificación: aún sin reseñas' : 'Calificación'} />
             <Stat value={String(reviews.length)} label={reviews.length === 1 ? 'Reseña' : 'Reseñas'} />
-            <Stat value={String(products.length)} label={in3d ? `Productos · ${in3d} en 3D` : 'Productos'} />
+            <Stat value={String(products.length)} label={conVideo ? `Productos · ${conVideo} con video` : 'Productos'} />
           </View>
 
           <SectionTitle
@@ -125,12 +126,15 @@ export default function Panel() {
             }
           />
           {products.length === 0 ? (
-            <Text style={type.body}>Aún no tienes {word}s. Agrega el primero con su foto y un video para la vista 3D.</Text>
+            <Text style={type.body}>Aún no tienes {word}s. Agrega el primero con su foto y, si quieres, un video corto.</Text>
           ) : (
             products.map((p) => <ProductRow key={p.id} product={p} category={business.category} onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id } })} />)
           )}
-          {products.some((p) => p.videoPath && !p.modelUrl) && (
-            <Text style={type.small}>Los productos con «3D en preparación» se ven con su foto mientras tanto.</Text>
+          {videosRechazados > 0 && (
+            <Notice tone="danger">{videosRechazados === 1 ? 'Hay un video que no aprobamos.' : `Hay ${videosRechazados} videos que no aprobamos.`} Toca el producto para ver el motivo y grabar uno nuevo.</Notice>
+          )}
+          {products.some((p) => p.videoStatus === 'pendiente') && (
+            <Text style={type.small}>Los videos «en revisión» se muestran a los clientes cuando el equipo los aprueba. Mientras tanto se ve la foto.</Text>
           )}
 
           <SectionTitle title="Reseñas de clientes" style={{ marginTop: 10 }} />

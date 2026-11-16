@@ -17,8 +17,20 @@ export default function Calificar() {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false); // ya había calificado: edita su reseña
 
   useEffect(() => { api.getBusiness(id).then((b) => setBusinessName(b?.name ?? '')).catch(() => {}); }, [api, id]);
+
+  // Una reseña por persona y negocio: si ya calificó, se carga para editarla.
+  useEffect(() => {
+    if (!user) return;
+    api.getMyReview(id, user.id).then((r) => {
+      if (!r) return;
+      setEditing(true);
+      setStars(r.stars);
+      setText(r.text);
+    }).catch(() => {});
+  }, [api, id, user]);
 
   const submit = async () => {
     if (!user) return router.replace({ pathname: '/login', params: { desde: 'calificar', negocio: id } });
@@ -26,7 +38,7 @@ export default function Calificar() {
     setLoading(true);
     setError('');
     try {
-      await api.createReview(id, user.id, user.name, stars, text.trim());
+      await api.saveMyReview(id, user.id, user.name, stars, text.trim());
       markReviewed(id);
       // Vuelve al negocio (aunque se haya llegado desde un producto) para ver el aviso de gracias.
       router.dismissTo({ pathname: '/negocio/[id]', params: { id } });
@@ -42,8 +54,8 @@ export default function Calificar() {
       <BackButton />
       <View style={{ gap: 6 }}>
         {!!businessName && <Text style={styles.business}>{businessName}</Text>}
-        <Text style={styles.title} accessibilityRole="header">¿Cómo te fue?</Text>
-        <Text style={styles.body}>Tu opinión ayuda a otros viajeros y al negocio a mejorar.</Text>
+        <Text style={styles.title} accessibilityRole="header">{editing ? 'Edita tu reseña' : '¿Cómo te fue?'}</Text>
+        <Text style={styles.body}>{editing ? 'Ya calificaste este negocio. Puedes cambiar tus estrellas o tu comentario.' : 'Califica al negocio en general: la comida o los productos, la atención y el lugar.'}</Text>
       </View>
       <View style={styles.stars} accessibilityRole="radiogroup" accessibilityLabel="Calificación">
         {([1, 2, 3, 4, 5] as const).map((n) => {
@@ -56,10 +68,10 @@ export default function Calificar() {
         })}
       </View>
       {!!stars && <Text style={styles.label}>{LABELS[stars]}</Text>}
-      <TextField label="Cuéntanos más" value={text} onChangeText={setText} multiline maxLength={600} placeholder="¿Qué compraste o pediste? ¿Era como en la foto?" />
+      <TextField label="Cuéntanos más" value={text} onChangeText={setText} multiline maxLength={600} placeholder="¿Qué pediste o compraste? ¿Cómo te atendieron?" />
       {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
-      <Button title="Publicar reseña" onPress={submit} loading={loading} />
-      <Text style={styles.note}>Al publicar, el negocio puede responder tu comentario.</Text>
+      <Button title={editing ? 'Guardar cambios' : 'Publicar reseña'} onPress={submit} loading={loading} />
+      <Text style={styles.note}>Puedes tener una reseña por negocio y editarla cuando quieras. El negocio puede responderte.</Text>
     </Screen>
   );
 }

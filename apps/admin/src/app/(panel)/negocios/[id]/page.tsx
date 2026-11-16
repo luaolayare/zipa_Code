@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { CATEGORIA, ESTADO, TIPO, fecha, pesos } from '@/lib/format';
 
+import { VideoReview } from '../../VideoReview';
+
 import { Decision } from './Decision';
 
 export default async function NegocioDetalle({ params }: { params: Promise<{ id: string }> }) {
@@ -65,7 +67,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
                       <strong>{p.name}</strong>
                       <span className="small muted">{pesos(p.price_cop)}</span>
                       {p.description && <span className="small">{p.description}</span>}
-                      {videos[p.id] ? <a className="small" href={videos[p.id]!} target="_blank" rel="noreferrer">Ver video para 3D</a> : <span className="small muted">Sin video</span>}
+                      {p.video_path ? <VideoReview productId={p.id} url={videos[p.id] ?? null} status={p.video_status} note={p.video_note} /> : <span className="small muted">Sin video</span>}
                     </div>
                   </div>
                 ))}
@@ -88,7 +90,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
           </div>
 
           {b.status === 'en_revision' ? (
-            <Decision businessId={b.id} name={b.name} />
+            <Decision businessId={b.id} name={b.name} pendingVideos={(products ?? []).filter((p) => p.video_status === 'pendiente').map((p) => p.id)} />
           ) : (
             <div className="card"><p className="muted">Solo se decide sobre negocios en revisión. Si el negocio cambia sus datos o los envía de nuevo, volverá a aparecer aquí.</p></div>
           )}

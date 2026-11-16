@@ -30,13 +30,17 @@ export interface Product {
   description: string | null;
   modelUrl: string | null; // archivo 3D (.glb / .usdz) generado desde el video
   photoUrl: string | null; // foto del producto (lo que se ve mientras no hay modelo 3D)
-  videoPath: string | null; // video de ~20 s en el bucket privado "videos", materia prima del 3D
+  videoPath: string | null; // video de ~20 s en el bucket privado "videos"
+  videoStatus: VideoStatus | null; // el equipo lo revisa antes de que lo vean los clientes
+  videoNote: string | null; // motivo si el equipo no aprobó el video
   status: ProductStatus;
 }
 
-/** Lo que el dueño ve de cada producto en su panel. */
-export type Product3DState = 'en_3d' | 'video_recibido' | 'solo_foto';
-export const product3DState = (p: Product): Product3DState => (p.modelUrl ? 'en_3d' : p.videoPath ? 'video_recibido' : 'solo_foto');
+export type VideoStatus = 'pendiente' | 'aprobado' | 'rechazado';
+
+/** Estado del video de un producto, para el panel del negocio. */
+export type ProductVideoState = 'sin_video' | VideoStatus;
+export const productVideoState = (p: Product): ProductVideoState => (p.videoPath ? (p.videoStatus ?? 'pendiente') : 'sin_video');
 
 export interface Review {
   id: string;

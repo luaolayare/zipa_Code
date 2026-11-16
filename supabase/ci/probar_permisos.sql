@@ -291,6 +291,73 @@ do $$ begin
 end $$;
 reset role;
 
+-- VIDEOS APROBADOS Y MI RESEÑA (migración 0011) ----------------------------------------------------
+insert into public.businesses (id, owner_id, name, type, category, address, status) values
+  ('00000000-0000-0000-0000-0000000000b9', '00000000-0000-0000-0000-0000000000d1', 'Negocio Con Video', 'emprendimiento', 'comer', 'Calle 9', 'publicado');
+insert into storage.objects (bucket_id, name) values
+  ('videos', '00000000-0000-0000-0000-0000000000d1/b9/v1.mp4'),
+  ('videos', '00000000-0000-0000-0000-0000000000d1/b9/v2.mp4');
+
+-- La dueña sube un producto con video: queda pendiente y no puede aprobarlo ella misma.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$insert into public.products (business_id, name, video_path) values ('00000000-0000-0000-0000-0000000000b9', 'Con video', '00000000-0000-0000-0000-0000000000d1/b9/v1.mp4')$q$);
+  if (select video_status from public.products where name = 'Con video') is distinct from 'pendiente' then raise exception 'el video nuevo no quedó pendiente'; end if;
+  perform ci_pruebas.debe_fallar($q$update public.products set video_status = 'aprobado' where name = 'Con video'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_revisar_video((select id from public.products where name = 'Con video'), 'aprobado')$q$, 'No autorizado%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 5, 'Mi propio negocio')$q$, 'No puedes calificar%');
+end $$;
+reset role;
+
+-- Un visitante no ve el video pendiente.
+set local role anon;
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from storage.objects where bucket_id = 'videos' and name like '%/b9/%'$q$) <> 0 then raise exception 'anon ve un video pendiente'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 5, 'x')$q$, 'permission denied%');
+end $$;
+reset role;
+
+-- La revisora lo revisa: sin motivo no puede rechazar; luego lo aprueba.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_revisar_video((select id from public.products where name = 'Con video'), 'rechazado', 'corto')$q$, 'Explica al negocio%');
+  perform ci_pruebas.debe_funcionar($q$select public.admin_revisar_video((select id from public.products where name = 'Con video'), 'rechazado', 'Se ve muy oscuro, grábalo con más luz')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.admin_revisar_video((select id from public.products where name = 'Con video'), 'aprobado')$q$);
+  if (select video_status || '|' || coalesce(video_note, '') from public.products where name = 'Con video') <> 'aprobado|' then raise exception 'el video no quedó aprobado y sin nota'; end if;
+end $$;
+reset role;
+
+-- Aprobado y con negocio publicado: el visitante sí lo ve (solo ese archivo).
+set local role anon;
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from storage.objects where bucket_id = 'videos' and name like '%/b9/%'$q$) <> 1 then raise exception 'anon no ve el video aprobado (o ve otros)'; end if;
+end $$;
+reset role;
+
+-- Si la dueña cambia el video, vuelve a revisión.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$update public.products set video_path = '00000000-0000-0000-0000-0000000000d1/b9/v2.mp4' where name = 'Con video'$q$);
+  if (select video_status from public.products where name = 'Con video') <> 'pendiente' then raise exception 'el video cambiado no volvió a revisión'; end if;
+end $$;
+reset role;
+
+-- La turista califica dos veces el mismo negocio: queda UNA reseña, con lo último que escribió.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 3, 'Primera vez')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 5, 'Volví y mejoró')$q$);
+  if ci_pruebas.cuenta($q$select * from public.reviews where business_id = '00000000-0000-0000-0000-0000000000b9' and user_id = '00000000-0000-0000-0000-0000000000c1'$q$) <> 1 then raise exception 'hay más de una reseña por persona'; end if;
+  if (select stars from public.reviews where business_id = '00000000-0000-0000-0000-0000000000b9' and user_id = '00000000-0000-0000-0000-0000000000c1') <> 5 then raise exception 'la reseña no se actualizó'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 9, 'x')$q$, 'La calificación va de 1 a 5%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 1, 'son unos malparidos')$q$, '%texto_ofensivo%');
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

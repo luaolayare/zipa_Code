@@ -21,6 +21,7 @@ export default function NegocioDetalle() {
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [thanks, setThanks] = useState(false);
+  const mine = reviews.find((r) => r.userId === user?.id) ?? null; // una reseña por persona y negocio
   const [error, setError] = useState(false);
 
   const loadReviews = useCallback(() => api.listReviews(id, user?.id).then(setReviews), [api, id, user?.id]);
@@ -108,13 +109,15 @@ export default function NegocioDetalle() {
         </View>
 
         <View style={styles.ratingCard}>
-          <Text style={styles.ratingBig}>{business.rating == null ? '—' : formatRating(business.rating)}</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.ratingLabel}>Calificación de clientes</Text>
-            <Text style={styles.muted}>{business.reviewCount === 0 ? 'Aún sin reseñas' : `${business.reviewCount} ${business.reviewCount === 1 ? 'reseña' : 'reseñas'}`}</Text>
+          <View style={styles.ratingRow}>
+            <Text style={styles.ratingBig}>{business.rating == null ? '—' : formatRating(business.rating)}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ratingLabel}>Calificación de clientes</Text>
+              <Text style={styles.muted}>{business.reviewCount === 0 ? 'Aún sin reseñas' : `${business.reviewCount} ${business.reviewCount === 1 ? 'reseña' : 'reseñas'}`}</Text>
+            </View>
           </View>
           <Pressable accessibilityRole="button" onPress={rate} style={({ pressed }) => [styles.rateButton, pressed && { opacity: 0.85 }]}>
-            <Text style={styles.primaryText}>Calificar</Text>
+            <Text style={styles.primaryText}>{mine ? 'Editar mi reseña' : 'Calificar'}</Text>
           </Pressable>
         </View>
 
@@ -135,11 +138,11 @@ export default function NegocioDetalle() {
         <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
         {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}
         {reviews.map((r) => {
-          const mine = r.userId === user?.id;
+          const isMine = r.userId === user?.id;
           return (
             <View key={r.id} style={styles.review}>
               <View style={styles.reviewTop}>
-                <Text style={styles.author} numberOfLines={1}>{r.authorName}{mine ? ' (tú)' : ''}</Text>
+                <Text style={styles.author} numberOfLines={1}>{r.authorName}{isMine ? ' (tú)' : ''}</Text>
                 <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>
                   {'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text>
                 </Text>
@@ -151,7 +154,7 @@ export default function NegocioDetalle() {
                   <Text style={styles.replyText}>{r.reply}</Text>
                 </View>
               )}
-              {!mine && (
+              {!isMine && (
                 <View style={styles.actions}>
                   <Pressable accessibilityRole="button" accessibilityLabel={`Reportar la reseña de ${r.authorName}`} onPress={() => report('review', r.id, `Reseña de ${r.authorName}`)} style={styles.action}>
                     <Flag size={14} color={colors.textMuted} />
@@ -204,10 +207,11 @@ const styles = StyleSheet.create({
   tagEmp: { backgroundColor: colors.accentSoft, color: colors.accentText },
   tagClassic: { backgroundColor: colors.primarySoft, color: colors.primary },
   hours: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.success },
-  ratingCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  ratingCard: { gap: 14, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   ratingBig: { fontFamily: fonts.display, fontSize: 44, letterSpacing: -1.5, color: colors.text },
   ratingLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  rateButton: { minHeight: 50, paddingHorizontal: 20, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  rateButton: { minHeight: 52, paddingHorizontal: 20, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   primaryButton: { minHeight: 52, paddingHorizontal: 22, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   primaryText: { fontFamily: fonts.bold, fontSize: 16, color: '#FFFFFF' },
   contact: { gap: 10 },

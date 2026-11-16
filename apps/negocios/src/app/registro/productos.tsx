@@ -44,7 +44,7 @@ export default function Productos() {
     <Page>
       <StepHeader step={4} title={comer ? 'Tu menú' : 'Tus productos'} />
       <Text style={type.body}>
-        Sube al menos un {word} con su foto. Si grabas un video de unos 20 segundos dando la vuelta alrededor, con él creamos una vista 3D. Antes de publicarla podrás revisar cómo quedó.
+        Sube al menos un {word} con su foto. Si grabas un video de unos 20 segundos mostrándolo, el equipo lo revisa y, al aprobarlo, los clientes lo ven en tu vitrina.
       </Text>
 
       {draft.products.map((p, i) => (
@@ -54,7 +54,7 @@ export default function Productos() {
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={type.h3} numberOfLines={1}>{p.form.name}</Text>
-            <Text style={styles.meta}>{formatCop(priceFrom(p.form.price))} · {p.form.video ? 'Video para 3D listo' : 'Solo foto'}</Text>
+            <Text style={styles.meta}>{formatCop(priceFrom(p.form.price))} · {p.form.video ? 'Con video' : 'Solo foto'}</Text>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel={`Quitar ${p.form.name}`} onPress={() => remove(i)} hitSlop={8} style={styles.trash}>
             <Trash2 size={20} color={colors.danger} />

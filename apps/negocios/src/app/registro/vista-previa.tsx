@@ -87,7 +87,7 @@ export default function VistaPrevia() {
         <Row label="Horario" value={draft.hours.trim() || 'Sin horario'} />
         <Row label="WhatsApp" value={draft.whatsapp.trim() || 'Sin número'} />
         <Row label={comer ? 'Menú' : 'Productos'} value={draft.products.map((p) => p.form.name).join(', ') || '—'} />
-        <Row label="Videos para 3D" value={`${draft.products.filter((p) => p.form.video).length} de ${draft.products.length}`} last />
+        <Row label="Videos" value={`${draft.products.filter((p) => p.form.video).length} de ${draft.products.length}`} last />
       </View>
 
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}

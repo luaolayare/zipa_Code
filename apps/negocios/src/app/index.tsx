@@ -10,7 +10,7 @@ import { Logo } from '@/components/Logo';
 
 const BENEFICIOS: [string, string][] = [
   ['Aparece ante turistas', ` que buscan dónde comer y qué comprar en ${BRAND.city}.`],
-  ['Muestra tus productos en 3D', ' grabando un video corto con tu celular.'],
+  ['Muestra tus productos en video', ', grabado con tu celular en 20 segundos.'],
   ['Recibe y responde reseñas', ' para ganar la confianza de nuevos clientes.'],
 ];
 
@@ -22,12 +22,12 @@ export default function Inicio() {
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }} bounces={false}>
         <View style={styles.hero}>
           <SafeAreaView edges={['top']} style={styles.heroInner}>
-            {/* Decoración: anillo y plato en 3D asomando por la derecha. */}
+            {/* Decoración: anillo y plato ilustrado asomando por la derecha. */}
             <View style={styles.ring} pointerEvents="none" />
             <View style={styles.plate} pointerEvents="none"><PlateArt category="comer" size={176} /></View>
             <Logo light />
             <Text style={styles.title}>Que los turistas encuentren tu negocio.</Text>
-            <Text style={styles.lead}>Registra tu restaurante o emprendimiento, muestra tus productos en 3D y recibe reseñas de tus clientes.</Text>
+            <Text style={styles.lead}>Registra tu restaurante o emprendimiento, muestra tus productos con fotos y video, y recibe reseñas de tus clientes.</Text>
           </SafeAreaView>
         </View>
 

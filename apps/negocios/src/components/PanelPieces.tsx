@@ -1,5 +1,5 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
-import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, product3DState, useAuth, type Category, type Product, type Review, PlateArt } from '@zipa/shared';
+import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Category, type Product, type Review, PlateArt } from '@zipa/shared';
 import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,13 +16,14 @@ export function Stat({ value, label }: { value: string; label: string }) {
 }
 
 const STATE = {
-  en_3d: { label: 'En 3D', color: colors.success },
-  video_recibido: { label: '3D en preparación', color: colors.accentText },
-  solo_foto: { label: 'Solo foto', color: colors.textMuted },
+  aprobado: { label: 'Video aprobado', color: colors.success },
+  pendiente: { label: 'Video en revisión', color: colors.accentText },
+  rechazado: { label: 'Video no aprobado', color: colors.danger },
+  sin_video: { label: 'Solo foto', color: colors.textMuted },
 };
 
 export function ProductRow({ product, category, onPress }: { product: Product; category: Category; onPress: () => void }) {
-  const s = STATE[product3DState(product)];
+  const s = STATE[productVideoState(product)];
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}>
       <View style={styles.thumb}>

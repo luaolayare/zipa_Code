@@ -29,7 +29,7 @@ export const priceFrom = (price: string) => {
 export function productFormError(f: ProductForm, word: string): string | null {
   if (!f.name.trim()) return `Escribe el nombre del ${word}.`;
   if (f.name.trim().length > 60) return 'El nombre es muy largo (máximo 60 caracteres).';
-  if (!f.photo && !f.photoUrl) return `Agrega una foto del ${word}. Es lo que ven los clientes mientras preparamos la vista 3D.`;
+  if (!f.photo && !f.photoUrl) return `Agrega una foto del ${word}. Es lo primero que ven los clientes.`;
   return null;
 }
 
@@ -82,11 +82,11 @@ export function ProductEditor({ value, onChange, category }: { value: ProductFor
           {hasVideo ? <Check size={26} color="#FFFFFF" strokeWidth={3} /> : <Video size={26} color="#FFFFFF" />}
         </View>
         <View style={{ flex: 1, gap: 4 }}>
-          <Text style={type.h3}>{hasVideo ? 'Video para 3D listo' : 'Video para la vista 3D'}</Text>
+          <Text style={type.h3}>{hasVideo ? 'Video listo' : 'Video del producto'}</Text>
           <Text style={type.small}>
             {hasVideo
-              ? 'Lo guardamos para crear la vista 3D. Mientras tanto, los clientes ven la foto. En tu panel verás cuándo esté lista para revisarla.'
-              : `Graba unos 20 segundos dando la vuelta alrededor del ${word}. Es opcional, pero los productos en 3D se ven mucho más.`}
+              ? 'El equipo lo revisa antes de mostrarlo. Mientras tanto, los clientes ven la foto. En tu panel verás si quedó aprobado.'
+              : `Graba unos 20 segundos mostrando el ${word}. Es opcional, pero los productos con video llaman mucho más la atención.`}
           </Text>
         </View>
       </View>

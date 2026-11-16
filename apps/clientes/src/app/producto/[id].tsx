@@ -7,6 +7,7 @@ import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, Sty
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
+import { ProductVideo } from '@/components/ProductVideo';
 
 /**
  * Realidad aumentada con el visor de cada sistema (sin construir un visor propio):
@@ -27,12 +28,15 @@ export default function ProductoScreen() {
   const insets = useSafeAreaInsets();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [business, setBusiness] = useState<Business | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     api.getProduct(id)
       .then(async (p) => {
         setProduct(p);
         if (p) setBusiness(await api.getBusiness(p.businessId));
+        // Solo los videos aprobados por el equipo (la base de datos no entrega los demás).
+        if (p?.videoPath && p.videoStatus === 'aprobado') setVideoUrl(await api.videoUrl(p.videoPath));
       })
       .catch(() => setProduct(null));
   }, [api, id]);
@@ -59,10 +63,12 @@ export default function ProductoScreen() {
       <View style={[styles.stage, { paddingTop: insets.top + 12 }]}>
         <View style={styles.stageTop}>
           <BackButton onDark />
-          <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : product.videoPath ? '3D en preparación' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
+          <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : videoUrl ? 'Video del negocio' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
         </View>
         <View style={styles.stageArt}>
-          {product.photoUrl ? (
+          {videoUrl ? (
+            <ProductVideo url={videoUrl} label={`Video de ${product.name}`} />
+          ) : product.photoUrl ? (
             <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={`Foto de ${product.name}`} />
           ) : (
             <PlateArt category={business?.category ?? 'comer'} size={300} />
@@ -80,11 +86,6 @@ export default function ProductoScreen() {
         {!!product.description && <Text style={styles.description}>{product.description}</Text>}
         <Text style={styles.price}>{formatCop(product.priceCop)}</Text>
 
-        {!product.modelUrl && product.videoPath && (
-          <View style={styles.soon}>
-            <Text style={styles.soonText}>El negocio ya grabó este {comer ? 'plato' : 'producto'} para crear su vista 3D. Cuando esté lista podrás verlo por todos lados.</Text>
-          </View>
-        )}
 
         {ar && (
           <Pressable accessibilityRole="button" onPress={() => Linking.openURL(ar)} style={({ pressed }) => [styles.primary, pressed && { opacity: 0.88 }]}>
@@ -93,7 +94,7 @@ export default function ProductoScreen() {
           </Pressable>
         )}
         <Pressable accessibilityRole="button" onPress={rate} style={({ pressed }) => [styles.outline, pressed && { opacity: 0.85 }]}>
-          <Text style={styles.outlineText}>{comer ? 'Ya lo probé: calificar' : 'Ya lo compré: calificar'}</Text>
+          <Text style={styles.outlineText}>{comer ? 'Ya lo probé: calificar el negocio' : 'Ya lo compré: calificar el negocio'}</Text>
         </Pressable>
         {ar && <Text style={styles.note}>Tamaño aproximado. El producto real puede variar.</Text>}
       </View>
@@ -106,15 +107,13 @@ const styles = StyleSheet.create({
   stage: { backgroundColor: colors.stage3d, paddingHorizontal: 20, paddingBottom: 20 },
   stageTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   stageBadge: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, overflow: 'hidden' },
-  stageArt: { height: 300, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  stageArt: { height: 340, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   photo: { width: '100%', height: '100%', borderRadius: 28 },
   body: { padding: 22, gap: 12 },
   businessName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.textMuted, textDecorationLine: 'underline' },
   h1: { fontFamily: fonts.hero, fontSize: 34, lineHeight: 37, letterSpacing: -1, color: colors.text, textAlign: 'left' },
   description: { fontFamily: fonts.regular, fontSize: 17, lineHeight: 26, color: colors.textBody },
   price: { fontFamily: fonts.display, fontSize: 30, color: colors.price, marginVertical: 4 },
-  soon: { backgroundColor: colors.accentSoft, borderRadius: 18, padding: 14 },
-  soonText: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22, color: colors.accentText },
   primary: { minHeight: 58, borderRadius: 18, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 },
   primaryText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
   outline: { minHeight: 58, borderRadius: 18, borderWidth: 1.5, borderColor: colors.text, alignItems: 'center', justifyContent: 'center', marginTop: 4 },

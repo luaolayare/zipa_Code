@@ -11,8 +11,8 @@ import { openNegociosApp } from '@/lib/negocios';
 
 const PASOS: [string, string][] = [
   ['Graba un video de 20 segundos', 'Da una vuelta alrededor de tu plato o producto con el celular. Sin equipos especiales.'],
-  ['Creamos la vista 3D', 'Mientras tanto, tu producto se muestra con su foto.'],
-  ['Aparece en tu vitrina', 'Revisa cómo quedó y los turistas lo ven antes de llegar.'],
+  ['Lo revisamos', 'El equipo aprueba el video. Mientras tanto, tu producto se muestra con su foto.'],
+  ['Aparece en tu vitrina', 'Los turistas ven tu producto en video antes de llegar.'],
 ];
 
 export default function TienesNegocio() {
@@ -30,7 +30,7 @@ export default function TienesNegocio() {
       <View style={[styles.header, { paddingTop: insets.top + 22 }]}>
         <View style={styles.plate} pointerEvents="none"><PlateArt category="artesanias" size={150} /></View>
         <Text style={styles.kicker}>Para restaurantes y emprendedores</Text>
-        <Text style={styles.title} accessibilityRole="header">Pon tu vitrina en 3D con tu celular</Text>
+        <Text style={styles.title} accessibilityRole="header">Muestra tu vitrina en video con tu celular</Text>
       </View>
 
       <View style={styles.body}>

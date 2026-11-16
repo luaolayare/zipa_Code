@@ -23,7 +23,7 @@ export default function Welcome() {
 
   return (
     <View style={[styles.screen, { paddingTop: 28 + insets.top, paddingBottom: 32 + insets.bottom }]}>
-      {/* Decoración: anillo que sale por la derecha y cuadro mostaza con el sello 3D. */}
+      {/* Decoración: anillo que sale por la derecha y cuadro mostaza. */}
       <View style={styles.ring} accessible={false} importantForAccessibility="no-hide-descendants" />
       <View style={styles.cube} accessible={false} importantForAccessibility="no-hide-descendants">
         <Box size={48} color={colors.text} strokeWidth={1.8} />
@@ -41,7 +41,7 @@ export default function Welcome() {
       <View style={styles.copy}>
         <Text style={styles.title}>Lo mejor de {BRAND.city}, hecho aquí.</Text>
         <Text style={styles.subtitle}>
-          Restaurantes y emprendimientos de la zona en un solo lugar. Mira en 3D muchos de los platos y productos antes de pedir o comprar, y cuéntale a otros viajeros cómo te fue.
+          Restaurantes y emprendimientos de la zona en un solo lugar. Mira fotos y videos de los platos y productos antes de pedir o comprar, y cuéntale a otros viajeros cómo te fue.
         </Text>
       </View>
 
