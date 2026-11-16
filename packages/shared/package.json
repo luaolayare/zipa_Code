@@ -5,12 +5,24 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "jest"
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": "*",
     "@supabase/supabase-js": "*",
     "react": "*",
     "react-native": "*"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~58.0.4",
+    "jest": "^30.5.2",
+    "jest-expo": "~58.0.14"
+  },
+  "jest": {
+    "preset": "jest-expo"
   }
 }

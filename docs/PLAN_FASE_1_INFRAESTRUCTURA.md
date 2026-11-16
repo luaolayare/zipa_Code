@@ -4,7 +4,8 @@
 
 **Estado de ejecución:**
 - **Paso 1 (higiene): hecho** — commits `58c144a` y `e89345f`.
-- **Paso 2 (permisos y parches del SDK 58): hecho.**
+- **Paso 2 (permisos y parches del SDK 58): hecho** — commit `c9251f4`.
+- **Paso 3 (ESLint, pruebas, Node): hecho.**
 - Los demás pasos: pendientes de autorización.
 
 **Arquitectura acordada:**
@@ -89,8 +90,8 @@ Permisos finales calculados con `npx expo config --type introspect`:
 | `expo-doctor` | Solo falla por lo anterior; antes pasaba 20/20 y no hay React duplicado. |
 | `npm audit` | Después del Paso 2: **5 moderadas**, ninguna alta ni crítica (antes 6). Con `--omit=dev` quedan 3 (`expo`, `@expo/fingerprint`, `minimatch`): son dependencias del paquete `expo`, pero corresponden a herramientas que corren en el PC al compilar (huella del build, búsqueda de archivos), no a código que viaje dentro de la app. *(Corrige la afirmación anterior "ninguna llega a las apps": sí están en el árbol de producción de npm, aunque no en el paquete JavaScript del celular.)* No usar `audit fix --force`, porque cambiaría versiones del SDK. |
 | Rangos | `@supabase/supabase-js ^2.119`, `lucide-react-native ^1.70` y `react-native-web ^0.21.4` usan `^`. El `package-lock.json` los fija, y `npm ci` en CI respeta el lock. |
-| Runtime | Node 24.18 local; no hay `engines` ni `.nvmrc`. |
-| Calidad | No hay ESLint ni pruebas. `npm run typecheck` pasa. |
+| Runtime | Node 24.18 local. ✅ Paso 3: `.nvmrc` (22) y `engines` (`>=22.13`, mínimo del SDK 58). |
+| Calidad | ✅ Paso 3: ESLint (`eslint-config-expo` ~58.0.4) en las 3 partes y 38 pruebas con `jest-expo` ~58.0.14 / Jest 30 en `@zipa/shared`. |
 | Panel Next.js (futuro) | Comparte `node_modules` del monorepo. Next.js necesita `react` y `react-dom` iguales, y el `override` 19.3.0 los alinea. Hay que verificar que la versión de Next.js elegida acepte React 19.3 y TypeScript 6 antes de instalarla. No debe importar `@zipa/shared/ui` (React Native), solo módulos puros (tipos, `brand`, `legal`, `moderation`). |
 
 ---
@@ -305,7 +306,7 @@ jobs:
 | ESLint | `npx expo lint` en cada app genera `eslint.config.js` con `eslint-config-expo` en una versión compatible con el SDK 58. Script `lint` en la raíz: `npm run lint --workspaces --if-present`. |
 | Pruebas | `jest-expo` (versión del SDK 58) en `packages/shared`. Primeras pruebas: `findOffensiveWords` (incluye plurales y "Che Guevara"), `normalize`, `normalizeIdNumber` e `isValidIdNumber`, `formatRating`, `formatDistance`, `consentsFor` y `authErrorMessage`. |
 | Pruebas de RLS (fase 2) | `supabase/tests/*.sql` con pgTAP: un usuario no ve verificaciones ajenas, `anon` no inserta reseñas, no se puede publicar un negocio ajeno, etc. Repite como prueba automática lo que hoy se verificó a mano. |
-| Node | `.nvmrc` con `22` (LTS) y `"engines": { "node": ">=20.19" }`. Confirmar el mínimo exacto del SDK 58 en su documentación. |
+| Node | ✅ Hecho (Paso 3): `.nvmrc` con `22` y `"engines": { "node": ">=22.13" }` (mínimo oficial del SDK 58 según docs.expo.dev). |
 | Despliegue de migraciones (fase 2) | Workflow aparte, manual (`workflow_dispatch`), con *GitHub Environments*: `staging` automático y `production` con aprobación requerida. Secretos de GitHub: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD_STAGING` y `SUPABASE_DB_PASSWORD_PROD`. |
 
 ---

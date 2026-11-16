@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
+import type { Business, BusinessType, Category, Product, Review } from './types';
 
 /** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
 export const normalizeIdNumber = (raw: string) => raw.replace(/[^0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -18,7 +19,7 @@ export class MissingBackendError extends Error {
   }
 }
 
-export type ReportTargetType ='review' | 'business' | 'user';
+export type ReportTargetType = 'review' | 'business' | 'user';
 export type ReportReason = 'ofensivo' | 'falso' | 'spam' | 'datos_personales' | 'otro';
 
 export const REPORT_REASONS: { id: ReportReason; label: string }[] = [
@@ -35,9 +36,8 @@ export interface ReportInput {
   reason: ReportReason;
   details?: string;
 }
-import type { Business, BusinessType, Category, Product, Review } from './types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// Las filas llegan de Supabase sin tipos generados; se convierten aquí al modelo de la app.
 const toBusiness = (r: any): Business => ({
   id: r.id,
   ownerId: r.owner_id,

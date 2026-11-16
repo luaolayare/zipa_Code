@@ -28,14 +28,20 @@ export default function Explorar() {
   const [cat, setCat] = useState<Category | 'todo'>('todo');
   const [status, setStatus] = useState<'cargando' | 'listo' | 'error'>('cargando');
 
-  const load = useCallback(() => {
-    setStatus('cargando');
+  // El estado solo cambia cuando llega la respuesta (el inicial ya es 'cargando').
+  const fetchBusinesses = useCallback(() => {
     api.listBusinesses()
       .then((list) => { setAll(list); setStatus('listo'); })
       .catch(() => setStatus('error'));
   }, [api]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { fetchBusinesses(); }, [fetchBusinesses]);
+
+  // "Intentar de nuevo": vuelve a mostrar la carga y repite la consulta.
+  const load = () => {
+    setStatus('cargando');
+    fetchBusinesses();
+  };
 
   // Texto claro sobre la cabecera verde; al salir de la pantalla vuelve a oscuro.
   useFocusEffect(

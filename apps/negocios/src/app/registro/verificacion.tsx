@@ -15,7 +15,7 @@ export default function Verificacion() {
   const { draft, update } = useRegistro();
   const [error, setError] = useState('');
 
-  const usePhoto = (result: ImagePicker.ImagePickerResult) => {
+  const applyPickedPhoto = (result: ImagePicker.ImagePickerResult) => {
     if (result.canceled || !result.assets?.[0]) return;
     const a = result.assets[0];
     update({ photoUri: a.uri, photoMimeType: a.mimeType ?? 'image/jpeg' });
@@ -27,7 +27,7 @@ export default function Verificacion() {
     if (!perm.granted) {
       return setError('Para tomar la foto, permite el uso de la cámara en los ajustes del celular, o elige una foto que ya tengas.');
     }
-    usePhoto(await ImagePicker.launchCameraAsync(PICKER_OPTIONS));
+    applyPickedPhoto(await ImagePicker.launchCameraAsync(PICKER_OPTIONS));
   };
 
   const pickPhoto = async () => {
@@ -35,7 +35,7 @@ export default function Verificacion() {
     if (!perm.granted) {
       return setError('Para elegir la foto, permite el acceso a tus fotos en los ajustes del celular, o tómala con la cámara.');
     }
-    usePhoto(await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS));
+    applyPickedPhoto(await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS));
   };
 
   const next = () => {
