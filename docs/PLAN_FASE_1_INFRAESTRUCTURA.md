@@ -5,7 +5,7 @@
 **Estado de ejecución:**
 - **Paso 1 (higiene): hecho** — commits `58c144a` y `e89345f`.
 - **Paso 2 (permisos y parches del SDK 58): hecho** — commit `c9251f4`.
-- **Paso 3 (ESLint, pruebas, Node): hecho.**
+- **Paso 3 (ESLint, pruebas, Node): hecho** — commit `dd3ba83`.
 - Los demás pasos: pendientes de autorización.
 
 **Arquitectura acordada:**
