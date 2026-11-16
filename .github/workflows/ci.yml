@@ -1,0 +1,70 @@
+# CI de Zipa lo tiene: calidad del código y verificación de migraciones.
+# No usa secretos ni toca el proyecto remoto de Supabase: la base de datos se levanta
+# dentro del runner con la CLI y se descarta al terminar.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Typecheck, lint y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # npm ci respeta package-lock.json: no actualiza ninguna versión.
+      - run: npm ci
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+
+      # Informativo: avisa si alguna dependencia sale del rango del SDK de Expo, sin fallar el CI.
+      - name: Compatibilidad con el SDK de Expo
+        run: |
+          (cd apps/clientes && npx expo install --check) || echo "::warning::clientes tiene versiones fuera del SDK de Expo"
+          (cd apps/negocios && npx expo install --check) || echo "::warning::negocios tiene versiones fuera del SDK de Expo"
+
+  migraciones:
+    name: Migraciones de Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 3.1.0
+
+      # Postgres local en Docker, con los esquemas auth y storage de Supabase.
+      - run: supabase db start
+
+      # Aplica las migraciones pendientes (0001…N). Si alguna está rota, falla aquí.
+      - run: supabase migration up --local
+
+      - name: Migraciones aplicadas = archivos en supabase/migrations
+        run: |
+          esperadas=$(ls supabase/migrations/*.sql | wc -l)
+          aplicadas=$(psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -tAc "select count(*) from supabase_migrations.schema_migrations")
+          echo "Archivos: $esperadas · Aplicadas: $aplicadas"
+          test "$esperadas" -eq "$aplicadas"
+
+      - name: Verificar el esquema (tablas, RLS, vistas, triggers, bucket, filtro)
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/ci/verificar_esquema.sql
