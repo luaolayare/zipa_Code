@@ -9,11 +9,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "co.zipa.vitrinalocal",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Zipa lo tiene usa la cámara para mostrarte en realidad aumentada, sobre tu mesa o en tu espacio, el plato o producto que estás viendo. No tomamos ni guardamos fotos.",
-        "NSLocationWhenInUseUsageDescription": "Zipa lo tiene usa tu ubicación mientras usas la app para mostrarte los negocios más cercanos y a qué distancia están. No la guardamos en tu perfil."
-      }
+      "bundleIdentifier": "co.zipa.vitrinalocal"
     },
     "android": {
       "package": "co.zipa.vitrinalocal",
@@ -24,10 +20,13 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": [
+      "blockedPermissions": [
         "android.permission.CAMERA",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {
@@ -36,7 +35,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,6 +1,11 @@
 # Zipa lo tiene — Plan de la Fase 1: estabilización de infraestructura
 
-**Fecha:** 16 de noviembre de 2026 · **Estado:** propuesta, **no ejecutada** · Requiere autorización (sección 8).
+**Fecha:** 16 de noviembre de 2026 · Requiere autorización por paso (sección 8).
+
+**Estado de ejecución:**
+- **Paso 1 (higiene): hecho** — commits `58c144a` y `e89345f`.
+- **Paso 2 (permisos y parches del SDK 58): hecho.**
+- Los demás pasos: pendientes de autorización.
 
 **Arquitectura acordada:**
 - monorepo con dos apps Expo (`apps/clientes`, `apps/negocios`) y `packages/shared`;
@@ -65,10 +70,11 @@ Permisos finales calculados con `npx expo config --type introspect`:
 
 | App | Permiso | ¿Lo usa el código? | Acción propuesta |
 | --- | --- | --- | --- |
-| Clientes | `CAMERA` / `NSCameraUsageDescription` | **No** (la RA no existe) | Quitar hasta implementar la RA. |
-| Clientes | `ACCESS_FINE/COARSE_LOCATION` / `NSLocationWhenInUseUsageDescription` | **No** (sin `expo-location`) | Quitar hasta implementar la distancia. |
-| Ambas | `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` | No (Expo los añade por defecto; el selector de fotos moderno no los requiere) | Bloquear con `android.blockedPermissions`. |
-| Ambas | `SYSTEM_ALERT_WINDOW` | No (añadido por defecto) | Bloquear. |
+| Clientes | `CAMERA` / `NSCameraUsageDescription` | **No** (la RA no existe) | Quitar hasta implementar la RA. ✅ Hecho (Paso 2). |
+| Clientes | `ACCESS_FINE/COARSE_LOCATION` / `NSLocationWhenInUseUsageDescription` | **No** (sin `expo-location`) | Quitar hasta implementar la distancia. ✅ Hecho (Paso 2). |
+| Clientes | `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` | No | Bloquear con `android.blockedPermissions`. ✅ Hecho (Paso 2). |
+| Negocios | `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` | Los añade `expo-image-picker` en su manifiesto. La documentación del SDK 58 dice que abrir la galería no requiere permiso en Android, pero **no garantiza** que bloquearlos sea seguro. | **Se mantienen** hasta probar cámara y galería en un Android real con un build `preview` (Paso 7). Si funcionan sin ellos, se bloquean. |
+| Ambas | `SYSTEM_ALERT_WINDOW` | No (añadido por defecto) | Bloquear. ✅ Hecho (Paso 2). |
 | Ambas | `VIBRATE`, `INTERNET` | `INTERNET` sí; `VIBRATE` es inofensivo | Mantener. |
 | Negocios | `CAMERA` / `NSCameraUsageDescription` | **Sí** (foto del local) | Mantener. |
 | Negocios | `NSPhotoLibraryUsageDescription` | **Sí** (elegir foto) | Mantener. |
@@ -81,7 +87,7 @@ Permisos finales calculados con `npx expo config --type introspect`:
 | SDK | Expo 58 con React Native 0.88.1 y React 19.3.0 (fijado con `overrides` junto con `react-dom`). |
 | Parches disponibles (mismo SDK) | `expo` 58.0.23 → ~58.0.25 · `expo-router` 58.0.30 → ~58.0.31 · `expo-constants` → ~58.0.16 · `expo-linking` → ~58.0.17 · `expo-status-bar` → ~58.0.5 · *(clientes)* `expo-font` → ~58.0.12 · `expo-splash-screen` → ~58.0.14. **Riesgo bajo** (parches del mismo SDK). |
 | `expo-doctor` | Solo falla por lo anterior; antes pasaba 20/20 y no hay React duplicado. |
-| `npm audit` | 6 moderadas en herramientas de desarrollo (`glob`, `minimatch` y `uuid` vía `@expo/cli`, `@expo/fingerprint` y `@expo/ngrok`); ninguna llega a las apps. No usar `audit fix --force`, porque cambiaría versiones del SDK. |
+| `npm audit` | Después del Paso 2: **5 moderadas**, ninguna alta ni crítica (antes 6). Con `--omit=dev` quedan 3 (`expo`, `@expo/fingerprint`, `minimatch`): son dependencias del paquete `expo`, pero corresponden a herramientas que corren en el PC al compilar (huella del build, búsqueda de archivos), no a código que viaje dentro de la app. *(Corrige la afirmación anterior "ninguna llega a las apps": sí están en el árbol de producción de npm, aunque no en el paquete JavaScript del celular.)* No usar `audit fix --force`, porque cambiaría versiones del SDK. |
 | Rangos | `@supabase/supabase-js ^2.119`, `lucide-react-native ^1.70` y `react-native-web ^0.21.4` usan `^`. El `package-lock.json` los fija, y `npm ci` en CI respeta el lock. |
 | Runtime | Node 24.18 local; no hay `engines` ni `.nvmrc`. |
 | Calidad | No hay ESLint ni pruebas. `npm run typecheck` pasa. |

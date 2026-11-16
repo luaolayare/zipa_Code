@@ -22,6 +22,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ]
     },
     "web": {
@@ -36,7 +39,8 @@
           "photosPermission": "Zipa lo tiene Negocios accede a tus fotos solo cuando eliges una foto de tu local o un video de un producto que ya tienes guardado.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true
