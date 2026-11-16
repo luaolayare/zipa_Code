@@ -12,7 +12,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
   const { id } = await params;
   const { supabase } = await requireAdmin();
 
-  const { data: b } = await supabase.from('businesses').select('*, owner:profiles(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
+  const { data: b } = await supabase.from('businesses').select('*, owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
   if (!b) notFound();
 
   const [{ data: v }, { data: products }, { data: acciones }] = await Promise.all([
@@ -65,7 +65,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
                     {p.photo_url ? <img src={p.photo_url} alt={`Foto de ${p.name}`} /> : <div className="noimg">Sin foto</div>}
                     <div className="info">
                       <strong>{p.name}</strong>
-                      <span className="small muted">{pesos(p.price_cop)}</span>
+                      <span className="small muted">{pesos(p.price_cop)}{p.section ? ` · ${p.section}` : ''}{p.available === false ? ' · No disponible hoy' : ''}</span>
                       {p.description && <span className="small">{p.description}</span>}
                       {p.video_path ? <VideoReview productId={p.id} url={videos[p.id] ?? null} status={p.video_status} note={p.video_note} /> : <span className="small muted">Sin video</span>}
                     </div>

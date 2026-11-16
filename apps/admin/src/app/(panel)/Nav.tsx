@@ -17,11 +17,17 @@ export function Nav({ negocios, videos, resenas, reportes }: { negocios: number;
   return (
     <nav className="nav" aria-label="Secciones">
       {item('/', 'Resumen')}
+      {item('/analitica', 'Analítica')}
+      <p className="nav-group">Negocios</p>
       {item('/negocios', 'Negocios', negocios)}
+      {item('/categorias', 'Categorías')}
+      <p className="nav-group">Moderación</p>
       {item('/videos', 'Videos', videos)}
       {item('/resenas', 'Reseñas', resenas)}
       {item('/reportes', 'Reportes', reportes)}
       {item('/bitacora', 'Bitácora')}
+      <p className="nav-group">Plataforma</p>
+      {item('/sistema', 'Sistema')}
     </nav>
   );
 }

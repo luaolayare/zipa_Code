@@ -32,6 +32,13 @@ export function useSearch(query: string) {
     };
   }, [api, text, key]);
 
+  // Analítica: una búsqueda cuenta cuando su resultado se queda en pantalla 1,5 s.
+  useEffect(() => {
+    if (answer?.key !== key || answer.error) return;
+    const t = setTimeout(() => { api.track('search', { search: text, results: answer.results.length }); }, 1500);
+    return () => clearTimeout(t);
+  }, [api, answer, key, text]);
+
   const status: SearchStatus = !text
     ? 'vacio'
     : text.length < 2

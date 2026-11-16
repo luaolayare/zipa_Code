@@ -30,6 +30,9 @@ export default function ProductoScreen() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
+  // Analítica: producto o plato consultado.
+  useEffect(() => { api.track('product_view', { productId: id }); }, [api, id]);
+
   useEffect(() => {
     api.getProduct(id)
       .then(async (p) => {

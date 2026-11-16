@@ -1,6 +1,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import type { KeyValueStore } from './analytics';
 import { createApi, type Api } from './api';
 import type { ConsentInput } from './legal';
 import { MissingConfigView } from './ui/MissingConfigView';
@@ -58,18 +59,18 @@ const toUser = (s: Session | null): AppUser | null =>
  * Sin Supabase: en desarrollo simula el inicio de sesión con datos de ejemplo;
  * en producción muestra un error en vez de la app.
  */
-export function AuthProvider({ client, children }: { client: SupabaseClient | null; children: ReactNode }) {
+export function AuthProvider({ client, children, storage = null, app = 'clientes' }: { client: SupabaseClient | null; children: ReactNode; storage?: KeyValueStore | null; app?: 'clientes' | 'negocios' }) {
   if (!client && !__DEV__) {
     console.error('Zipa lo tiene: compilación de producción sin variables de Supabase (ver .env.example).');
     return <MissingConfigView />;
   }
-  return <AuthProviderInner client={client}>{children}</AuthProviderInner>;
+  return <AuthProviderInner client={client} storage={storage} app={app}>{children}</AuthProviderInner>;
 }
 
-function AuthProviderInner({ client, children }: { client: SupabaseClient | null; children: ReactNode }) {
+function AuthProviderInner({ client, children, storage, app }: { client: SupabaseClient | null; children: ReactNode; storage: KeyValueStore | null; app: 'clientes' | 'negocios' }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(client !== null);
-  const api = useMemo(() => createApi(client), [client]);
+  const api = useMemo(() => createApi(client, { storage, app }), [client, storage, app]);
 
   useEffect(() => {
     if (!client) return;

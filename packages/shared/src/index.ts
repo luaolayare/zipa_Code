@@ -5,6 +5,7 @@ export * from './types';
 export * from './categories';
 export * from './supabase';
 export * from './api';
+export * from './analytics';
 export * from './auth';
 export * from './demo';
 export * from './legal';

@@ -664,6 +664,78 @@ do $$ begin
 end $$;
 reset role;
 
+-- ANALÍTICA (migración 0015) -------------------------------------------------------------------------
+-- El público registra eventos, pero no lee la tabla ni los agregados.
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$
+declare i int;
+begin
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'app_open')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'business_view', '00000000-0000-0000-0000-0000000000e1')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'whatsapp_click', '00000000-0000-0000-0000-0000000000e1')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'category_view', null, null, 'pizzerias')$q$);
+  -- Un negocio sin publicar no se registra (queda en null).
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'business_view', '00000000-0000-0000-0000-0000000000e3')$q$);
+  perform ci_pruebas.debe_fallar($q$select public.registrar_evento('11111111-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000001', 'clientes', 'robar_datos')$q$, 'Evento no válido%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_evento(null, '22222222-0000-0000-0000-000000000001', 'clientes', 'app_open')$q$, 'Falta el identificador%');
+  perform ci_pruebas.debe_fallar('select * from public.analytics_events', 'permission denied%');
+  perform ci_pruebas.debe_fallar('select public.admin_analitica()', 'permission denied%');
+  perform ci_pruebas.debe_fallar('select public.admin_sistema()', 'permission denied%');
+  -- Búsquedas: la de 3 dispositivos distintos sale en el top; la de 1 solo, no.
+  for i in 1..3 loop
+    perform public.registrar_evento(('33333333-0000-0000-0000-00000000000' || i)::uuid, '22222222-0000-0000-0000-000000000002', 'clientes', 'search', null, null, null, 'Pizzería ', 4);
+  end loop;
+  perform public.registrar_evento('33333333-0000-0000-0000-000000000009', '22222222-0000-0000-0000-000000000002', 'clientes', 'search', null, null, null, 'mi vecino juan perez', 0);
+  -- Freno: el evento 61 del mismo dispositivo en un minuto se ignora.
+  for i in 1..70 loop
+    perform public.registrar_evento('44444444-0000-0000-0000-000000000001', '22222222-0000-0000-0000-000000000003', 'clientes', 'app_open');
+  end loop;
+end $$;
+reset role;
+
+do $$ begin
+  if (select count(*) from public.analytics_events where device_id = '44444444-0000-0000-0000-000000000001') <> 60 then raise exception 'el freno de 60 eventos por minuto no funciona'; end if;
+  if exists (select 1 from public.analytics_events where business_id = '00000000-0000-0000-0000-0000000000e3') then raise exception 'se registró la visita a un negocio sin publicar'; end if;
+  if (select search_term from public.analytics_events where name = 'search' and device_id = '33333333-0000-0000-0000-000000000001') <> 'pizzeria' then raise exception 'la búsqueda no se guardó normalizada'; end if;
+end $$;
+
+-- Turista con sesión: tampoco ve analítica.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar('select public.admin_analitica()', 'No autorizado%');
+  perform ci_pruebas.debe_fallar('select public.admin_sistema()', 'No autorizado%');
+  perform ci_pruebas.debe_fallar('select * from public.analytics_events', 'permission denied%');
+end $$;
+reset role;
+
+-- Revisora con MFA: ve los agregados (sin búsquedas individuales); no limpia eventos.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$
+declare a jsonb;
+begin
+  a := public.admin_analitica(30);
+  if (a ->> 'activos_hoy')::int < 6 then raise exception 'activos_hoy no cuenta los dispositivos: %', a ->> 'activos_hoy'; end if;
+  if (a -> 'totales' ->> 'whatsapp_click')::int <> 1 then raise exception 'no cuenta los clics en WhatsApp'; end if;
+  if (a -> 'top_negocios' -> 0 ->> 'whatsapp')::int <> 1 then raise exception 'top_negocios no trae los clics'; end if;
+  if (a -> 'top_categorias' -> 0 ->> 'id') <> 'pizzerias' then raise exception 'top_categorias no funciona'; end if;
+  if jsonb_array_length(a -> 'top_busquedas') <> 1 or (a -> 'top_busquedas' -> 0 ->> 'termino') <> 'pizzeria' then raise exception 'top_busquedas muestra búsquedas individuales o no muestra la común: %', a -> 'top_busquedas'; end if;
+  if (a ->> 'busquedas_sin_resultados')::int <> 1 then raise exception 'no cuenta las búsquedas sin resultados'; end if;
+  if jsonb_array_length(a -> 'serie') <> 30 then raise exception 'la serie no tiene 30 días'; end if;
+  if (public.admin_sistema() ->> 'tamano_base_bytes')::bigint <= 0 then raise exception 'admin_sistema no mide la base'; end if;
+  perform ci_pruebas.debe_fallar('select public.admin_limpiar_eventos()', 'No autorizado%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar('select public.admin_limpiar_eventos()');
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

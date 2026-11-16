@@ -3,7 +3,7 @@ import { WhatsAppIcon, groupMenu, isRestaurant, businessCover, businessTypeLabel
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Ban, BadgeCheck, Camera, Flag, MapPin } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -46,6 +46,9 @@ export default function NegocioDetalle() {
       return () => setStatusBarStyle('dark');
     }, [api, id, v, user, loadReviews]),
   );
+
+  // Analítica: una vista por negocio abierto (no cada vez que se vuelve a la pantalla).
+  useEffect(() => { api.track('business_view', { businessId: id }); }, [api, id]);
 
   if (error && business === undefined) {
     return (
@@ -141,8 +144,8 @@ export default function NegocioDetalle() {
         </View>
 
         <View style={styles.contact}>
-          <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => Linking.openURL(mapsUrl(business.address))} />
-          {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => Linking.openURL(wa)} />}
+          <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => { api.track('maps_click', { businessId: business.id }); Linking.openURL(mapsUrl(business.address)); }} />
+          {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => { api.track('whatsapp_click', { businessId: business.id }); Linking.openURL(wa); }} />}
         </View>
 
         <Text style={styles.h2} accessibilityRole="header">{isRestaurant(business) ? 'Menú' : 'Productos'}</Text>

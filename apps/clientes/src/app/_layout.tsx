@@ -1,4 +1,4 @@
-import { APP_FONTS, AuthProvider, colors } from '@zipa/shared';
+import { APP_FONTS, AuthProvider, colors, deviceStore, useAuth } from '@zipa/shared';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -20,9 +20,17 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <AuthProvider client={supabase}>
+    <AuthProvider client={supabase} storage={deviceStore} app="clientes">
+      <AppOpen />
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
     </AuthProvider>
   );
+}
+
+/** Cuenta una apertura de la app (analítica anónima, migración 0015). */
+function AppOpen() {
+  const { api } = useAuth();
+  useEffect(() => { api.track('app_open'); }, [api]);
+  return null;
 }

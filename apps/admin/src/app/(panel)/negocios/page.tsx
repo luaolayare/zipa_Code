@@ -11,7 +11,7 @@ export default async function Negocios({ searchParams }: { searchParams: Promise
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from('businesses')
-    .select('id, name, category, type, address, status, created_at, owner:profiles(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)')
+    .select('id, name, category, type, address, status, created_at, owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)')
     .eq('status', estado)
     .order('created_at', { ascending: estado !== 'en_revision' ? false : true }) // en revisión: el más antiguo primero
     .limit(200);

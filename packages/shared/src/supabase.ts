@@ -5,6 +5,9 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
  * Crea el cliente de Supabase. Si faltan las variables de entorno devuelve null:
  * en desarrollo las apps usan datos de ejemplo (demo.ts); en producción muestran un error.
  */
+/** Almacenamiento del celular (sesión y el identificador anónimo de la analítica). */
+export const deviceStore = AsyncStorage;
+
 export function createSupabase(url?: string, anonKey?: string): SupabaseClient | null {
   if (!url || !anonKey) return null;
   return createClient(url, anonKey, {

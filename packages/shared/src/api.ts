@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { createTracker, type KeyValueStore } from './analytics';
 import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categories';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
@@ -187,7 +188,7 @@ export interface NewBusiness {
  * Acceso a datos. Con un cliente de Supabase usa la base real;
  * con null usa datos de ejemplo en memoria.
  */
-export function createApi(db: SupabaseClient | null) {
+export function createApi(db: SupabaseClient | null, options: { storage?: KeyValueStore | null; app?: 'clientes' | 'negocios' } = {}) {
   // Los datos de ejemplo solo existen en desarrollo. Una compilación de producción sin Supabase
   // es un error de configuración: nunca debe mostrar negocios, precios ni reseñas inventados.
   if (!db && !__DEV__) throw new MissingBackendError();
@@ -198,8 +199,12 @@ export function createApi(db: SupabaseClient | null) {
   const demoReports: (ReportInput & { reporterId: string })[] = [];
   const demoBlocks = new Set<string>(); // `${bloqueador}:${bloqueado}`
 
+  // Analítica anónima de uso (migración 0015). En modo demo no envía nada.
+  const track = createTracker(db, options.storage ?? null, options.app ?? 'clientes');
+
   return {
-    isDemo: db === null,
+    track,
+    isDemo: !db,
 
     /**
      * Elimina la cuenta y todo lo asociado (perfil, reseñas, negocio, productos, aceptaciones,

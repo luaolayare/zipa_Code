@@ -27,6 +27,9 @@ export default function Categoria() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState(false);
 
+  // Analítica: categoría principal o subcategoría consultada.
+  useEffect(() => { api.track('category_view', { category: subcategory ?? main.id }); }, [api, main.id, subcategory]);
+
   useEffect(() => {
     api.listCategories().then((all) => setSubs(subcategoriesOf(all, main.id as MainCategory))).catch(() => setSubs([]));
   }, [api, main.id]);
