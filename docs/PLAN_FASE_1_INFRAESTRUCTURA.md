@@ -20,6 +20,14 @@
   - **Verificado:** permisos, políticas y funciones con consultas de solo lectura. La API como visitante rechaza todo lo administrativo, y la función rechaza llamadas sin sesión o con la clave anon. Datos sin cambios.
   - **`REVISION_TOKEN` ya no se usa:** la autorización A3 y la tarea P0 de configurarlo quedan sin efecto.
   - **Pendiente:** la primera cuenta administradora (alta por SQL, cuando el responsable la indique). Además, el MFA solo se puede activar desde el futuro panel.
+- **Paso 7 (EAS): hecho, falta probarlo en un Android real.**
+  - **Commit** `1183096`, con CI en verde.
+  - **Clientes vinculada** a `@luisdev1796/vitrina-local` (projectId `2daab65c-…`).
+  - **`eas.json` de las dos apps:** perfiles `development`, `preview` y `production`, cada uno con su `environment`.
+  - **Variables `EXPO_PUBLIC_SUPABASE_*` en EAS:** `preview` y `development` en los dos proyectos, apuntando al proyecto actual (staging). `production` queda vacío a propósito hasta el Paso 9.
+  - **Build `preview` de Android de clientes:** `45449c18-…`, FINISHED, versionCode 1, keystore creado por EAS.
+  - **Verificación del APK:** contiene la URL de staging. Sus permisos son solo `INTERNET` y `VIBRATE`; `DUMP` es del receptor de `androidx.profileinstaller` y no es un permiso que pida la app. No hay cámara ni ubicación.
+  - **Sin hacer:** `app.config.ts` con variante `.staging` (A7) y el build de negocios para probar cámara y galería sin permisos de almacenamiento (A8).
 - Los demás pasos: pendientes de autorización.
 
 > **Riesgo abierto (decisión del responsable, 16 nov 2026):** la contraseña de PostgreSQL que se compartió por chat **todavía no se rota**. Debe rotarse antes de crear el proyecto de producción (Paso 9) y antes de dar acceso a terceros.
