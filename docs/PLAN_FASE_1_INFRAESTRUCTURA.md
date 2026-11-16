@@ -6,7 +6,10 @@
 - **Paso 1 (higiene): hecho** — commits `58c144a` y `e89345f`.
 - **Paso 2 (permisos y parches del SDK 58): hecho** — commit `c9251f4`.
 - **Paso 3 (ESLint, pruebas, Node): hecho** — commit `dd3ba83`.
+- **Paso 4 (CI con GitHub Actions): hecho** — commits `a0e5a29`, `df4e17a`, `883a933` y `311ad64`, llevados a `main` por *fast-forward*. Tres ejecuciones en verde en GitHub.
 - Los demás pasos: pendientes de autorización.
+
+> **Riesgo abierto (decisión del responsable, 16 nov 2026):** la contraseña de PostgreSQL que se compartió por chat **todavía no se rota**. Debe rotarse antes de crear el proyecto de producción (Paso 9) y antes de dar acceso a terceros.
 
 **Arquitectura acordada:**
 - monorepo con dos apps Expo (`apps/clientes`, `apps/negocios`) y `packages/shared`;
@@ -261,7 +264,11 @@ Alternativa descartada por ahora: un *Custom Access Token Hook* que agregue el r
 
 ---
 
-## 5. CI con GitHub Actions (propuesta)
+## 5. CI con GitHub Actions (implementado en el Paso 4)
+
+**Estado:** ✅ en `.github/workflows/ci.yml`. Respecto al borrador de abajo: corre también en ramas `ci/**` (para probar cambios del propio CI); usa `actions/checkout@v7`, `actions/setup-node@v7` y `supabase/setup-cli@v3` (las versiones anteriores usaban Node 20, obsoleto); aplica las migraciones con `supabase migration up --local`, comprueba que el número de migraciones aplicadas coincida con los archivos y corre `supabase/ci/verificar_esquema.sql` en lugar de pgTAP (pgTAP sigue pendiente). Permisos del workflow: solo lectura. Sin secretos.
+
+*Borrador original, como referencia:*
 
 **Reglas:** usar `npm ci` (respeta el lock, no actualiza nada), sin `audit fix` ni `--fix` automáticos, y Node fijado con `.nvmrc`.
 
@@ -382,7 +389,7 @@ npx eas-cli build --profile preview --platform android
 | # | Decisión o acción | Recomendación |
 | --- | --- | --- |
 | A1 | Commit de los 6 cambios locales y de la migración 0006 | Sí (alinea Git con la base) |
-| A2 | Rotar la contraseña de la base (**manual, en el panel**) | Sí, de inmediato |
+| A2 | Rotar la contraseña de la base (**manual, en el panel**) | Sí, de inmediato. **Pospuesto por decisión del responsable** (16 nov 2026); obligatorio antes del Paso 9. |
 | A3 | Configurar `REVISION_TOKEN` (**lo ejecutas tú**) o esperar a la 0008 | Esperar a la 0008 si el panel admin va pronto |
 | A4 | Convertir el proyecto actual en **staging** y crear uno nuevo de **producción** (¿cuándo? ¿plan Pro?) | Staging ya; producción cerca del lanzamiento |
 | A5 | Vincular la app de clientes a EAS (`eas init`, crea un proyecto en expo.dev) | Sí |
@@ -428,7 +435,7 @@ flowchart TD
 | Instalar Next.js en el monorepo arrastra otras versiones de React o TypeScript | Comprobar la compatibilidad de Next.js con React 19.3 y TS 6, y correr `npm ls react react-dom` después de instalar. |
 | CI rompe por diferencias de Node | `.nvmrc` y `engines`. |
 | El plan gratuito de Supabase pausa el proyecto de producción | Plan Pro en producción. |
-| La contraseña expuesta sigue vigente | A2 antes de cualquier otra cosa. |
+| La contraseña expuesta sigue vigente (A2 pospuesto) | Rotarla antes del Paso 9 y antes de dar acceso a terceros; no reutilizarla en producción. |
 
 ---
 
