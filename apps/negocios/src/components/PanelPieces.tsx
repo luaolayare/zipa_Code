@@ -1,11 +1,10 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
-import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, product3DState, useAuth, type Category, type Product, type Review } from '@zipa/shared';
+import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, product3DState, useAuth, type Category, type Product, type Review, PlateArt } from '@zipa/shared';
 import { ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type } from './kit';
-import { PlateArt } from './PlateArt';
 
 export function Stat({ value, label }: { value: string; label: string }) {
   return (

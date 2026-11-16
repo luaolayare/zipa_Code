@@ -19,3 +19,4 @@ export { Button } from './ui/Button';
 export { TextField } from './ui/TextField';
 export { Screen } from './ui/Screen';
 export { Card } from './ui/Card';
+export { PlateArt } from './ui/PlateArt';

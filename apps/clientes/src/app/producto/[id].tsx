@@ -1,26 +1,123 @@
-import { Button, Card, Screen, colors } from '@zipa/shared';
+// Producto: foto grande (o vista 3D cuando exista), datos y calificar.
+import { PlateArt, colors, fonts, formatCop, useAuth, type Business, type Product } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { ScanLine } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Visor 3D del producto.
-// Fase 1 (prueba técnica): decidir el formato (.glb para Android, .usdz para iOS) y el visor
-// (por ejemplo react-three-fiber o el visor nativo de realidad aumentada de cada sistema).
-export default function Producto() {
-  const { name } = useLocalSearchParams<{ id: string; name?: string }>();
+import { BackButton } from '@/components/BackButton';
+
+/**
+ * Realidad aumentada con el visor de cada sistema (sin construir un visor propio):
+ * Android abre Scene Viewer con el .glb; iPhone abre Quick Look con el .usdz.
+ * Devuelve null si el modelo no sirve para este celular.
+ */
+function arUrl(modelUrl: string): string | null {
+  if (Platform.OS === 'android' && /\.glb(\?|$)/i.test(modelUrl)) {
+    return `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(modelUrl)}&mode=ar_preferred`;
+  }
+  if (Platform.OS === 'ios' && /\.usdz(\?|$)/i.test(modelUrl)) return modelUrl;
+  return null;
+}
+
+export default function ProductoScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { api, user } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [product, setProduct] = useState<Product | null | undefined>(undefined);
+  const [business, setBusiness] = useState<Business | null>(null);
+
+  useEffect(() => {
+    api.getProduct(id)
+      .then(async (p) => {
+        setProduct(p);
+        if (p) setBusiness(await api.getBusiness(p.businessId));
+      })
+      .catch(() => setProduct(null));
+  }, [api, id]);
+
+  if (product === undefined) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  if (!product) {
+    return (
+      <View style={[styles.center, { paddingTop: insets.top }]}>
+        <Text style={styles.h1}>Este producto no está disponible</Text>
+        <BackButton />
+      </View>
+    );
+  }
+
+  const comer = business?.category === 'comer';
+  const ar = product.modelUrl ? arUrl(product.modelUrl) : null;
+  const rate = () => {
+    if (!user) return router.push({ pathname: '/login', params: { desde: 'calificar', negocio: product.businessId } });
+    router.push({ pathname: '/calificar/[id]', params: { id: product.businessId } });
+  };
+
   return (
-    <Screen>
-      <Button variant="link" title="‹ Volver" onPress={() => router.back()} style={{ alignSelf: 'flex-start' }} />
-      <Text style={styles.title}>{name ?? 'Producto'}</Text>
-      <Card style={styles.viewer}>
-        <Text style={styles.meta}>Aquí va el visor 3D. Se construye en la fase 1.</Text>
-      </Card>
-      <Button title="Ver en mi espacio (realidad aumentada)" onPress={() => {}} disabled />
-    </Screen>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}>
+      <View style={[styles.stage, { paddingTop: insets.top + 12 }]}>
+        <View style={styles.stageTop}>
+          <BackButton onDark />
+          <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : product.videoPath ? '3D en preparación' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
+        </View>
+        <View style={styles.stageArt}>
+          {product.photoUrl ? (
+            <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={`Foto de ${product.name}`} />
+          ) : (
+            <PlateArt category={business?.category ?? 'comer'} size={300} />
+          )}
+        </View>
+      </View>
+
+      <View style={styles.body}>
+        {!!business && (
+          <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/negocio/[id]', params: { id: business.id } })}>
+            <Text style={styles.businessName}>{business.name}</Text>
+          </Pressable>
+        )}
+        <Text style={styles.h1} accessibilityRole="header">{product.name}</Text>
+        {!!product.description && <Text style={styles.description}>{product.description}</Text>}
+        <Text style={styles.price}>{formatCop(product.priceCop)}</Text>
+
+        {!product.modelUrl && product.videoPath && (
+          <View style={styles.soon}>
+            <Text style={styles.soonText}>El negocio ya grabó este {comer ? 'plato' : 'producto'} para crear su vista 3D. Cuando esté lista podrás verlo por todos lados.</Text>
+          </View>
+        )}
+
+        {ar && (
+          <Pressable accessibilityRole="button" onPress={() => Linking.openURL(ar)} style={({ pressed }) => [styles.primary, pressed && { opacity: 0.88 }]}>
+            <ScanLine size={22} color="#FFFFFF" />
+            <Text style={styles.primaryText}>{comer ? 'Ver en mi mesa' : 'Ver en mi espacio'}</Text>
+          </Pressable>
+        )}
+        <Pressable accessibilityRole="button" onPress={rate} style={({ pressed }) => [styles.outline, pressed && { opacity: 0.85 }]}>
+          <Text style={styles.outlineText}>{comer ? 'Ya lo probé: calificar' : 'Ya lo compré: calificar'}</Text>
+        </Pressable>
+        {ar && <Text style={styles.note}>Tamaño aproximado. El producto real puede variar.</Text>}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  viewer: { height: 320, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E9EFEE' },
-  meta: { fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, backgroundColor: colors.background },
+  stage: { backgroundColor: colors.stage3d, paddingHorizontal: 20, paddingBottom: 20 },
+  stageTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  stageBadge: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, overflow: 'hidden' },
+  stageArt: { height: 300, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  photo: { width: '100%', height: '100%', borderRadius: 28 },
+  body: { padding: 22, gap: 12 },
+  businessName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.textMuted, textDecorationLine: 'underline' },
+  h1: { fontFamily: fonts.hero, fontSize: 34, lineHeight: 37, letterSpacing: -1, color: colors.text, textAlign: 'left' },
+  description: { fontFamily: fonts.regular, fontSize: 17, lineHeight: 26, color: colors.textBody },
+  price: { fontFamily: fonts.display, fontSize: 30, color: colors.price, marginVertical: 4 },
+  soon: { backgroundColor: colors.accentSoft, borderRadius: 18, padding: 14 },
+  soonText: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22, color: colors.accentText },
+  primary: { minHeight: 58, borderRadius: 18, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 },
+  primaryText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
+  outline: { minHeight: 58, borderRadius: 18, borderWidth: 1.5, borderColor: colors.text, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  outlineText: { fontFamily: fonts.bold, fontSize: 17, color: colors.text },
+  note: { fontFamily: fonts.regular, fontSize: 13.5, color: colors.textMuted, textAlign: 'center' },
 });

@@ -15,7 +15,8 @@
     "@react-native-async-storage/async-storage": "*",
     "@supabase/supabase-js": "*",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-svg": "*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

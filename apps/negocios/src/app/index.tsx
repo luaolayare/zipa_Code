@@ -1,5 +1,5 @@
 // Bienvenida de la app de negocios.
-import { BRAND, Button, colors, fonts, useAuth } from '@zipa/shared';
+import { BRAND, Button, colors, fonts, useAuth, PlateArt } from '@zipa/shared';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Check } from 'lucide-react-native';
@@ -7,7 +7,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
-import { PlateArt } from '@/components/PlateArt';
 
 const BENEFICIOS: [string, string][] = [
   ['Aparece ante turistas', ` que buscan dónde comer y qué comprar en ${BRAND.city}.`],

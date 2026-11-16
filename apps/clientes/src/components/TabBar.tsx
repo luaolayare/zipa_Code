@@ -3,14 +3,13 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Compass, Store, User, type LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { openNegociosApp } from '@/lib/negocios';
-
 const TABS: Record<string, { label: string; Icon: LucideIcon }> = {
   explorar: { label: 'Explorar', Icon: Compass },
+  negocio: { label: '¿Tienes negocio?', Icon: Store },
   perfil: { label: 'Perfil', Icon: User },
 };
 
-/** Barra inferior: Explorar, ¿Tienes negocio? (abre la app de negocios) y Perfil. */
+/** Barra inferior: Explorar, ¿Tienes negocio? y Perfil. */
 export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
   const tab = (key: string, label: string, Icon: LucideIcon, active: boolean, onPress: () => void) => {
     const color = active ? colors.primary : colors.textMuted;
@@ -22,7 +21,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
     );
   };
 
-  const [explorar, perfil] = ['explorar', 'perfil'].map((name) => {
+  const tabs = ['explorar', 'negocio', 'perfil'].map((name) => {
     const index = state.routes.findIndex((r) => r.name === name);
     const route = state.routes[index];
     const { label, Icon } = TABS[name];
@@ -31,9 +30,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
 
   return (
     <View accessibilityRole="tablist" style={[styles.bar, { height: 72 + insets.bottom, paddingBottom: insets.bottom }]}>
-      {explorar}
-      {tab('negocio', '¿Tienes negocio?', Store, false, openNegociosApp)}
-      {perfil}
+      {tabs}
     </View>
   );
 }

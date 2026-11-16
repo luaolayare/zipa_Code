@@ -1,4 +1,4 @@
-import { Button, Card, colors, fonts, formatCop, useAuth } from '@zipa/shared';
+import { Button, Card, colors, fonts, formatCop, useAuth, PlateArt } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -6,7 +6,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type } from '@/components/kit';
 import { Page } from '@/components/Page';
-import { PlateArt } from '@/components/PlateArt';
+
 import { ProductEditor, emptyProductForm, priceFrom, productFormError, type ProductForm } from '@/components/ProductEditor';
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';

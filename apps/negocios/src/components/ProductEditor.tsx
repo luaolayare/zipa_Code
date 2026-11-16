@@ -1,13 +1,12 @@
 // Formulario de un producto: nombre, precio, descripción, foto y video para el 3D.
 // Lo usan el Paso 4 del registro y el panel (agregar o editar).
-import { TextField, colors, fonts, type Category, type LocalFile } from '@zipa/shared';
+import { TextField, colors, fonts, type Category, type LocalFile, PlateArt } from '@zipa/shared';
 import { Camera, Check, ImageIcon, Video } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type } from './kit';
 import { pickPhoto, pickVideo, recordVideo, takePhoto, type MediaResult } from './media';
-import { PlateArt } from './PlateArt';
 
 export interface ProductForm {
   name: string;

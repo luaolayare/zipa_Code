@@ -1,30 +1,70 @@
-import { Button, Card, Screen, businessTypeLabel, categoryLabel, colors, confirmAsync, formatCop, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+// Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
+import { businessCover, businessSpecialty, businessTypeLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Ban, Flag } from 'lucide-react-native';
+import { setStatusBarStyle } from 'expo-status-bar';
+import { Ban, Flag, MapPin, MessageCircle } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { BackButton } from '@/components/BackButton';
+import { ProductCard } from '@/components/ProductCard';
+import { mapsUrl, takeReviewed, whatsappUrl } from '@/lib/contacto';
+
+const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
 export default function NegocioDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { api, user } = useAuth();
-  const [business, setBusiness] = useState<Business | null>(null);
+  const insets = useSafeAreaInsets();
+  const [business, setBusiness] = useState<Business | null | undefined>(undefined); // undefined = cargando
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [thanks, setThanks] = useState(false);
+  const [error, setError] = useState(false);
 
   const loadReviews = useCallback(() => api.listReviews(id, user?.id).then(setReviews), [api, id, user?.id]);
 
   useFocusEffect(
     useCallback(() => {
-      api.getBusiness(id).then(setBusiness);
-      api.listProducts(id).then(setProducts);
-      loadReviews();
+      setStatusBarStyle('light');
+      if (takeReviewed(id)) setThanks(true);
+      Promise.all([api.getBusiness(id), api.listProducts(id), loadReviews()])
+        .then(([b, p]) => { setBusiness(b); setProducts(p); setError(false); })
+        .catch(() => setError(true));
+      return () => setStatusBarStyle('dark');
     }, [api, id, loadReviews]),
   );
 
-  if (!business) return <Screen><Text>Cargando…</Text></Screen>;
+  if (error && business === undefined) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.emptyTitle}>No pudimos cargar este negocio</Text>
+        <Text style={styles.muted}>Revisa tu conexión a internet.</Text>
+        <BackButton />
+      </SafeAreaView>
+    );
+  }
+  if (business === undefined) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
+  if (business === null) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={styles.emptyTitle}>Este negocio no está disponible</Text>
+        <Text style={styles.muted}>Puede que esté en revisión o que ya no esté en la app.</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.replace('/explorar')} style={styles.primaryButton}>
+          <Text style={styles.primaryText}>Explorar otros negocios</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
+  const { cover } = businessCover(business);
+  const comer = business.category === 'comer';
+  const meta = [businessSpecialty(business), formatPriceLevel(business.priceLevel)].filter(Boolean).join(' · ');
+  const wa = whatsappUrl(business.whatsapp);
 
   const rate = () => {
-    if (!user) return router.push('/login'); // calificar exige iniciar sesión
+    if (!user) return router.push({ pathname: '/login', params: { desde: 'calificar', negocio: id } });
     router.push({ pathname: '/calificar/[id]', params: { id } });
   };
 
@@ -36,89 +76,158 @@ export default function NegocioDetalle() {
 
   const block = async (r: Review) => {
     if (!user) return router.push('/login');
-    const ok = await confirmAsync(
-      `¿Bloquear a ${r.authorName}?`,
-      'Dejarás de ver sus reseñas en todos los negocios. Puedes desbloquearlo después.',
-      'Bloquear',
-      true,
-    );
+    const ok = await confirmAsync(`¿Bloquear a ${r.authorName}?`, 'Dejarás de ver sus reseñas en todos los negocios. Puedes desbloquearlo después.', 'Bloquear', true);
     if (!ok) return;
     await api.blockUser(user.id, r.userId);
     await loadReviews();
   };
 
   return (
-    <Screen>
-      <Button variant="link" title="‹ Volver" onPress={() => router.back()} style={{ alignSelf: 'flex-start' }} />
-      <Text style={styles.tag}>{businessTypeLabel(business.type)}</Text>
-      <Text style={styles.title}>{business.name}</Text>
-      <Text style={styles.meta}>{categoryLabel(business.category)} · {business.address}</Text>
-      {!!business.hours && <Text style={styles.open}>{business.hours}</Text>}
-
-      <Card style={styles.ratingCard}>
-        <Text style={styles.big}>{business.rating?.toFixed(1).replace('.', ',') ?? '–'}</Text>
-        <Text style={[styles.meta, { flex: 1 }]}>{business.reviewCount} reseñas</Text>
-        <Button title="Calificar" onPress={rate} style={{ minHeight: 44 }} />
-      </Card>
-
-      <Text style={styles.h2}>{business.category === 'comer' ? 'Menú en 3D' : 'Vitrina en 3D'}</Text>
-      {products.map((p) => (
-        <Card key={p.id}>
-          <Text style={styles.name}>{p.name}</Text>
-          <Text style={styles.price}>{formatCop(p.priceCop)}</Text>
-          <Button title="Ver en 3D" variant="outline" onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id, name: p.name } })} />
-        </Card>
-      ))}
-
-      <Text style={styles.h2}>Lo que dicen los clientes</Text>
-      {reviews.map((r) => (
-        <Card key={r.id}>
-          <View style={styles.row}>
-            <Text style={styles.name}>{r.authorName}</Text>
-            <Text style={styles.stars}>{'★'.repeat(r.stars)}{'☆'.repeat(5 - r.stars)}</Text>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}>
+      <View style={[styles.header, { backgroundColor: cover, paddingTop: insets.top + 12 }]}>
+        <BackButton onDark />
+        <View style={styles.identity}>
+          <View style={styles.logo}><Text style={styles.logoText}>{initials(business.name)}</Text></View>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={styles.name} accessibilityRole="header">{business.name}</Text>
+            <Text style={styles.headerMeta}>{meta}</Text>
           </View>
-          <Text style={styles.body}>{r.text}</Text>
-          {!!r.reply && <Text style={styles.reply}>Respuesta del negocio: {r.reply}</Text>}
-          {r.userId !== user?.id && (
-            <View style={styles.actions}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Reportar la reseña de ${r.authorName}`} onPress={() => report('review', r.id, `Reseña de ${r.authorName}`)} style={styles.action}>
-                <Flag size={14} color={colors.textMuted} strokeWidth={2} />
-                <Text style={styles.actionText}>Reportar</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Bloquear a ${r.authorName}`} onPress={() => block(r)} style={styles.action}>
-                <Ban size={14} color={colors.textMuted} strokeWidth={2} />
-                <Text style={styles.actionText}>Bloquear usuario</Text>
-              </Pressable>
-            </View>
-          )}
-        </Card>
-      ))}
-      {reviews.length === 0 && <Text style={styles.meta}>Aún no hay reseñas. ¡Sé el primero!</Text>}
+        </View>
+      </View>
 
-      <Pressable accessibilityRole="button" onPress={() => report('business', business.id, business.name)} style={[styles.action, styles.reportBusiness]}>
-        <Flag size={14} color={colors.textMuted} strokeWidth={2} />
-        <Text style={styles.actionText}>Reportar este negocio</Text>
-      </Pressable>
-    </Screen>
+      <View style={styles.body}>
+        {thanks && (
+          <View style={styles.thanks} accessibilityLiveRegion="polite">
+            <Text style={styles.thanksText}>Gracias. Tu reseña ya es visible para otros viajeros.</Text>
+          </View>
+        )}
+
+        <View style={styles.tagsRow}>
+          <Text style={[styles.tag, business.type === 'emprendimiento' ? styles.tagEmp : styles.tagClassic]}>{businessTypeLabel(business.type)}</Text>
+          {!!business.hours && <Text style={styles.hours}>{business.hours}</Text>}
+        </View>
+
+        <View style={styles.ratingCard}>
+          <Text style={styles.ratingBig}>{business.rating == null ? '—' : formatRating(business.rating)}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.ratingLabel}>Calificación de clientes</Text>
+            <Text style={styles.muted}>{business.reviewCount === 0 ? 'Aún sin reseñas' : `${business.reviewCount} ${business.reviewCount === 1 ? 'reseña' : 'reseñas'}`}</Text>
+          </View>
+          <Pressable accessibilityRole="button" onPress={rate} style={({ pressed }) => [styles.rateButton, pressed && { opacity: 0.85 }]}>
+            <Text style={styles.primaryText}>Calificar</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.contact}>
+          <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => Linking.openURL(mapsUrl(business.address))} />
+          {wa && <ContactButton icon={<MessageCircle size={20} color={colors.primary} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => Linking.openURL(wa)} />}
+        </View>
+
+        <Text style={styles.h2} accessibilityRole="header">{comer ? 'Menú' : 'Vitrina'}</Text>
+        {products.length === 0 ? (
+          <Text style={styles.muted}>Este negocio aún no ha subido productos.</Text>
+        ) : (
+          <View style={styles.grid}>
+            {products.map((p, i) => <ProductCard key={p.id} product={p} category={business.category} seed={i} />)}
+          </View>
+        )}
+
+        <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
+        {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}
+        {reviews.map((r) => {
+          const mine = r.userId === user?.id;
+          return (
+            <View key={r.id} style={styles.review}>
+              <View style={styles.reviewTop}>
+                <Text style={styles.author} numberOfLines={1}>{r.authorName}{mine ? ' (tú)' : ''}</Text>
+                <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>
+                  {'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text>
+                </Text>
+              </View>
+              {!!r.text && <Text style={styles.reviewText}>{r.text}</Text>}
+              {!!r.reply && (
+                <View style={styles.reply}>
+                  <Text style={styles.replyLabel}>Respuesta de {business.name}</Text>
+                  <Text style={styles.replyText}>{r.reply}</Text>
+                </View>
+              )}
+              {!mine && (
+                <View style={styles.actions}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Reportar la reseña de ${r.authorName}`} onPress={() => report('review', r.id, `Reseña de ${r.authorName}`)} style={styles.action}>
+                    <Flag size={14} color={colors.textMuted} />
+                    <Text style={styles.actionText}>Reportar</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`Bloquear a ${r.authorName}`} onPress={() => block(r)} style={styles.action}>
+                    <Ban size={14} color={colors.textMuted} />
+                    <Text style={styles.actionText}>Bloquear usuario</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          );
+        })}
+
+        <Pressable accessibilityRole="button" onPress={() => report('business', business.id, business.name)} style={[styles.action, { alignSelf: 'center', marginTop: 8 }]}>
+          <Flag size={14} color={colors.textMuted} />
+          <Text style={styles.actionText}>Reportar este negocio</Text>
+        </Pressable>
+      </View>
+    </ScrollView>
+  );
+}
+
+function ContactButton({ icon, label, sub, onPress }: { icon: React.ReactNode; label: string; sub: string; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="link" accessibilityLabel={`${label}: ${sub}`} onPress={onPress} style={({ pressed }) => [styles.contactButton, pressed && { opacity: 0.85 }]}>
+      <View style={styles.contactIcon}>{icon}</View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.contactLabel}>{label}</Text>
+        <Text style={styles.contactSub} numberOfLines={1}>{sub}</Text>
+      </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  tag: { alignSelf: 'flex-start', fontSize: 12, fontWeight: '700', color: colors.accentText, backgroundColor: colors.accentSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 14, color: colors.textMuted },
-  open: { fontSize: 14, color: colors.success, fontWeight: '600' },
-  ratingCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  big: { fontSize: 32, fontWeight: '700', color: colors.text },
-  h2: { fontSize: 20, fontWeight: '700', color: colors.text, marginTop: 8 },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  price: { fontSize: 15, fontWeight: '700', color: colors.price },
-  row: { flexDirection: 'row', justifyContent: 'space-between' },
-  stars: { color: '#8A5A00', fontWeight: '700' },
-  body: { fontSize: 14, lineHeight: 20, color: '#2E3A38' },
-  reply: { fontSize: 13, color: colors.textMuted, backgroundColor: colors.background, padding: 10, borderRadius: 10 },
-  actions: { flexDirection: 'row', gap: 16, marginTop: 2 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background },
+  header: { paddingHorizontal: 20, paddingBottom: 28, gap: 22 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  logo: { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  logoText: { fontFamily: fonts.display, fontSize: 30, letterSpacing: -0.5, color: colors.text },
+  name: { fontFamily: fonts.hero, fontSize: 32, lineHeight: 35, letterSpacing: -0.8, color: '#FFFFFF' },
+  headerMeta: { fontFamily: fonts.medium, fontSize: 16, color: 'rgba(255,255,255,0.85)' },
+  body: { padding: 20, gap: 18 },
+  thanks: { backgroundColor: colors.primarySoft, borderRadius: 20, padding: 16 },
+  thanksText: { fontFamily: fonts.medium, fontSize: 15.5, lineHeight: 22, color: colors.primary },
+  tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
+  tag: { fontFamily: fonts.bold, fontSize: 14, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, overflow: 'hidden' },
+  tagEmp: { backgroundColor: colors.accentSoft, color: colors.accentText },
+  tagClassic: { backgroundColor: colors.primarySoft, color: colors.primary },
+  hours: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.success },
+  ratingCard: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  ratingBig: { fontFamily: fonts.display, fontSize: 44, letterSpacing: -1.5, color: colors.text },
+  ratingLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
+  rateButton: { minHeight: 50, paddingHorizontal: 20, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  primaryButton: { minHeight: 52, paddingHorizontal: 22, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  primaryText: { fontFamily: fonts.bold, fontSize: 16, color: '#FFFFFF' },
+  contact: { gap: 10 },
+  contactButton: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  contactIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  contactLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
+  contactSub: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted },
+  h2: { fontFamily: fonts.display, fontSize: 25, letterSpacing: -0.5, color: colors.text, marginTop: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  muted: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted },
+  emptyTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.text, textAlign: 'center' },
+  review: { gap: 10, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  author: { flex: 1, fontFamily: fonts.bold, fontSize: 16.5, color: colors.text },
+  stars: { fontSize: 18, letterSpacing: 1, color: colors.starText },
+  reviewText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: colors.textBody },
+  reply: { gap: 4, padding: 14, borderRadius: 16, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
+  replyLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.4, color: colors.primary },
+  replyText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
+  actions: { flexDirection: 'row', gap: 18 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
-  actionText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
-  reportBusiness: { alignSelf: 'center', marginTop: 8 },
+  actionText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.textMuted },
 });

@@ -1,10 +1,16 @@
-import { BRAND, Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
-import { router } from 'expo-router';
+import { BRAND, Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, fonts, useAuth } from '@zipa/shared';
+import { router, useLocalSearchParams } from 'expo-router';
+import { Store } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { BackButton } from '@/components/BackButton';
 
 export default function Login() {
   const { signIn, signUp } = useAuth();
+  // Si viene de "Calificar", al entrar vuelve al negocio para terminar la reseña.
+  const { desde, negocio } = useLocalSearchParams<{ desde?: string; negocio?: string }>();
+  const forReview = desde === 'calificar' && !!negocio;
   const [mode, setMode] = useState<'entrar' | 'crear'>('entrar');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,7 +37,8 @@ export default function Login() {
         const { needsEmailConfirmation } = await signUp(email.trim(), password, name.trim(), consentsFor('clientes'));
         if (needsEmailConfirmation) return setSentTo(email.trim());
       }
-      router.replace('/explorar');
+      if (forReview) router.replace({ pathname: '/calificar/[id]', params: { id: negocio! } });
+      else router.replace('/explorar');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos iniciar sesión.');
     } finally {
@@ -49,9 +56,14 @@ export default function Login() {
 
   return (
     <Screen>
-      <Text style={styles.title}>{mode === 'entrar' ? `Entra a ${BRAND.name}` : 'Crea tu cuenta'}</Text>
-      <Text style={styles.subtitle}>Guarda tus lugares favoritos y califica los negocios que visitas.</Text>
-      {/* TODO fase 2: Continuar con Google y con Apple (Supabase Auth + expo-auth-session). */}
+      <BackButton />
+      <View style={styles.logo}><Store size={26} color={colors.text} strokeWidth={2.2} /></View>
+      <Text style={styles.title} accessibilityRole="header">{mode === 'entrar' ? `Entra a ${BRAND.name}` : 'Crea tu cuenta'}</Text>
+      <Text style={styles.subtitle}>Califica los negocios que visitas y lleva el registro de tus reseñas.</Text>
+      {forReview && (
+        <View style={styles.notice}><Text style={styles.noticeText}>Inicia sesión para publicar tu reseña.</Text></View>
+      )}
+      {/* Pendiente: Continuar con Google y con Apple (Supabase Auth + expo-auth-session). */}
       {mode === 'crear' && <TextField label="Tu nombre" value={name} onChangeText={setName} autoComplete="name" />}
       <TextField label="Correo electrónico" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
       <TextField label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry autoComplete="password" />
@@ -77,7 +89,10 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 28, fontWeight: '700', color: colors.text },
-  subtitle: { fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  error: { color: colors.danger, fontWeight: '600' },
+  logo: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  title: { fontFamily: fonts.hero, fontSize: 36, lineHeight: 39, letterSpacing: -1, color: colors.text },
+  subtitle: { fontFamily: fonts.regular, fontSize: 16.5, lineHeight: 24, color: colors.textMuted, marginTop: -8 },
+  notice: { backgroundColor: colors.accentSoft, borderRadius: 18, padding: 16 },
+  noticeText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.accentText },
+  error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
 });

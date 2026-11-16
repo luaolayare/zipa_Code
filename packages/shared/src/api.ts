@@ -116,6 +116,9 @@ const publicPathOf = (url: string | null) => {
   return tail ? decodeURIComponent(tail) : null;
 };
 
+/** Reseña propia con el nombre del negocio. */
+export type MyReview = Review & { businessName: string };
+
 export interface BusinessEdit {
   name?: string;
   type?: BusinessType;
@@ -239,6 +242,34 @@ export function createApi(db: SupabaseClient | null) {
       const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
+    },
+
+    /** Un producto de un negocio publicado (o del propio negocio). */
+    async getProduct(id: string): Promise<Product | null> {
+      if (!db) return demoProducts.find((p) => p.id === id) ?? null;
+      const { data, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
+      if (error) throw error;
+      return data ? toProduct(data) : null;
+    },
+
+    /** Reseñas que escribió una persona, con el nombre del negocio (pantalla Perfil). */
+    async myReviews(userId: string): Promise<MyReview[]> {
+      const mine = !db
+        ? demoReviews.filter((r) => r.userId === userId)
+        : await (async () => {
+            const { data, error } = await db.from('reviews_public').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+            if (error) throw error;
+            return (data ?? []).map(toReview);
+          })();
+      if (!mine.length) return [];
+      const ids = [...new Set(mine.map((r) => r.businessId))];
+      let names: Record<string, string> = {};
+      if (!db) names = Object.fromEntries(DEMO_BUSINESSES.map((b) => [b.id, b.name]));
+      else {
+        const { data } = await db.from('businesses_public').select('id, name').in('id', ids);
+        names = Object.fromEntries((data ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
+      }
+      return mine.map((r) => ({ ...r, businessName: names[r.businessId] ?? 'Negocio' }));
     },
 
     /** Reseñas del negocio. Con `viewerId`, sin las de personas que esa persona bloqueó. */

@@ -1,6 +1,6 @@
 // Ilustración de un plato o producto en perspectiva, con volumen y sombra.
 // Se usa mientras un producto no tiene foto ni modelo 3D, para que nada se vea vacío.
-import type { Category } from '@zipa/shared';
+import type { Category } from '../types';
 import { useId } from 'react';
 import { View } from 'react-native';
 import Svg, { Defs, Ellipse, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
