@@ -15,7 +15,7 @@ export const BRAND = {
  */
 export const CREDITS = {
   developedBy: 'SCALIX Cloud',
-  developer: 'Luis Alfredo Laya',
+  developer: 'Luis Alfredo Olaya',
   site: 'https://scalix-cloud.com/',
 } as const;
 
