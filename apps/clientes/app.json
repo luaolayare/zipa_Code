@@ -40,6 +40,17 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "2daab65c-048f-4557-a7ca-49dbc3f71203"
+      }
+    },
+    "owner": "luisdev1796"
   }
 }
