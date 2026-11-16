@@ -2,11 +2,12 @@ import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-na
 
 import { colors, radius } from '../theme';
 
-export function TextField({ label, ...props }: { label: string } & TextInputProps) {
+export function TextField({ label, style, ...props }: { label: string } & TextInputProps) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput accessibilityLabel={label} placeholderTextColor={colors.textMuted} style={styles.input} {...props} />
+      {/* El estilo de la pantalla se suma al del campo (antes lo reemplazaba y el campo quedaba sin borde ni fondo). */}
+      <TextInput accessibilityLabel={label} placeholderTextColor={colors.textMuted} {...props} style={[styles.input, style]} />
     </View>
   );
 }

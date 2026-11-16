@@ -29,7 +29,7 @@ export function BusinessRow({ business: b, variant }: { business: Business; vari
         <Text style={styles.meta}>{meta}</Text>
         <Rating value={formatRating(b.rating)} gap={8}>
           {classic ? (
-            <Pill label={`${b.productCount} en 3D`} bg={colors.primarySoft} fg={colors.primary} />
+            b.productCount > 0 && <Pill label={`${b.productCount} en 3D`} bg={colors.primarySoft} fg={colors.primary} />
           ) : (
             <Pill label={businessTypeLabel(b.type)} bg={emp ? colors.accentSoft : colors.primarySoft} fg={emp ? colors.accentText : colors.primary} />
           )}

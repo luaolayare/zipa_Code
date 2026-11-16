@@ -11,7 +11,7 @@ export function CarouselCard({ business: b }: { business: Business }) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={b.name} onPress={() => openBusiness(b.id)} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <Cover business={b} circle={76} ring={6} style={styles.cover}>
-        <Text style={styles.badge3d}>{b.productCount} en 3D</Text>
+        {b.productCount > 0 && <Text style={styles.badge3d}>{b.productCount} en 3D</Text>}
       </Cover>
       <View style={styles.body}>
         <Text style={styles.name}>{b.name}</Text>

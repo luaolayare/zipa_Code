@@ -16,10 +16,13 @@ export const OFFENSIVE_WORDS = [
   'retrasado', 'mongolico', 'subnormal',
 ] as const;
 
-/** Palabras ofensivas encontradas en el texto (sin tildes ni mayúsculas, por palabra completa). */
+/**
+ * Palabras ofensivas encontradas en el texto (sin tildes ni mayúsculas, por palabra completa,
+ * incluido el plural: "malparido", "malparidos", "maricones").
+ */
 export function findOffensiveWords(text: string): string[] {
   const words = ` ${normalize(text).replace(/[^a-z0-9]+/g, ' ')} `;
-  return OFFENSIVE_WORDS.filter((w) => words.includes(` ${w} `));
+  return OFFENSIVE_WORDS.filter((w) => [w, `${w}s`, `${w}es`].some((form) => words.includes(` ${form} `)));
 }
 
 export const OFFENSIVE_MESSAGE =
