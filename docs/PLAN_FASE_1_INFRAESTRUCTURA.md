@@ -13,6 +13,13 @@
   - **Permisos de `anon` y `authenticated` verificados** con `has_table_privilege`. La API real lee lo público y rechaza con 42501 lo privado.
   - **Datos sin cambios.**
   - **Observación:** quedan privilegios por defecto de `supabase_admin` que exponen las tablas que cree ese rol. Las migraciones crean tablas como `postgres`, así que no aplican.
+- **Paso 6 (migración 0008, roles administrativos): hecho.**
+  - **Commit** `b58c06f`: la 0008, `revisar-negocio` con JWT de administrador más `is_admin()`, `verify_jwt = true`, y la prueba de CI ampliada con revisora y admin, con y sin MFA. CI en verde.
+  - **Prueba de punta a punta en Supabase local (Docker):** 33 comprobaciones OK, con MFA TOTP real, foto en Storage, publicación, bitácora y borrado de cuenta.
+  - **Aplicado en el proyecto real el 16 nov 2026, con autorización:** la 0008 con `db push` y `revisar-negocio` versión 2 con `functions deploy`.
+  - **Verificado:** permisos, políticas y funciones con consultas de solo lectura. La API como visitante rechaza todo lo administrativo, y la función rechaza llamadas sin sesión o con la clave anon. Datos sin cambios.
+  - **`REVISION_TOKEN` ya no se usa:** la autorización A3 y la tarea P0 de configurarlo quedan sin efecto.
+  - **Pendiente:** la primera cuenta administradora (alta por SQL, cuando el responsable la indique). Además, el MFA solo se puede activar desde el futuro panel.
 - Los demás pasos: pendientes de autorización.
 
 > **Riesgo abierto (decisión del responsable, 16 nov 2026):** la contraseña de PostgreSQL que se compartió por chat **todavía no se rota**. Debe rotarse antes de crear el proyecto de producción (Paso 9) y antes de dar acceso a terceros.
