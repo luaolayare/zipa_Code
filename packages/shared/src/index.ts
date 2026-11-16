@@ -1,4 +1,5 @@
 export * from './theme';
+export { APP_FONTS } from './fonts';
 export * from './brand';
 export * from './types';
 export * from './categories';

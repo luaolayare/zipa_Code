@@ -24,7 +24,8 @@
         "android.permission.CAMERA"
       ],
       "blockedPermissions": [
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -40,7 +41,19 @@
           "microphonePermission": false
         }
       ],
-      "expo-status-bar"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Zipa lo tiene Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y para grabar sin sonido el video de tus productos con el que creamos la vista 3D.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ],
+      "expo-status-bar",
+      "expo-font",
+      "expo-splash-screen",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true

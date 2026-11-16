@@ -1,13 +1,14 @@
-import { Button, Card, Screen, TextField, colors, isValidIdNumber } from '@zipa/shared';
-import * as ImagePicker from 'expo-image-picker';
+import { Button, TextField, colors, fonts, isValidIdNumber } from '@zipa/shared';
 import { router } from 'expo-router';
+import { Camera, Check, ImageIcon } from 'lucide-react-native';
 import { useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { Notice, type } from '@/components/kit';
+import { pickPhoto, takePhoto, type MediaResult } from '@/components/media';
+import { Page } from '@/components/Page';
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';
-
-const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.7, allowsEditing: false };
 
 // Paso 3: verificación. La foto y la cédula/NIT solo las ve el equipo de revisión;
 // la foto se guarda en un espacio privado y se borra al terminar la revisión.
@@ -15,27 +16,11 @@ export default function Verificacion() {
   const { draft, update } = useRegistro();
   const [error, setError] = useState('');
 
-  const applyPickedPhoto = (result: ImagePicker.ImagePickerResult) => {
-    if (result.canceled || !result.assets?.[0]) return;
-    const a = result.assets[0];
-    update({ photoUri: a.uri, photoMimeType: a.mimeType ?? 'image/jpeg' });
+  const apply = (r: MediaResult) => {
+    if (!r) return;
+    if ('error' in r) return setError(r.error);
+    update({ photoUri: r.file.uri, photoMimeType: r.file.mimeType ?? 'image/jpeg', verificationSaved: false });
     setError('');
-  };
-
-  const takePhoto = async () => {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    if (!perm.granted) {
-      return setError('Para tomar la foto, permite el uso de la cámara en los ajustes del celular, o elige una foto que ya tengas.');
-    }
-    applyPickedPhoto(await ImagePicker.launchCameraAsync(PICKER_OPTIONS));
-  };
-
-  const pickPhoto = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      return setError('Para elegir la foto, permite el acceso a tus fotos en los ajustes del celular, o tómala con la cámara.');
-    }
-    applyPickedPhoto(await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS));
   };
 
   const next = () => {
@@ -45,43 +30,53 @@ export default function Verificacion() {
     router.push('/registro/productos');
   };
 
+  const done = !!draft.photoUri;
+
   return (
-    <Screen>
+    <Page>
       <StepHeader step={3} title="Verificación" />
-      <Text style={styles.body}>Para que los turistas confíen, revisamos cada negocio antes de publicarlo.</Text>
-      <Card>
-        <Text style={styles.strong}>Foto de tu local o puesto</Text>
-        {draft.photoUri ? (
-          <Image source={{ uri: draft.photoUri }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />
-        ) : (
-          <Text style={styles.body}>Toma o sube una foto donde se vea el negocio.</Text>
-        )}
-        <View style={styles.buttons}>
-          <Button title={draft.photoUri ? 'Tomar otra foto' : 'Tomar foto'} variant="outline" onPress={takePhoto} />
-          <Button title="Elegir de mis fotos" variant="link" onPress={pickPhoto} />
+      <Text style={type.body}>Para que los turistas confíen, solo publicamos negocios reales. Revisamos cada negocio antes de publicarlo.</Text>
+
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={done ? 'Foto del local cargada. Tocar para tomar otra' : 'Tomar foto de tu local o puesto'}
+        onPress={async () => apply(await takePhoto())}
+        style={({ pressed }) => [styles.drop, done && styles.dropDone, pressed && { opacity: 0.85 }]}>
+        <View style={[styles.dropIcon, done && { backgroundColor: colors.success }]}>
+          {done ? <Check size={30} color="#FFFFFF" strokeWidth={3} /> : <Camera size={28} color={colors.text} />}
         </View>
-        <Text style={styles.private}>Solo la ve el equipo de revisión y se borra cuando terminamos de revisar.</Text>
-      </Card>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={type.h3}>Foto de tu local o puesto</Text>
+          <Text style={type.small}>{done ? 'Foto cargada. Toca para tomar otra.' : 'Toca para tomarla con la cámara.'}</Text>
+        </View>
+      </Pressable>
+      {done && <Image source={{ uri: draft.photoUri! }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />}
+      <Pressable accessibilityRole="button" onPress={async () => apply(await pickPhoto())} style={styles.alt} hitSlop={6}>
+        <ImageIcon size={20} color={colors.primary} />
+        <Text style={styles.altText}>Elegir una foto que ya tengo</Text>
+      </Pressable>
+      <Text style={type.small}>Solo la ve el equipo de revisión y se borra cuando terminamos de revisar.</Text>
+
       <TextField
         label="Cédula o NIT del responsable"
         value={draft.idNumber}
-        onChangeText={(idNumber) => update({ idNumber })}
+        onChangeText={(idNumber) => update({ idNumber, verificationSaved: false })}
         keyboardType="numbers-and-punctuation"
-        placeholder="Solo lo ve el equipo de revisión"
+        placeholder="Ej: 1.234.567.890"
+        hint="Solo la ve el equipo de revisión. Nunca se muestra a los clientes."
       />
-      <Text style={styles.note}>No necesitas Cámara de Comercio para empezar. Los emprendimientos informales también pueden registrarse.</Text>
-      {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
+      <Notice>No necesitas Cámara de Comercio para empezar. Los emprendimientos informales también pueden registrarse.</Notice>
+      {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title="Seguir" onPress={next} />
-    </Screen>
+    </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  strong: { fontSize: 15, fontWeight: '700', color: colors.text },
-  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: 12, backgroundColor: colors.stage3d },
-  buttons: { gap: 4 },
-  private: { fontSize: 13, lineHeight: 18, color: colors.textMuted },
-  note: { fontSize: 13, lineHeight: 19, color: colors.primary, backgroundColor: colors.primarySoft, padding: 12, borderRadius: 12 },
-  error: { color: colors.danger, fontWeight: '600' },
+  drop: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 24, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
+  dropDone: { borderColor: colors.success },
+  dropIcon: { width: 60, height: 60, borderRadius: 18, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: 22, backgroundColor: colors.stage3d },
+  alt: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 40 },
+  altText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary, textDecorationLine: 'underline' },
 });

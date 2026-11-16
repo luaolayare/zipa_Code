@@ -28,8 +28,14 @@ export interface Product {
   priceCop: number | null;
   description: string | null;
   modelUrl: string | null; // archivo 3D (.glb / .usdz) generado desde el video
+  photoUrl: string | null; // foto del producto (lo que se ve mientras no hay modelo 3D)
+  videoPath: string | null; // video de ~20 s en el bucket privado "videos", materia prima del 3D
   status: ProductStatus;
 }
+
+/** Lo que el dueño ve de cada producto en su panel. */
+export type Product3DState = 'en_3d' | 'video_recibido' | 'solo_foto';
+export const product3DState = (p: Product): Product3DState => (p.modelUrl ? 'en_3d' : p.videoPath ? 'video_recibido' : 'solo_foto');
 
 export interface Review {
   id: string;

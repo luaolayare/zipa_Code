@@ -1,6 +1,4 @@
-import { DMSans_400Regular, DMSans_500Medium, DMSans_600SemiBold, DMSans_700Bold } from '@expo-google-fonts/dm-sans';
-import { SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
-import { AuthProvider, colors } from '@zipa/shared';
+import { APP_FONTS, AuthProvider, colors } from '@zipa/shared';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,13 +11,7 @@ import { supabase } from '@/lib/supabase';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceGrotesk_700Bold,
-    DMSans_400Regular,
-    DMSans_500Medium,
-    DMSans_600SemiBold,
-    DMSans_700Bold,
-  });
+  const [loaded, error] = useFonts(APP_FONTS);
 
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();

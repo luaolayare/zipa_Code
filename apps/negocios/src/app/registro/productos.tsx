@@ -1,58 +1,84 @@
-import { Button, Card, Screen, TextField, colors, formatCop } from '@zipa/shared';
+import { Button, Card, colors, fonts, formatCop, useAuth } from '@zipa/shared';
 import { router } from 'expo-router';
+import { Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { type } from '@/components/kit';
+import { Page } from '@/components/Page';
+import { PlateArt } from '@/components/PlateArt';
+import { ProductEditor, emptyProductForm, priceFrom, productFormError, type ProductForm } from '@/components/ProductEditor';
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';
 
-// Paso 4: productos en 3D. El negocio graba un video de ~20 s girando alrededor del producto.
+// Paso 4: productos. Cada uno lleva foto y, si se puede, un video de ~20 s para la vista 3D.
 export default function Productos() {
   const { draft, update } = useRegistro();
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
+  const { api } = useAuth();
+  const [form, setForm] = useState<ProductForm>(emptyProductForm);
   const [error, setError] = useState('');
-  const word = draft.category === 'comer' ? 'plato' : 'producto';
+  const comer = draft.category === 'comer';
+  const word = comer ? 'plato' : 'producto';
+  const count = draft.products.length;
 
-  // TODO fase 1: grabar con expo-camera SIN SONIDO (mute: true; la app no pide micrófono),
-  // subir el video y generar el modelo 3D en el servidor.
   const add = () => {
-    if (!name.trim()) return setError(`Escribe el nombre del ${word}.`);
-    const digits = price.replace(/\D/g, '');
-    update({ products: [...draft.products, { name: name.trim(), priceCop: digits ? Number(digits) : null, videoUri: null }] });
-    setName('');
-    setPrice('');
+    const e = productFormError(form, word);
+    if (e) return setError(e);
+    update({ products: [...draft.products, { form, savedId: null }] });
+    setForm(emptyProductForm);
     setError('');
   };
 
-  const next = () => {
-    if (draft.products.length === 0) return setError(`Agrega al menos un ${word}.`);
+  const remove = (i: number) => update({ products: draft.products.filter((_, j) => j !== i) });
+
+  const next = async () => {
+    if (form.name.trim()) return setError(`Tienes un ${word} sin agregar. Toca "Agregar" o borra el nombre.`);
+    // Al retomar un registro, los productos que ya se guardaron cuentan.
+    const saved = count === 0 && draft.businessId ? (await api.myProducts(draft.businessId).catch(() => [])).length : 0;
+    if (count === 0 && saved === 0) return setError(`Agrega al menos un ${word}.`);
+    setError('');
     router.push('/registro/vista-previa');
   };
 
   return (
-    <Screen>
-      <StepHeader step={4} title="Tus productos en 3D" />
-      <Text style={styles.body}>Graba un video de unos 20 segundos dando la vuelta alrededor del {word}. Con ese video creamos una vista 3D. Antes de publicarla podrás revisar cómo quedó.</Text>
+    <Page>
+      <StepHeader step={4} title={comer ? 'Tu menú' : 'Tus productos'} />
+      <Text style={type.body}>
+        Sube al menos un {word} con su foto. Si grabas un video de unos 20 segundos dando la vuelta alrededor, con él creamos una vista 3D. Antes de publicarla podrás revisar cómo quedó.
+      </Text>
+
       {draft.products.map((p, i) => (
-        <Card key={i}>
-          <Text style={styles.strong}>{p.name}</Text>
-          <Text style={styles.body}>{formatCop(p.priceCop)} · modelo 3D pendiente</Text>
-        </Card>
+        <View key={i} style={styles.row}>
+          <View style={styles.thumb}>
+            {p.form.photo ? <Image source={{ uri: p.form.photo.uri }} style={styles.thumbImg} /> : <PlateArt category={draft.category} size={64} />}
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={type.h3} numberOfLines={1}>{p.form.name}</Text>
+            <Text style={styles.meta}>{formatCop(priceFrom(p.form.price))} · {p.form.video ? 'Video para 3D listo' : 'Solo foto'}</Text>
+          </View>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Quitar ${p.form.name}`} onPress={() => remove(i)} hitSlop={8} style={styles.trash}>
+            <Trash2 size={20} color={colors.danger} />
+          </Pressable>
+        </View>
       ))}
-      <Card>
-        <TextField label="Nombre" value={name} onChangeText={setName} />
-        <TextField label="Precio" value={price} onChangeText={setPrice} keyboardType="number-pad" placeholder="Ej: 7000" />
-        <Button title={`Grabar video del ${word} y agregar`} variant="outline" onPress={add} />
+
+      <Card style={styles.editor}>
+        <Text style={type.h2}>{count === 0 ? `Tu primer ${word}` : `Otro ${word}`}</Text>
+        <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} category={draft.category} />
+        <Button title={count === 0 ? `Agregar ${word}` : `Agregar otro ${word}`} variant="primary" onPress={add} />
       </Card>
-      {!!error && <Text style={styles.error}>{error}</Text>}
+
+      {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title="Ver cómo quedó" variant="accent" onPress={next} />
-    </Screen>
+    </Page>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  strong: { fontSize: 15, fontWeight: '700', color: colors.text },
-  error: { color: colors.danger, fontWeight: '600' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  thumb: { width: 68, height: 68, borderRadius: 16, backgroundColor: colors.stage3d, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  thumbImg: { width: '100%', height: '100%' },
+  meta: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted },
+  trash: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  editor: { padding: 20, gap: 18 },
 });

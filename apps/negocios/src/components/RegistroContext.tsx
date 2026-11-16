@@ -1,10 +1,11 @@
-import type { BusinessType, Category } from '@zipa/shared';
+import type { Business, BusinessType, Category } from '@zipa/shared';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
+import type { ProductForm } from './ProductEditor';
+
 export interface DraftProduct {
-  name: string;
-  priceCop: number | null;
-  videoUri: string | null; // video de 20 s grabado con el celular
+  form: ProductForm; // nombre, precio, descripción, foto y video (archivos locales hasta enviar)
+  savedId: string | null; // id ya creado en la base, para no duplicarlo si hay que reintentar el envío
 }
 
 export interface RegistroDraft {
@@ -19,6 +20,7 @@ export interface RegistroDraft {
   idNumber: string; // cédula o NIT, solo visible para el equipo de revisión
   products: DraftProduct[];
   businessId: string | null; // id ya creado en la base, para no duplicarlo si hay que reintentar el envío
+  verificationSaved: boolean; // la foto y la cédula ya se guardaron (en un intento anterior)
 }
 
 const empty: RegistroDraft = {
@@ -33,22 +35,36 @@ const empty: RegistroDraft = {
   idNumber: '',
   products: [],
   businessId: null,
+  verificationSaved: false,
 };
 
-const Ctx = createContext<{ draft: RegistroDraft; update: (p: Partial<RegistroDraft>) => void; reset: () => void } | null>(null);
+/** Retoma un registro que quedó sin terminar (negocio en borrador o no aprobado). */
+export const draftFromBusiness = (b: Business): Partial<RegistroDraft> => ({
+  name: b.name,
+  type: b.type,
+  category: b.category,
+  address: b.address,
+  hours: b.hours ?? '',
+  whatsapp: b.whatsapp ?? '',
+  businessId: b.id,
+  verificationSaved: false,
+});
+
+type Ctx = { draft: RegistroDraft; update: (p: Partial<RegistroDraft>) => void; reset: () => void };
+const RegistroCtx = createContext<Ctx | null>(null);
 
 /** Guarda en memoria lo que el negocio llena durante los 5 pasos del registro. */
 export function RegistroProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<RegistroDraft>(empty);
   return (
-    <Ctx.Provider value={{ draft, update: (p) => setDraft((d) => ({ ...d, ...p })), reset: () => setDraft(empty) }}>
+    <RegistroCtx.Provider value={{ draft, update: (p) => setDraft((d) => ({ ...d, ...p })), reset: () => setDraft(empty) }}>
       {children}
-    </Ctx.Provider>
+    </RegistroCtx.Provider>
   );
 }
 
 export function useRegistro() {
-  const v = useContext(Ctx);
+  const v = useContext(RegistroCtx);
   if (!v) throw new Error('useRegistro debe usarse dentro de <RegistroProvider>');
   return v;
 }

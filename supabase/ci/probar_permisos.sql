@@ -146,9 +146,16 @@ do $$ begin
   perform ci_pruebas.debe_funcionar($q$insert into public.business_verifications (business_id, photo_path, id_number) values ('00000000-0000-0000-0000-0000000000b2', 'd1/b2/local.jpg', '900123456-7') on conflict (business_id) do update set photo_path = excluded.photo_path, id_number = excluded.id_number$q$);
   perform ci_pruebas.debe_funcionar($q$insert into public.business_verifications (business_id, photo_path, id_number) values ('00000000-0000-0000-0000-0000000000b2', 'd1/b2/otra.jpg', '900123456-7') on conflict (business_id) do update set photo_path = excluded.photo_path, id_number = excluded.id_number$q$);
   perform ci_pruebas.debe_funcionar($q$insert into public.products (business_id, name, price_cop) values ('00000000-0000-0000-0000-0000000000b2', 'Arepa', 7000)$q$);
+  perform ci_pruebas.debe_funcionar($q$update public.products set name = 'Arepa de huevo', photo_url = 'https://ejemplo.test/a.jpg' where business_id = '00000000-0000-0000-0000-0000000000b2'$q$);
+  -- El modelo 3D lo pone el proceso del servidor, nunca el dueño (migración 0009).
+  perform ci_pruebas.debe_fallar($q$update public.products set model_url = 'https://x.test/m.glb' where business_id = '00000000-0000-0000-0000-0000000000b2'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$insert into public.products (business_id, name, model_url, status) values ('00000000-0000-0000-0000-0000000000b2', 'Trampa', 'https://x.test/m.glb', 'listo')$q$, 'permission denied%');
+  perform ci_pruebas.debe_funcionar($q$delete from public.products where business_id = '00000000-0000-0000-0000-0000000000b2' and name = 'Arepa de huevo'$q$);
   perform ci_pruebas.debe_funcionar($q$update public.reviews set reply = '¡Gracias!', replied_at = now() where business_id = '00000000-0000-0000-0000-0000000000b1'$q$);
   -- No puede: publicarse sola (RLS), borrar reseñas, ni leer reportes ajenos.
-  perform ci_pruebas.debe_fallar($q$update public.businesses set status = 'publicado' where id = '00000000-0000-0000-0000-0000000000b2'$q$, '%row-level security%');
+  perform ci_pruebas.debe_fallar($q$update public.businesses set status = 'publicado' where id = '00000000-0000-0000-0000-0000000000b2'$q$, '%equipo de revisión%');
+  perform ci_pruebas.debe_fallar($q$update public.businesses set status = 'rechazado' where id = '00000000-0000-0000-0000-0000000000b2'$q$, '%equipo de revisión%');
+  perform ci_pruebas.debe_fallar($q$update public.businesses set owner_id = '00000000-0000-0000-0000-0000000000c1' where id = '00000000-0000-0000-0000-0000000000b2'$q$, 'permission denied%');
   if ci_pruebas.filas('delete from public.reviews') <> 0 then raise exception 'la dueña borró reseñas'; end if;
   if ci_pruebas.cuenta('select * from public.reports') <> 0 then raise exception 'la dueña ve reportes ajenos'; end if;
 end $$;
@@ -215,6 +222,34 @@ begin
   end if;
 end $$;
 
+reset role;
+
+-- DUEÑA EDITA SU NEGOCIO PUBLICADO (migración 0009) ---------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+
+do $$
+declare estado text;
+begin
+  -- Cambiar horario o WhatsApp: sigue publicado.
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set hours = 'Todos los días', whatsapp = '3001234567' where id = '00000000-0000-0000-0000-0000000000b1'$q$);
+  select status into estado from public.businesses where id = '00000000-0000-0000-0000-0000000000b1';
+  if estado <> 'publicado' then raise exception 'cambiar el horario sacó al negocio de publicado (%)', estado; end if;
+  -- Cambiar el nombre: vuelve a revisión.
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set name = 'Otro Nombre' where id = '00000000-0000-0000-0000-0000000000b1'$q$);
+  select status into estado from public.businesses where id = '00000000-0000-0000-0000-0000000000b1';
+  if estado <> 'en_revision' then raise exception 'cambiar el nombre no devolvió el negocio a revisión (%)', estado; end if;
+  -- Nadie edita negocios ajenos.
+end $$;
+
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.filas($q$update public.businesses set hours = 'x' where id = '00000000-0000-0000-0000-0000000000b2'$q$) <> 0 then
+    raise exception 'la turista editó un negocio ajeno';
+  end if;
+end $$;
 reset role;
 
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------

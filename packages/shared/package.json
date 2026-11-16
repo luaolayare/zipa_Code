@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "peerDependencies": {
+    "@expo-google-fonts/bricolage-grotesque": "*",
+    "@expo-google-fonts/dm-sans": "*",
     "@react-native-async-storage/async-storage": "*",
     "@supabase/supabase-js": "*",
     "react": "*",

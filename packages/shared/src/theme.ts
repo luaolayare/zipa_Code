@@ -29,7 +29,11 @@ export const colors = {
  * fontFamily (no con fontWeight). Las apps las cargan en su _layout.tsx raíz.
  */
 export const fonts = {
-  display: 'SpaceGrotesk_700Bold', // títulos y números grandes
+  // Bricolage Grotesque: títulos con carácter (trazos cálidos, letras con personalidad).
+  hero: 'BricolageGrotesque_800ExtraBold', // titulares grandes de portada
+  display: 'BricolageGrotesque_700Bold', // títulos y números grandes
+  displaySemi: 'BricolageGrotesque_600SemiBold', // subtítulos
+  // DM Sans: textos, botones y formularios (muy legible en pantallas pequeñas).
   regular: 'DMSans_400Regular',
   medium: 'DMSans_500Medium',
   semibold: 'DMSans_600SemiBold',

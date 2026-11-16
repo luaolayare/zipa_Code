@@ -3,7 +3,7 @@ import { StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { colors, radius, spacing } from '../theme';
 
-export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+export function Card({ children, style }: { children: ReactNode; style?: ViewStyle | ViewStyle[] }) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -12,8 +12,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md + 2,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     gap: spacing.sm,
   },
 });

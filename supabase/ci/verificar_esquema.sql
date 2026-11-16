@@ -44,6 +44,14 @@ begin
     raise exception 'Falta el bucket privado verificaciones';
   end if;
 
+  -- 5b. Fotos de productos (públicas) y videos para el 3D (privados), migración 0009.
+  if not exists (select 1 from storage.buckets where id = 'productos' and public = true) then
+    raise exception 'Falta el bucket público productos';
+  end if;
+  if not exists (select 1 from storage.buckets where id = 'videos' and public = false) then
+    raise exception 'Falta el bucket privado videos';
+  end if;
+
   -- 6. Filtro de palabras ofensivas (misma regla que packages/shared/src/moderation.ts).
   if not public.texto_ofensivo('son unos malparidos') then
     raise exception 'texto_ofensivo no detecta plurales';

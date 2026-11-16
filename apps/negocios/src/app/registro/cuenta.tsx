@@ -1,8 +1,10 @@
-import { Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, useAuth } from '@zipa/shared';
-import { router } from 'expo-router';
+import { Button, CheckEmailView, ConsentCheckbox, TextField, consentsFor, useAuth } from '@zipa/shared';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 
+import { type } from '@/components/kit';
+import { Page } from '@/components/Page';
 import { StepHeader } from '@/components/StepHeader';
 
 const CONSENT_ERROR = 'Para registrar tu negocio debes aceptar los Términos y la Política de privacidad.';
@@ -13,7 +15,8 @@ export default function Cuenta() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [hasAccount, setHasAccount] = useState(false);
+  const { entrar } = useLocalSearchParams<{ entrar?: string }>();
+  const [hasAccount, setHasAccount] = useState(entrar === '1');
   const [accepted, setAccepted] = useState(false); // sin marcar por defecto
   const [missingConsent, setMissingConsent] = useState(false);
   const [error, setError] = useState('');
@@ -71,22 +74,22 @@ export default function Cuenta() {
       }
     };
     return (
-      <Screen>
+      <Page>
         <StepHeader step={1} title="Tu cuenta" />
-        <Text style={styles.body}>Entraste como {user.email}.</Text>
+        <Text style={type.body}>Entraste como {user.email}.</Text>
         {alreadyAccepted === false && consent}
-        {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
+        {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
         <Button title="Seguir" onPress={next} loading={loading || alreadyAccepted === null} />
-      </Screen>
+      </Page>
     );
   }
 
   if (sentTo) {
     return (
-      <Screen>
+      <Page>
         <StepHeader step={1} title="Confirma tu correo" />
         <CheckEmailView email={sentTo} onContinue={() => { setSentTo(null); setHasAccount(true); setPassword(''); }} />
-      </Screen>
+      </Page>
     );
   }
 
@@ -114,25 +117,20 @@ export default function Cuenta() {
   };
 
   return (
-    <Screen>
+    <Page>
       <StepHeader step={1} title={hasAccount ? 'Entra a tu cuenta' : 'Crea tu cuenta'} />
-      <Text style={styles.body}>Esta es la cuenta del dueño o encargado. Con ella administras tu negocio.</Text>
+      <Text style={type.body}>Esta es la cuenta del dueño o encargado. Con ella administras tu negocio.</Text>
       {!hasAccount && <TextField label="Tu nombre" value={name} onChangeText={setName} placeholder="Ej: Inés Pérez" />}
       <TextField label="Correo electrónico" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
       <TextField label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry placeholder="Mínimo 6 caracteres" />
       {!hasAccount && consent}
-      {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
+      {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title={hasAccount ? 'Entrar' : 'Crear cuenta y seguir'} onPress={submit} loading={loading} />
       <Button
         variant="link"
         title={hasAccount ? 'Crear una cuenta nueva' : 'Ya tengo cuenta'}
         onPress={() => { setHasAccount(!hasAccount); setError(''); setMissingConsent(false); }}
       />
-    </Screen>
+    </Page>
   );
 }
-
-const styles = StyleSheet.create({
-  body: { fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  error: { color: colors.danger, fontWeight: '600' },
-});

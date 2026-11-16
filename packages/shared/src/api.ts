@@ -63,6 +63,8 @@ const toProduct = (r: any): Product => ({
   priceCop: r.price_cop,
   description: r.description,
   modelUrl: r.model_url,
+  photoUrl: r.photo_url ?? null,
+  videoPath: r.video_path ?? null,
   status: r.status,
 });
 
@@ -76,6 +78,52 @@ const toReview = (r: any): Review => ({
   reply: r.reply,
   createdAt: r.created_at,
 });
+
+/** Archivo local elegido o grabado en el celular. */
+export interface LocalFile {
+  uri: string;
+  mimeType?: string | null;
+}
+
+export interface ProductInput {
+  name: string;
+  priceCop: number | null;
+  description?: string | null;
+  photo?: LocalFile | null; // nueva foto (si no cambia, se omite)
+  video?: LocalFile | null; // nuevo video para el 3D (si no cambia, se omite)
+}
+
+const extFor = (mime: string, fallback: string) => {
+  const sub = mime.split('/')[1] ?? fallback;
+  return ({ jpeg: 'jpg', quicktime: 'mov' } as Record<string, string>)[sub] ?? sub;
+};
+
+/** Sube un archivo local a Storage y devuelve su ruta. */
+async function uploadFile(db: SupabaseClient, bucket: string, path: string, file: LocalFile, fallbackMime: string) {
+  const mime = file.mimeType ?? fallbackMime;
+  const body = await (await fetch(file.uri)).arrayBuffer();
+  const { error } = await db.storage.from(bucket).upload(path, body, { contentType: mime, upsert: false });
+  if (error) {
+    if (/exceeded|too large|size/i.test(error.message)) throw new Error('El archivo es demasiado pesado. Graba un video más corto o elige una foto más liviana.');
+    throw new Error('No pudimos subir el archivo. Revisa tu conexión e intenta de nuevo.');
+  }
+  return path;
+}
+
+/** Ruta de Storage a partir de la URL pública de un archivo del bucket "productos". */
+const publicPathOf = (url: string | null) => {
+  const tail = url?.split('/object/public/productos/')[1];
+  return tail ? decodeURIComponent(tail) : null;
+};
+
+export interface BusinessEdit {
+  name?: string;
+  type?: BusinessType;
+  category?: Category;
+  address?: string;
+  hours?: string | null;
+  whatsapp?: string | null;
+}
 
 export interface NewBusiness {
   name: string;
@@ -96,6 +144,7 @@ export function createApi(db: SupabaseClient | null) {
   if (!db && !__DEV__) throw new MissingBackendError();
 
   let demoReviews = [...DEMO_REVIEWS];
+  let demoProducts = [...DEMO_PRODUCTS];
   const demoConsents: (ConsentInput & { userId: string; acceptedAt: string })[] = [];
   const demoReports: (ReportInput & { reporterId: string })[] = [];
   const demoBlocks = new Set<string>(); // `${bloqueador}:${bloqueado}`
@@ -186,7 +235,7 @@ export function createApi(db: SupabaseClient | null) {
     },
 
     async listProducts(businessId: string): Promise<Product[]> {
-      if (!db) return DEMO_PRODUCTS.filter((p) => p.businessId === businessId);
+      if (!db) return demoProducts.filter((p) => p.businessId === businessId);
       const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
@@ -254,6 +303,127 @@ export function createApi(db: SupabaseClient | null) {
         await db.storage.from('verificaciones').remove([path]); // no dejar fotos sueltas
         throw error;
       }
+    },
+
+    /** Productos del negocio propio (incluye los de un negocio aún no publicado). */
+    async myProducts(businessId: string): Promise<Product[]> {
+      if (!db) return demoProducts.filter((p) => p.businessId === businessId);
+      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('created_at');
+      if (error) throw error;
+      return (data ?? []).map(toProduct);
+    },
+
+    /**
+     * Crea o actualiza un producto del negocio propio. La foto va al bucket público "productos"
+     * y el video (sin sonido) al privado "videos", ambos en la carpeta del dueño.
+     * El modelo 3D lo genera después el servidor a partir del video.
+     */
+    async saveProduct(ownerId: string, businessId: string, input: ProductInput, productId?: string): Promise<Product> {
+      const fields = { name: input.name.trim(), price_cop: input.priceCop, description: input.description?.trim() || null };
+      if (!db) {
+        const existing = demoProducts.find((p) => p.id === productId);
+        const p: Product = {
+          id: productId ?? 'demo-p-' + Date.now(),
+          businessId,
+          name: fields.name,
+          priceCop: fields.price_cop,
+          description: fields.description,
+          modelUrl: existing?.modelUrl ?? null,
+          photoUrl: input.photo?.uri ?? existing?.photoUrl ?? null,
+          videoPath: input.video?.uri ?? existing?.videoPath ?? null,
+          status: 'procesando',
+        };
+        demoProducts = [...demoProducts.filter((x) => x.id !== p.id), p];
+        return p;
+      }
+
+      let id = productId;
+      let old: Product | null = null;
+      if (id) {
+        const { data, error } = await db.from('products').select('*').eq('id', id).single();
+        if (error) throw error;
+        old = toProduct(data);
+        const { error: e2 } = await db.from('products').update(fields).eq('id', id);
+        if (e2) throw e2;
+      } else {
+        const { data, error } = await db.from('products').insert({ business_id: businessId, ...fields }).select('id').single();
+        if (error) throw error;
+        id = data.id as string;
+      }
+
+      const folder = `${ownerId}/${businessId}/${id}`;
+      const patch: Record<string, string> = {};
+      const toRemove: { bucket: string; path: string }[] = [];
+      if (input.photo) {
+        const mime = input.photo.mimeType ?? 'image/jpeg';
+        const path = await uploadFile(db, 'productos', `${folder}/foto-${Date.now()}.${extFor(mime, 'jpg')}`, input.photo, 'image/jpeg');
+        patch.photo_url = db.storage.from('productos').getPublicUrl(path).data.publicUrl;
+        const oldPath = publicPathOf(old?.photoUrl ?? null);
+        if (oldPath) toRemove.push({ bucket: 'productos', path: oldPath });
+      }
+      if (input.video) {
+        const mime = input.video.mimeType ?? 'video/mp4';
+        patch.video_path = await uploadFile(db, 'videos', `${folder}/video-${Date.now()}.${extFor(mime, 'mp4')}`, input.video, 'video/mp4');
+        if (old?.videoPath) toRemove.push({ bucket: 'videos', path: old.videoPath });
+      }
+      if (Object.keys(patch).length) {
+        const { error } = await db.from('products').update(patch).eq('id', id);
+        if (error) throw error;
+      }
+      // Los archivos reemplazados ya no se usan: se borran (si falla, no afecta al producto).
+      for (const f of toRemove) await db.storage.from(f.bucket).remove([f.path]);
+
+      const { data, error } = await db.from('products').select('*').eq('id', id).single();
+      if (error) throw error;
+      return toProduct(data);
+    },
+
+    /** Borra un producto propio con su foto y su video. */
+    async deleteProduct(product: Product) {
+      if (!db) {
+        demoProducts = demoProducts.filter((p) => p.id !== product.id);
+        return;
+      }
+      const { error } = await db.from('products').delete().eq('id', product.id);
+      if (error) throw error;
+      const photo = publicPathOf(product.photoUrl);
+      if (photo) await db.storage.from('productos').remove([photo]);
+      if (product.videoPath) await db.storage.from('videos').remove([product.videoPath]);
+    },
+
+    /**
+     * Edita los datos del negocio propio. Si ya estaba publicado y cambia nombre, dirección, tipo
+     * o categoría, la base lo devuelve a revisión (migración 0009). Devuelve el negocio actualizado.
+     */
+    async updateBusiness(businessId: string, edit: BusinessEdit): Promise<Business> {
+      if (!db) throw new Error('Sin conexión a la base de datos.');
+      const row: Record<string, unknown> = {};
+      if (edit.name !== undefined) row.name = edit.name.trim();
+      if (edit.type !== undefined) row.type = edit.type;
+      if (edit.category !== undefined) row.category = edit.category;
+      if (edit.address !== undefined) row.address = edit.address.trim();
+      if (edit.hours !== undefined) row.hours = edit.hours?.trim() || null;
+      if (edit.whatsapp !== undefined) row.whatsapp = edit.whatsapp?.trim() || null;
+      const { data, error } = await db.from('businesses').update(row).eq('id', businessId).select('*').single();
+      if (error) throw error;
+      return toBusiness({ ...data, rating: null, review_count: 0, product_count: 0 });
+    },
+
+    /** El negocio responde (o corrige su respuesta a) una reseña. Vacío = quitar la respuesta. */
+    async replyToReview(reviewId: string, reply: string) {
+      const text = reply.trim();
+      if (text && findOffensiveWords(text).length) throw new OffensiveTextError();
+      if (!db) {
+        demoReviews = demoReviews.map((r) => (r.id === reviewId ? { ...r, reply: text || null } : r));
+        return;
+      }
+      const { data, error } = await db
+        .from('reviews')
+        .update({ reply: text || null, replied_at: text ? new Date().toISOString() : null })
+        .eq('id', reviewId)
+        .select('id');
+      if (error) throw error;
+      if (!data?.length) throw new Error('No pudimos guardar tu respuesta. Intenta de nuevo.');
     },
 
     async submitForReview(businessId: string) {

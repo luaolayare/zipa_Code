@@ -11,8 +11,8 @@
 //    sus aceptaciones (consents), sus reportes y sus bloqueos.
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
-// Buckets donde las apps guardan archivos de usuarios ("verificaciones": migración 0005).
-const BUCKETS = ['verificaciones', 'productos', 'negocios'];
+// Buckets donde las apps guardan archivos de usuarios ("verificaciones": 0005; "productos" y "videos": 0009).
+const BUCKETS = ['verificaciones', 'productos', 'videos', 'negocios'];
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
