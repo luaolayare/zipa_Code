@@ -62,6 +62,9 @@ export interface Product {
   videoStatus: VideoStatus | null; // el equipo lo revisa antes de que lo vean los clientes
   videoNote: string | null; // motivo si el equipo no aprobó el video
   status: ProductStatus;
+  available: boolean; // false: "No disponible hoy" (sigue en el menú)
+  section: string | null; // sección del menú: "Entradas", "Bebidas"...
+  sortOrder: number;
 }
 
 export type VideoStatus = 'pendiente' | 'aprobado' | 'rechazado';

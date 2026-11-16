@@ -74,6 +74,9 @@ const toProduct = (r: any): Product => ({
   videoStatus: r.video_status ?? null,
   videoNote: r.video_note ?? null,
   status: r.status,
+  available: r.available ?? true,
+  section: r.section ?? null,
+  sortOrder: r.sort_order ?? 0,
 });
 
 const toReview = (r: any): Review => ({
@@ -131,6 +134,8 @@ export interface ProductInput {
   description?: string | null;
   photo?: LocalFile | null; // nueva foto (si no cambia, se omite)
   video?: LocalFile | null; // nuevo video para el 3D (si no cambia, se omite)
+  available?: boolean; // por defecto, disponible
+  section?: string | null; // sección del menú
 }
 
 const extFor = (mime: string, fallback: string) => {
@@ -335,9 +340,19 @@ export function createApi(db: SupabaseClient | null) {
 
     async listProducts(businessId: string): Promise<Product[]> {
       if (!db) return demoProducts.filter((p) => p.businessId === businessId);
-      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('created_at');
+      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('sort_order').order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
+    },
+
+    /** El negocio marca un producto como disponible o "no disponible hoy" (sin borrarlo). */
+    async setProductAvailable(productId: string, available: boolean) {
+      if (!db) {
+        demoProducts = demoProducts.map((p) => (p.id === productId ? { ...p, available } : p));
+        return;
+      }
+      const { error } = await db.from('products').update({ available }).eq('id', productId);
+      if (error) throw error;
     },
 
     /** Un producto de un negocio publicado (o del propio negocio). */
@@ -494,7 +509,7 @@ export function createApi(db: SupabaseClient | null) {
     /** Productos del negocio propio (incluye los de un negocio aún no publicado). */
     async myProducts(businessId: string): Promise<Product[]> {
       if (!db) return demoProducts.filter((p) => p.businessId === businessId);
-      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('created_at');
+      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('sort_order').order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
     },
@@ -505,7 +520,13 @@ export function createApi(db: SupabaseClient | null) {
      * El modelo 3D lo genera después el servidor a partir del video.
      */
     async saveProduct(ownerId: string, businessId: string, input: ProductInput, productId?: string): Promise<Product> {
-      const fields = { name: input.name.trim(), price_cop: input.priceCop, description: input.description?.trim() || null };
+      const fields = {
+        name: input.name.trim(),
+        price_cop: input.priceCop,
+        description: input.description?.trim() || null,
+        available: input.available ?? true,
+        section: input.section?.trim() || null,
+      };
       if (!db) {
         const existing = demoProducts.find((p) => p.id === productId);
         const p: Product = {
@@ -520,6 +541,9 @@ export function createApi(db: SupabaseClient | null) {
           videoStatus: input.video ? 'pendiente' : existing?.videoStatus ?? null,
           videoNote: input.video ? null : existing?.videoNote ?? null,
           status: 'procesando',
+          available: fields.available,
+          section: fields.section,
+          sortOrder: existing?.sortOrder ?? 0,
         };
         demoProducts = [...demoProducts.filter((x) => x.id !== p.id), p];
         return p;

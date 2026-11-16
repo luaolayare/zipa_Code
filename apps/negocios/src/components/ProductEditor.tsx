@@ -1,6 +1,6 @@
 // Formulario de un producto: nombre, precio, descripción, foto y video para el 3D.
 // Lo usan el Paso 4 del registro y el panel (agregar o editar).
-import { TextField, colors, fonts, type Category, type LocalFile, PlateArt } from '@zipa/shared';
+import { MAX_PRICE_COP, MENU_SECTIONS, TextField, colors, fonts, formatCop, type Category, type LocalFile, PlateArt } from '@zipa/shared';
 import { Camera, Check, ImageIcon, Video } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,9 +16,11 @@ export interface ProductForm {
   photoUrl: string | null; // foto que ya estaba guardada
   video: LocalFile | null; // video nuevo
   hasSavedVideo: boolean; // ya había un video guardado
+  available: boolean; // false: "No disponible hoy"
+  section: string; // sección del menú ('' = sin sección)
 }
 
-export const emptyProductForm: ProductForm = { name: '', price: '', description: '', photo: null, photoUrl: null, video: null, hasSavedVideo: false };
+export const emptyProductForm: ProductForm = { name: '', price: '', description: '', photo: null, photoUrl: null, video: null, hasSavedVideo: false, available: true, section: '' };
 
 export const priceFrom = (price: string) => {
   const digits = price.replace(/\D/g, '');
@@ -29,6 +31,11 @@ export const priceFrom = (price: string) => {
 export function productFormError(f: ProductForm, word: string): string | null {
   if (!f.name.trim()) return `Escribe el nombre del ${word}.`;
   if (f.name.trim().length > 60) return 'El nombre es muy largo (máximo 60 caracteres).';
+  const price = priceFrom(f.price);
+  if (price === null) return `Escribe el precio del ${word} en pesos. Ej: 7.000.`;
+  if (price === 0) return 'El precio no puede ser $ 0.';
+  if (price > MAX_PRICE_COP) return `Revisa el precio: ${formatCop(price)} parece demasiado alto.`;
+  if (f.section.trim().length > 40) return 'El nombre de la sección es muy largo (máximo 40 caracteres).';
   if (!f.photo && !f.photoUrl) return `Agrega una foto del ${word}. Es lo primero que ven los clientes.`;
   return null;
 }
@@ -65,6 +72,45 @@ export function ProductEditor({ value, onChange, category }: { value: ProductFor
         placeholder="Ej: $ 7.000"
       />
       <TextField label="Descripción (opcional)" value={value.description} onChangeText={(description) => onChange({ ...value, description })} placeholder="¿Qué lleva? ¿Cómo se sirve o cómo está hecho?" multiline maxLength={300} />
+
+      {/* Sección del menú: sugerencias para restaurantes y campo libre para todos. */}
+      <View style={{ gap: 10 }}>
+        <Text style={styles.label}>{word === 'plato' ? 'Sección del menú' : 'Sección (opcional)'}</Text>
+        {word === 'plato' && (
+          <View style={styles.chips}>
+            {MENU_SECTIONS.map((s) => {
+              const on = value.section === s;
+              return (
+                <Pressable key={s} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => onChange({ ...value, section: on ? '' : s })} style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && { opacity: 0.8 }]}>
+                  <Text style={[styles.chipText, on && { color: '#FFFFFF' }]}>{s}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+        <TextField
+          label={word === 'plato' ? 'U otra sección' : 'Nombre de la sección'}
+          value={MENU_SECTIONS.includes(value.section) && word === 'plato' ? '' : value.section}
+          onChangeText={(section) => onChange({ ...value, section })}
+          placeholder={word === 'plato' ? 'Ej: Desayunos' : 'Ej: Mochilas'}
+          maxLength={40}
+        />
+      </View>
+
+      <Pressable
+        accessibilityRole="switch"
+        accessibilityState={{ checked: value.available }}
+        accessibilityLabel="Disponible hoy"
+        onPress={() => onChange({ ...value, available: !value.available })}
+        style={({ pressed }) => [styles.toggleRow, pressed && { opacity: 0.85 }]}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={type.h3}>Disponible hoy</Text>
+          <Text style={type.small}>{value.available ? 'Los clientes lo ven normal.' : 'Sigue en tu menú, marcado como «No disponible hoy».'}</Text>
+        </View>
+        <View style={[styles.track, value.available && styles.trackOn]}>
+          <View style={[styles.knob, value.available && styles.knobOn]} />
+        </View>
+      </Pressable>
 
       <Text style={styles.label}>Foto</Text>
       <View style={styles.photoRow}>
@@ -129,4 +175,13 @@ const styles = StyleSheet.create({
   recDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#FFFFFF' },
   recText: { fontFamily: fonts.bold, fontSize: 16.5, color: '#FFFFFF' },
   link: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary, textDecorationLine: 'underline' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 42, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.text },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  track: { width: 52, height: 32, borderRadius: 16, backgroundColor: colors.inputBorder, padding: 3, justifyContent: 'center' },
+  trackOn: { backgroundColor: colors.success },
+  knob: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#FFFFFF' },
+  knobOn: { alignSelf: 'flex-end' },
 });

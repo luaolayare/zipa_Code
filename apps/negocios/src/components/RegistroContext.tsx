@@ -1,5 +1,6 @@
 import type { Business, BusinessType, Category, MainCategory } from '@zipa/shared';
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
 import type { ProductForm } from './ProductEditor';
 
@@ -59,14 +60,60 @@ export const draftFromBusiness = (b: Business): Partial<RegistroDraft> => ({
   verificationSaved: false,
 });
 
-type Ctx = { draft: RegistroDraft; update: (p: Partial<RegistroDraft>) => void; reset: () => void };
+type Ctx = { draft: RegistroDraft; update: (p: Partial<RegistroDraft>) => void; reset: () => void; restored: boolean };
 const RegistroCtx = createContext<Ctx | null>(null);
 
-/** Guarda en memoria lo que el negocio llena durante los 5 pasos del registro. */
+const STORAGE_KEY = 'zipa:registro-negocio:v1';
+
+/**
+ * Lo que se guarda en el celular para retomar el registro si se cierra la app. La cédula o NIT
+ * NO se guarda (dato sensible): se vuelve a pedir.
+ */
+export const draftToStore = (d: RegistroDraft): Partial<RegistroDraft> => {
+  const { idNumber: _omit, ...rest } = d;
+  return rest;
+};
+
+/** Hay algo que valga la pena retomar. */
+export const hasProgress = (d: Partial<RegistroDraft>) => !!(d.name?.trim() || d.subcategoryId || d.address?.trim() || d.products?.length);
+
+/** Lo que el negocio llena durante los 5 pasos del registro, guardado también en el celular. */
 export function RegistroProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState<RegistroDraft>(empty);
+  const [restored, setRestored] = useState(false);
+  const loaded = useRef(false);
+
+  // Al abrir la app: si quedó un registro a medias, se retoma.
+  useEffect(() => {
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((raw) => {
+        const saved = raw ? (JSON.parse(raw) as Partial<RegistroDraft>) : null;
+        if (saved && hasProgress(saved)) {
+          setDraft((d) => ({ ...d, ...saved, idNumber: '' }));
+          setRestored(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => { loaded.current = true; });
+  }, []);
+
+  // Cada cambio se guarda (después de cargar, para no pisar lo guardado con el borrador vacío).
+  useEffect(() => {
+    if (!loaded.current) return;
+    const t = setTimeout(() => {
+      (hasProgress(draft) ? AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(draftToStore(draft))) : AsyncStorage.removeItem(STORAGE_KEY)).catch(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [draft]);
+
+  const reset = () => {
+    setDraft(empty);
+    setRestored(false);
+    AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
+  };
+
   return (
-    <RegistroCtx.Provider value={{ draft, update: (p) => setDraft((d) => ({ ...d, ...p })), reset: () => setDraft(empty) }}>
+    <RegistroCtx.Provider value={{ draft, update: (p) => setDraft((d) => ({ ...d, ...p })), reset, restored }}>
       {children}
     </RegistroCtx.Provider>
   );

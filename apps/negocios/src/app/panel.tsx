@@ -130,7 +130,19 @@ export default function Panel() {
           {products.length === 0 ? (
             <Text style={type.body}>Aún no tienes {word}s. Agrega el primero con su foto y, si quieres, un video corto.</Text>
           ) : (
-            products.map((p) => <ProductRow key={p.id} product={p} category={business.category} onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id } })} />)
+            products.map((p) => (
+              <ProductRow
+                key={p.id}
+                product={p}
+                category={business.category}
+                onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id } })}
+                onToggleAvailable={async () => {
+                  // Cambio inmediato en pantalla; si falla, se revierte.
+                  setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, available: !p.available } : x)));
+                  try { await api.setProductAvailable(p.id, !p.available); } catch { setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, available: p.available } : x))); }
+                }}
+              />
+            ))
           )}
           {videosRechazados > 0 && (
             <Notice tone="danger">{videosRechazados === 1 ? 'Hay un video que no aprobamos.' : `Hay ${videosRechazados} videos que no aprobamos.`} Toca el producto para ver el motivo y grabar uno nuevo.</Notice>

@@ -59,6 +59,14 @@ describe('createApi en modo demo', () => {
     expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
   });
 
+  it('guarda sección y disponibilidad de un plato, y la cambia con un toque', async () => {
+    const api = createApi(null);
+    const saved = await api.saveProduct('demo', 'b1', { name: 'Changua', priceCop: 9000, section: ' Desayunos ', available: true });
+    expect(saved.section).toBe('Desayunos');
+    await api.setProductAvailable(saved.id, false);
+    expect((await api.listProducts('b1')).find((x) => x.id === saved.id)?.available).toBe(false);
+  });
+
   it('cuenta los negocios por categoría principal', async () => {
     const api = createApi(null);
     const n = await api.countByMainCategory();

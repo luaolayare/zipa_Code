@@ -641,6 +641,29 @@ do $$ begin
 end $$;
 reset role;
 
+-- MENÚ DIGITAL (migración 0014) --------------------------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$insert into public.products (business_id, name, price_cop, section, available, sort_order) values ('00000000-0000-0000-0000-0000000000e1', 'Pizza margarita', 28000, 'Platos fuertes', true, 1)$q$);
+  perform ci_pruebas.debe_funcionar($q$update public.products set available = false, section = 'Pizzas' where name = 'Pizza margarita'$q$);
+  if (select available::text || '|' || section from public.products where name = 'Pizza margarita') <> 'false|Pizzas' then raise exception 'no guardó disponibilidad y sección'; end if;
+  perform ci_pruebas.debe_fallar($q$update public.products set section = '' where name = 'Pizza margarita'$q$, '%check constraint%');
+  -- Productos ajenos: no.
+  if ci_pruebas.filas($q$update public.products set available = false where business_id = '00000000-0000-0000-0000-0000000000b1'$q$) <> 0 then raise exception 'cambió la disponibilidad de productos ajenos'; end if;
+  -- Cambiar disponibilidad no toca la aprobación del video.
+  perform ci_pruebas.debe_fallar($q$update public.products set video_status = 'aprobado' where name = 'Pizza margarita'$q$, 'permission denied%');
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if (select available from public.products where name = 'Pizza margarita') is distinct from false then raise exception 'el público no ve que el plato no está disponible'; end if;
+  perform ci_pruebas.debe_fallar($q$update public.products set available = true$q$, 'permission denied%');
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

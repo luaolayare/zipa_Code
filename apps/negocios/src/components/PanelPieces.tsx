@@ -22,7 +22,7 @@ const STATE = {
   sin_video: { label: 'Solo foto', color: colors.textMuted },
 };
 
-export function ProductRow({ product, category, onPress }: { product: Product; category: Category; onPress: () => void }) {
+export function ProductRow({ product, category, onPress, onToggleAvailable }: { product: Product; category: Category; onPress: () => void; onToggleAvailable?: () => void }) {
   const s = STATE[productVideoState(product)];
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}>
@@ -31,7 +31,20 @@ export function ProductRow({ product, category, onPress }: { product: Product; c
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text style={type.h3} numberOfLines={2}>{product.name}</Text>
-        <Text style={styles.price}>{formatCop(product.priceCop)}</Text>
+        <Text style={styles.price}>{formatCop(product.priceCop)}{product.section ? ` · ${product.section}` : ''}</Text>
+        {onToggleAvailable && (
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: product.available }}
+            accessibilityLabel={`${product.name}: disponible hoy`}
+            onPress={onToggleAvailable}
+            hitSlop={6}
+            style={[styles.avail, product.available ? styles.availOn : styles.availOff]}>
+            <Text style={[styles.availText, { color: product.available ? colors.success : colors.danger }]}>
+              {product.available ? 'Disponible hoy' : 'No disponible hoy'}
+            </Text>
+          </Pressable>
+        )}
         <View style={styles.stateRow}>
           <View style={[styles.stateDot, { backgroundColor: s.color }]} />
           <Text style={[styles.state, { color: s.color }]}>{s.label}</Text>
@@ -130,4 +143,8 @@ const styles = StyleSheet.create({
   link: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.primary, textDecorationLine: 'underline' },
   replyButton: { alignSelf: 'flex-start', minHeight: 46, paddingHorizontal: 22, justifyContent: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: colors.border },
   replyButtonText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
+  avail: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999, borderWidth: 1.5 },
+  availOn: { borderColor: colors.success, backgroundColor: '#DCEFE2' },
+  availOff: { borderColor: colors.danger, backgroundColor: '#F9DED6' },
+  availText: { fontFamily: fonts.bold, fontSize: 13 },
 });

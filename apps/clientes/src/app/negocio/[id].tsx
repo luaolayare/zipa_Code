@@ -1,5 +1,5 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+import { WhatsAppIcon, groupMenu, isRestaurant, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Ban, BadgeCheck, Camera, Flag, MapPin } from 'lucide-react-native';
@@ -70,7 +70,6 @@ export default function NegocioDetalle() {
   }
 
   const { cover } = businessCover(business);
-  const comer = business.category === 'comer';
   // "Pizzerías · Pizza al horno de leña · $$" (subcategoría, lo que vende en sus palabras y precio).
   const meta = [business.subcategoryName ?? categoryLabel(business.category), business.specialty, formatPriceLevel(business.priceLevel)].filter(Boolean).join(' · ');
   const wa = whatsappUrl(business.whatsapp);
@@ -146,14 +145,21 @@ export default function NegocioDetalle() {
           {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => Linking.openURL(wa)} />}
         </View>
 
-        <Text style={styles.h2} accessibilityRole="header">{comer ? 'Menú' : 'Vitrina'}</Text>
+        <Text style={styles.h2} accessibilityRole="header">{isRestaurant(business) ? 'Menú' : 'Productos'}</Text>
         {products.length === 0 ? (
           <Text style={styles.muted}>Este negocio aún no ha subido productos.</Text>
         ) : (
-          <View style={styles.grid}>
-            {products.map((p, i) => <ProductCard key={p.id} product={p} category={business.category} seed={i} />)}
-          </View>
+          // Por secciones; si ningún producto tiene sección, una sola grilla sin título.
+          groupMenu(products).map(({ section, items }, g, all) => (
+            <View key={section ?? 'sin-seccion'} style={{ gap: 12 }}>
+              {(section || all.length > 1) && <Text style={styles.menuSection} accessibilityRole="header">{section ?? 'Más del menú'}</Text>}
+              <View style={styles.grid}>
+                {items.map((p, i) => <ProductCard key={p.id} product={p} category={business.category} seed={g * 10 + i} />)}
+              </View>
+            </View>
+          ))
         )}
+        {products.length > 0 && <Text style={styles.muted}>Para pedir o preguntar por un {isRestaurant(business) ? 'plato' : 'producto'}, escríbele al negocio por WhatsApp.</Text>}
 
         <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
         {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}
@@ -273,4 +279,5 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 18 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
   actionText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.textMuted },
+  menuSection: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginTop: 4 },
 });

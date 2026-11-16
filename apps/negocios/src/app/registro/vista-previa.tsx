@@ -60,6 +60,8 @@ export default function VistaPrevia() {
           description: p.form.description,
           photo: p.form.photo,
           video: p.form.video,
+          available: p.form.available,
+          section: p.form.section,
         });
         products[i] = { ...p, savedId: saved.id };
         update({ products: [...products] });

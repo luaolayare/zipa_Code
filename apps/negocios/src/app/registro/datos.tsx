@@ -1,9 +1,9 @@
-import { Button, TextField, type BusinessType } from '@zipa/shared';
+import { Button, TextField, colors, type BusinessType } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
 
-import { BUSINESS_TYPES, type } from '@/components/kit';
+import { BUSINESS_TYPES, Notice, type } from '@/components/kit';
 import { CategoryPicker } from '@/components/CategoryPicker';
 import { OptionCards } from '@/components/OptionChips';
 import { Page } from '@/components/Page';
@@ -12,7 +12,7 @@ import { StepHeader } from '@/components/StepHeader';
 
 // Paso 2: datos del negocio.
 export default function Datos() {
-  const { draft, update } = useRegistro();
+  const { draft, update, reset, restored } = useRegistro();
   const [error, setError] = useState('');
 
   const next = () => {
@@ -26,6 +26,13 @@ export default function Datos() {
   return (
     <Page>
       <StepHeader step={2} title="Datos del negocio" />
+      {restored && (
+        <Notice tone="info">
+          <Text style={type.strong}>Retomamos tu registro donde lo dejaste.</Text>
+          <Text style={type.small}>Por seguridad, la cédula o NIT se vuelve a pedir en el paso 3.</Text>
+          <Text style={[type.strong, { color: colors.primary, marginTop: 6, textDecorationLine: 'underline' }]} accessibilityRole="button" onPress={reset}>Empezar de cero</Text>
+        </Notice>
+      )}
       <TextField label="Nombre del negocio" value={draft.name} onChangeText={(name) => update({ name })} placeholder="Ej: Arepas Mamá Inés" maxLength={80} />
       <CategoryPicker value={draft} onChange={(patch) => { update(patch); setError(''); }} />
       <OptionCards<BusinessType> label="¿Cómo se describe?" options={BUSINESS_TYPES} value={draft.type} onChange={(t) => update({ type: t })} />

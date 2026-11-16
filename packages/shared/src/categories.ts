@@ -1,4 +1,4 @@
-import type { Business, BusinessType, Category, CategoryNode, MainCategory } from './types';
+import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product } from './types';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'comer', label: 'Comer' },
@@ -103,3 +103,29 @@ export const businessCover = (b: Business) => {
  * a un negocio "el mejor" sería engañoso.
  */
 export const MIN_REVIEWS_FOR_RANKING = 5;
+
+// --- Menú digital (migración 0014) ---------------------------------------------------------------
+
+/** Secciones sugeridas para el menú de un restaurante (el negocio puede escribir otra). */
+export const MENU_SECTIONS = ['Entradas', 'Platos fuertes', 'Sopas', 'Para compartir', 'Bebidas', 'Postres'];
+
+/** Precio máximo razonable para un producto (evita errores de digitación como $ 70000000). */
+export const MAX_PRICE_COP = 5_000_000;
+
+/**
+ * Agrupa los productos por sección, en el orden del menú: primero las secciones sugeridas en su
+ * orden, luego las propias del negocio y al final los que no tienen sección ("Más del menú").
+ * Dentro de cada sección: disponibles primero, luego por orden y nombre.
+ */
+export function groupMenu(products: Product[]): { section: string | null; items: Product[] }[] {
+  const key = (p: Product) => p.section?.trim() || null;
+  const sections = [...new Set(products.map(key))];
+  const rank = (s: string | null) => (s === null ? 1000 : MENU_SECTIONS.indexOf(s) >= 0 ? MENU_SECTIONS.indexOf(s) : 100);
+  sections.sort((a, b) => rank(a) - rank(b) || (a ?? '').localeCompare(b ?? '', 'es'));
+  return sections.map((section) => ({
+    section,
+    items: products
+      .filter((p) => key(p) === section)
+      .sort((a, b) => Number(b.available) - Number(a.available) || a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, 'es')),
+  }));
+}

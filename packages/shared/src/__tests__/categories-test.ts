@@ -16,9 +16,10 @@ import {
   subcategoriesOf,
   DEMO_CATEGORIES,
   MAIN_CATEGORIES,
+  groupMenu,
 } from '../categories';
 import { CREDITS } from '../brand';
-import { DEMO_BUSINESSES } from '../demo';
+import { DEMO_BUSINESSES, DEMO_PRODUCTS } from '../demo';
 
 const base = DEMO_BUSINESSES[0];
 
@@ -118,5 +119,23 @@ describe('categorías de la Beta 2', () => {
   it('los créditos de «Acerca de» están en un solo lugar', () => {
     expect(CREDITS.developedBy).toBe('SCALIX Cloud');
     expect(CREDITS.site).toMatch(/^https:\/\//);
+  });
+});
+
+describe('menú digital', () => {
+  const p = (name: string, section: string | null, available = true, sortOrder = 0) => ({ ...DEMO_PRODUCTS[0], id: name, name, section, available, sortOrder });
+
+  it('agrupa por secciones en el orden del menú y deja al final lo que no tiene sección', () => {
+    const groups = groupMenu([p('Limonada', 'Bebidas'), p('Ajiaco', 'Sopas'), p('Suelto', null), p('Empanadas', 'Entradas'), p('Especial', 'Desayunos')]);
+    expect(groups.map((g) => g.section)).toEqual(['Entradas', 'Sopas', 'Bebidas', 'Desayunos', null]);
+  });
+
+  it('dentro de cada sección, los disponibles primero y luego por orden', () => {
+    const [g] = groupMenu([p('B', 'Postres', true, 2), p('A', 'Postres', false, 0), p('C', 'Postres', true, 1)]);
+    expect(g.items.map((x) => x.name)).toEqual(['C', 'B', 'A']);
+  });
+
+  it('trata igual una sección con espacios de más', () => {
+    expect(groupMenu([p('A', 'Bebidas '), p('B', 'Bebidas')])).toHaveLength(1);
   });
 });
