@@ -7,6 +7,12 @@
 - **Paso 2 (permisos y parches del SDK 58): hecho** — commit `c9251f4`.
 - **Paso 3 (ESLint, pruebas, Node): hecho** — commit `dd3ba83`.
 - **Paso 4 (CI con GitHub Actions): hecho** — commits `a0e5a29`, `df4e17a`, `883a933` y `311ad64`, llevados a `main` por *fast-forward*. Tres ejecuciones en verde en GitHub.
+- **Paso 5 (migración 0007, privilegios mínimos): hecho.**
+  - **Commits:** `65ea68a` (prueba `supabase/ci/probar_permisos.sql`, que falló a propósito sin la 0007) y `b2c7501` (la 0007, con CI en verde).
+  - **Aplicada en Supabase** con `db push` el 16 nov 2026, con autorización. Las migraciones 0001–0007 quedaron alineadas.
+  - **Permisos de `anon` y `authenticated` verificados** con `has_table_privilege`. La API real lee lo público y rechaza con 42501 lo privado.
+  - **Datos sin cambios.**
+  - **Observación:** quedan privilegios por defecto de `supabase_admin` que exponen las tablas que cree ese rol. Las migraciones crean tablas como `postgres`, así que no aplican.
 - Los demás pasos: pendientes de autorización.
 
 > **Riesgo abierto (decisión del responsable, 16 nov 2026):** la contraseña de PostgreSQL que se compartió por chat **todavía no se rota**. Debe rotarse antes de crear el proyecto de producción (Paso 9) y antes de dar acceso a terceros.
