@@ -1,6 +1,6 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
 import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Category, type Product, type Review, PlateArt } from '@zipa/shared';
-import { ChevronRight } from 'lucide-react-native';
+import { BadgeCheck, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -76,7 +76,11 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
         <Text style={[type.h3, { flex: 1 }]} numberOfLines={1}>{review.authorName}</Text>
         <Stars n={review.stars} />
       </View>
+      {review.visited && (
+        <View style={styles.visited}><BadgeCheck size={15} color={colors.success} /><Text style={styles.visitedText}>Visitó el negocio</Text></View>
+      )}
       <Text style={styles.reviewText}>{review.text}</Text>
+      {!!review.photoUrl && <Image source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${review.authorName}`} />}
       <Text style={type.small}>{date}</Text>
 
       {review.reply && !editing ? (
@@ -116,6 +120,9 @@ const styles = StyleSheet.create({
   review: { padding: 18, gap: 10, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stars: { fontSize: 18, color: colors.starText, letterSpacing: 1 },
+  visited: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  visitedText: { fontFamily: fonts.bold, fontSize: 13, color: colors.success },
+  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: 14, backgroundColor: colors.stage3d },
   reviewText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: colors.textBody },
   reply: { gap: 6, padding: 14, borderRadius: 16, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
   replyLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.primary },

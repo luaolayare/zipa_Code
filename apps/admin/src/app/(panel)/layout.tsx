@@ -5,9 +5,10 @@ import { Nav } from './Nav';
 // Todas las páginas del panel: exigen sesión, MFA (aal2) y rol del equipo.
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const { supabase, user, role } = await requireAdmin();
-  const [{ count: negocios }, { count: videos }, { count: reportes }] = await Promise.all([
+  const [{ count: negocios }, { count: videos }, { count: resenas }, { count: reportes }] = await Promise.all([
     supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('status', 'en_revision'),
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('video_status', 'pendiente'),
+    supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'en_espera'),
     supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pendiente'),
   ]);
 
@@ -18,7 +19,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="brand-mark" aria-hidden>▣</span>
           <span>Zipa lo tiene<small>Panel del equipo</small></span>
         </div>
-        <Nav negocios={negocios ?? 0} videos={videos ?? 0} reportes={reportes ?? 0} />
+        <Nav negocios={negocios ?? 0} videos={videos ?? 0} resenas={resenas ?? 0} reportes={reportes ?? 0} />
         <div className="who">
           <span>Sesión de<br /><strong>{user.email}</strong></span>
           <span className="pill publicado" style={{ alignSelf: 'flex-start' }}>{role === 'admin' ? 'Administrador' : 'Revisor'}</span>

@@ -51,4 +51,9 @@ export interface Review {
   text: string;
   reply: string | null;
   createdAt: string;
+  status?: ReviewStatus; // 'en_espera': la ve solo su autor hasta que el equipo la revise
+  visited?: boolean; // escaneó el QR del negocio (sello "Visitó el negocio")
+  photoUrl?: string | null; // foto que agregó el cliente
 }
+
+export type ReviewStatus = 'publicada' | 'en_espera' | 'rechazada';

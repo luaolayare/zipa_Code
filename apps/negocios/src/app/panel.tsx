@@ -18,6 +18,7 @@ export default function Panel() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +28,8 @@ export default function Panel() {
     try {
       const b = await api.myBusiness(user.id);
       if (!b) return router.replace('/registro/datos'); // tiene cuenta pero aún no registró el negocio
-      const [p, r] = await Promise.all([api.myProducts(b.id), api.listReviews(b.id)]);
+      const [p, r, t] = await Promise.all([api.myProducts(b.id), api.listReviews(b.id), api.myQrToken(b.id)]);
+      setQrToken(t);
       setBusiness(b);
       setProducts(p);
       setReviews(r);
@@ -147,7 +149,7 @@ export default function Panel() {
           )}
 
           <Pressable accessibilityRole="button" accessibilityLabel="Ver e imprimir tu QR" onPress={() => router.push('/qr')} style={({ pressed }) => [styles.qrCard, pressed && { opacity: 0.9 }]}>
-            <View style={styles.qrBox}><QrMini businessId={business.id} /></View>
+            <View style={styles.qrBox}><QrMini businessId={business.id} token={qrToken} /></View>
             <View style={{ flex: 1, gap: 6 }}>
               <Text style={type.h3}>Tu QR para mesas y mostrador</Text>
               <Text style={type.small}>Lleva directo a tu vitrina y a dejar reseña. Toca para verlo grande y compartirlo.</Text>

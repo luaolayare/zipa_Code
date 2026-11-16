@@ -2,25 +2,27 @@
 import { businessCover, businessSpecialty, businessTypeLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { Ban, Flag, MapPin, MessageCircle } from 'lucide-react-native';
+import { Ban, BadgeCheck, Camera, Flag, MapPin, MessageCircle } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
 import { ProductCard } from '@/components/ProductCard';
-import { mapsUrl, takeReviewed, whatsappUrl } from '@/lib/contacto';
+import { mapsUrl, setPendingVisit, takePendingVisit, takeReviewed, whatsappUrl } from '@/lib/contacto';
 
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
 export default function NegocioDetalle() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // v: código de visita que trae el QR del mostrador del negocio.
+  const { id, v } = useLocalSearchParams<{ id: string; v?: string }>();
   const { api, user } = useAuth();
   const insets = useSafeAreaInsets();
   const [business, setBusiness] = useState<Business | null | undefined>(undefined); // undefined = cargando
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [thanks, setThanks] = useState(false);
+  const [thanks, setThanks] = useState<string | null>(null); // 'publicada' o 'en_espera'
+  const [visit, setVisit] = useState(false);
   const mine = reviews.find((r) => r.userId === user?.id) ?? null; // una reseña por persona y negocio
   const [error, setError] = useState(false);
 
@@ -29,12 +31,20 @@ export default function NegocioDetalle() {
   useFocusEffect(
     useCallback(() => {
       setStatusBarStyle('light');
-      if (takeReviewed(id)) setThanks(true);
+      const reviewed = takeReviewed(id);
+      if (reviewed) setThanks(reviewed);
+      // Visita verificada: con sesión se registra ya; sin sesión, al iniciarla.
+      const pending = takePendingVisit();
+      const token = v ?? (pending?.businessId === id ? pending.token : undefined);
+      if (token) {
+        if (user) api.registerVisit(id, token).then((ok) => setVisit(ok)).catch(() => {});
+        else setPendingVisit(id, token);
+      }
       Promise.all([api.getBusiness(id), api.listProducts(id), loadReviews()])
         .then(([b, p]) => { setBusiness(b); setProducts(p); setError(false); })
         .catch(() => setError(true));
       return () => setStatusBarStyle('dark');
-    }, [api, id, loadReviews]),
+    }, [api, id, v, user, loadReviews]),
   );
 
   if (error && business === undefined) {
@@ -98,8 +108,17 @@ export default function NegocioDetalle() {
 
       <View style={styles.body}>
         {thanks && (
+          <View style={[styles.thanks, thanks === 'en_espera' && styles.waiting]} accessibilityLiveRegion="polite">
+            <Text style={[styles.thanksText, thanks === 'en_espera' && { color: colors.accentText }]}>
+              {thanks === 'en_espera'
+                ? 'Gracias. Tu reseña quedó en revisión: este negocio recibió varias calificaciones bajas seguidas y el equipo las revisa antes de publicarlas.'
+                : 'Gracias. Tu reseña ya es visible para otros viajeros.'}
+            </Text>
+          </View>
+        )}
+        {visit && !thanks && (
           <View style={styles.thanks} accessibilityLiveRegion="polite">
-            <Text style={styles.thanksText}>Gracias. Tu reseña ya es visible para otros viajeros.</Text>
+            <Text style={styles.thanksText}>Registramos tu visita. Si calificas este negocio, tu reseña saldrá con el sello «Visitó el negocio».</Text>
           </View>
         )}
 
@@ -147,7 +166,19 @@ export default function NegocioDetalle() {
                   {'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text>
                 </Text>
               </View>
+              {(r.visited || r.photoUrl || r.status === 'en_espera') && (
+                <View style={styles.badges}>
+                  {r.status === 'en_espera' && <Text style={[styles.badge, styles.badgeWait]}>En revisión (solo la ves tú)</Text>}
+                  {r.visited && (
+                    <View style={styles.badgeRow}><BadgeCheck size={15} color={colors.success} /><Text style={[styles.badge, styles.badgeOk]}>Visitó el negocio</Text></View>
+                  )}
+                  {!!r.photoUrl && (
+                    <View style={styles.badgeRow}><Camera size={15} color={colors.primary} /><Text style={styles.badge}>Con foto</Text></View>
+                  )}
+                </View>
+              )}
               {!!r.text && <Text style={styles.reviewText}>{r.text}</Text>}
+              {!!r.photoUrl && <Image source={{ uri: r.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${r.authorName}`} />}
               {!!r.reply && (
                 <View style={styles.reply}>
                   <Text style={styles.replyLabel}>Respuesta de {business.name}</Text>
@@ -201,6 +232,13 @@ const styles = StyleSheet.create({
   headerMeta: { fontFamily: fonts.medium, fontSize: 16, color: 'rgba(255,255,255,0.85)' },
   body: { padding: 20, gap: 18 },
   thanks: { backgroundColor: colors.primarySoft, borderRadius: 20, padding: 16 },
+  waiting: { backgroundColor: colors.accentSoft },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  badge: { fontFamily: fonts.bold, fontSize: 13, color: colors.primary },
+  badgeOk: { color: colors.success },
+  badgeWait: { color: colors.accentText, backgroundColor: colors.accentSoft, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, overflow: 'hidden' },
+  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: 16, backgroundColor: colors.stage3d },
   thanksText: { fontFamily: fonts.medium, fontSize: 15.5, lineHeight: 22, color: colors.primary },
   tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
   tag: { fontFamily: fonts.bold, fontSize: 14, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, overflow: 'hidden' },

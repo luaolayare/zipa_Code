@@ -1,11 +1,12 @@
-import { Button, OffensiveTextError, Screen, TextField, colors, fonts, useAuth, type Review } from '@zipa/shared';
+import { Button, OffensiveTextError, Screen, TextField, colors, fonts, useAuth, type LocalFile, type Review } from '@zipa/shared';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Star } from 'lucide-react-native';
+import { ImagePlus, Star, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BackButton } from '@/components/BackButton';
-import { markReviewed } from '@/lib/contacto';
+import { markReviewed, takePendingVisit } from '@/lib/contacto';
 
 const LABELS = ['', 'Muy mal', 'Mal', 'Regular', 'Bien', '¡Excelente!'];
 
@@ -18,6 +19,8 @@ export default function Calificar() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false); // ya había calificado: edita su reseña
+  const [photo, setPhoto] = useState<LocalFile | null>(null); // foto nueva
+  const [savedPhoto, setSavedPhoto] = useState<string | null>(null); // foto que ya tenía
 
   useEffect(() => { api.getBusiness(id).then((b) => setBusinessName(b?.name ?? '')).catch(() => {}); }, [api, id]);
 
@@ -29,6 +32,7 @@ export default function Calificar() {
       setEditing(true);
       setStars(r.stars);
       setText(r.text);
+      setSavedPhoto(r.photoUrl ?? null);
     }).catch(() => {});
   }, [api, id, user]);
 
@@ -38,15 +42,25 @@ export default function Calificar() {
     setLoading(true);
     setError('');
     try {
-      await api.saveMyReview(id, user.id, user.name, stars, text.trim());
-      markReviewed(id);
+      // Si llegó por el QR sin sesión, la visita se registra antes de guardar (para el sello).
+      const pending = takePendingVisit();
+      if (pending?.businessId === id) await api.registerVisit(id, pending.token);
+      const status = await api.saveMyReview(id, user.id, user.name, stars, text.trim(), photo);
+      markReviewed(id, status);
       // Vuelve al negocio (aunque se haya llegado desde un producto) para ver el aviso de gracias.
       router.dismissTo({ pathname: '/negocio/[id]', params: { id } });
     } catch (e) {
-      setError(e instanceof OffensiveTextError ? 'Tu reseña tiene palabras que no permitimos. Cuéntalo de otra forma.' : 'No pudimos publicar tu reseña. Revisa tu conexión e intenta de nuevo.');
+      setError(e instanceof OffensiveTextError ? 'Tu reseña tiene palabras que no permitimos. Cuéntalo de otra forma.' : e instanceof Error ? e.message : 'No pudimos publicar tu reseña.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Selector de fotos del sistema: no pide permiso de cámara ni de galería.
+  const pickPhoto = async () => {
+    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true });
+    if (r.canceled || !r.assets?.[0]) return;
+    setPhoto({ uri: r.assets[0].uri, mimeType: r.assets[0].mimeType ?? 'image/jpeg' });
   };
 
   return (
@@ -69,6 +83,24 @@ export default function Calificar() {
       </View>
       {!!stars && <Text style={styles.label}>{LABELS[stars]}</Text>}
       <TextField label="Cuéntanos más" value={text} onChangeText={setText} multiline maxLength={600} placeholder="¿Qué pediste o compraste? ¿Cómo te atendieron?" />
+      <View style={{ gap: 10 }}>
+        <Text style={styles.photoLabel}>Foto (opcional)</Text>
+        {photo || savedPhoto ? (
+          <View>
+            <Image source={{ uri: photo?.uri ?? savedPhoto! }} style={styles.photo} accessibilityLabel="Foto de tu reseña" />
+            {!!photo && (
+              <Pressable accessibilityRole="button" accessibilityLabel="Quitar la foto" onPress={() => setPhoto(null)} style={styles.photoRemove}>
+                <X size={18} color="#FFFFFF" />
+              </Pressable>
+            )}
+          </View>
+        ) : null}
+        <Pressable accessibilityRole="button" onPress={pickPhoto} style={({ pressed }) => [styles.photoButton, pressed && { opacity: 0.85 }]}>
+          <ImagePlus size={22} color={colors.primary} />
+          <Text style={styles.photoButtonText}>{photo || savedPhoto ? 'Cambiar la foto' : 'Agregar una foto de lo que compraste'}</Text>
+        </Pressable>
+        <Text style={styles.note}>Las reseñas con foto inspiran más confianza a otros viajeros.</Text>
+      </View>
       {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
       <Button title={editing ? 'Guardar cambios' : 'Publicar reseña'} onPress={submit} loading={loading} />
       <Text style={styles.note}>Puedes tener una reseña por negocio y editarla cuando quieras. El negocio puede responderte.</Text>
@@ -85,5 +117,10 @@ const styles = StyleSheet.create({
   starOn: { borderColor: colors.star, backgroundColor: '#FFF6DF' },
   label: { fontFamily: fonts.display, fontSize: 20, color: colors.starText, marginTop: -6 },
   error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
+  photoLabel: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: 18, backgroundColor: colors.stage3d },
+  photoRemove: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(20,33,31,0.75)', alignItems: 'center', justifyContent: 'center' },
+  photoButton: { minHeight: 56, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 14 },
+  photoButtonText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary },
   note: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, textAlign: 'center' },
 });

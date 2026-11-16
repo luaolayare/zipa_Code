@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export function Nav({ negocios, videos, reportes }: { negocios: number; videos: number; reportes: number }) {
+export function Nav({ negocios, videos, resenas, reportes }: { negocios: number; videos: number; resenas: number; reportes: number }) {
   const path = usePathname();
   const item = (href: string, label: string, count?: number) => {
     const active = href === '/' ? path === '/' : path.startsWith(href);
@@ -19,6 +19,7 @@ export function Nav({ negocios, videos, reportes }: { negocios: number; videos: 
       {item('/', 'Resumen')}
       {item('/negocios', 'Negocios', negocios)}
       {item('/videos', 'Videos', videos)}
+      {item('/resenas', 'Reseñas', resenas)}
       {item('/reportes', 'Reportes', reportes)}
       {item('/bitacora', 'Bitácora')}
     </nav>

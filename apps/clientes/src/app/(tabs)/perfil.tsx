@@ -69,6 +69,7 @@ export default function Perfil() {
             <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>{'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text></Text>
           </View>
           {!!r.text && <Text style={styles.reviewText} numberOfLines={3}>{r.text}</Text>}
+          {r.status === 'en_espera' && <Text style={styles.waiting}>En revisión por el equipo</Text>}
           {!!r.reply && <Text style={styles.replied}>El negocio te respondió</Text>}
         </Pressable>
       ))}
@@ -98,6 +99,7 @@ const styles = StyleSheet.create({
   reviewBusiness: { flex: 1, fontFamily: fonts.bold, fontSize: 16, color: colors.text },
   stars: { fontSize: 16, letterSpacing: 1, color: colors.starText },
   reviewText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
+  waiting: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.accentText },
   replied: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.primary },
   legal: { marginTop: 4, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, gap: 2 },
   legalTitle: { fontFamily: fonts.bold, fontSize: 13, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },

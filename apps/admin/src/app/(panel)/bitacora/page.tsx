@@ -11,6 +11,8 @@ const ACCION: Record<string, string> = {
   reporte_descartado: 'Descartó un reporte',
   aprobar_video: 'Aprobó un video',
   rechazar_video: 'No aprobó un video',
+  publicar_resena: 'Publicó una reseña en espera',
+  rechazar_resena: 'No publicó una reseña en espera',
 };
 
 export default async function Bitacora() {

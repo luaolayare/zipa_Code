@@ -6,13 +6,15 @@ import { StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 /**
- * Enlace que abre el negocio en la app de clientes.
+ * Enlace que abre el negocio en la app de clientes. `v` es el código de visita del negocio
+ * (migración 0012): quien escanea el QR del mostrador queda como "Visitó el negocio".
  * PROVISIONAL: usa el esquema de la app (vitrinalocal://). Cuando exista el dominio propio se cambia
  * por https://<dominio>/n/<id>, que abre la app si está instalada o lleva a la tienda si no.
  */
-export const qrLink = (businessId: string) => `vitrinalocal://negocio/${businessId}`;
+export const qrLink = (businessId: string, token: string | null) =>
+  `vitrinalocal://negocio/${businessId}${token ? `?v=${token}` : ''}`;
 
-export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: string; name: string; comer: boolean }>(function QrPoster({ businessId, name, comer }, ref) {
+export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: string; token: string | null; name: string; comer: boolean }>(function QrPoster({ businessId, token, name, comer }, ref) {
   return (
     <View ref={ref} collapsable={false} style={styles.poster}>
       <View style={styles.brand}>
@@ -22,7 +24,7 @@ export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: stri
       <Text style={styles.name} numberOfLines={2}>{name}</Text>
       <Text style={styles.call}>{comer ? 'Escanea y mira nuestro menú' : 'Escanea y mira nuestros productos'}</Text>
       <View style={styles.qrBox}>
-        <QRCode value={qrLink(businessId)} size={210} color={colors.dark} backgroundColor="#FFFFFF" ecl="M" />
+        <QRCode value={qrLink(businessId, token)} size={210} color={colors.dark} backgroundColor="#FFFFFF" ecl="M" />
       </View>
       <Text style={styles.foot}>Y al final, cuéntanos cómo te fue ★</Text>
     </View>
@@ -30,8 +32,8 @@ export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: stri
 });
 
 /** QR pequeño para la tarjeta del panel. */
-export function QrMini({ businessId }: { businessId: string }) {
-  return <QRCode value={qrLink(businessId)} size={92} color={colors.dark} backgroundColor="#FFFFFF" />;
+export function QrMini({ businessId, token }: { businessId: string; token: string | null }) {
+  return <QRCode value={qrLink(businessId, token)} size={92} color={colors.dark} backgroundColor="#FFFFFF" />;
 }
 
 const styles = StyleSheet.create({

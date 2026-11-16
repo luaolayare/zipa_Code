@@ -13,11 +13,22 @@ export function whatsappUrl(raw: string | null): string | null {
 export const mapsUrl = (address: string) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address}, ${BRAND.city}, Colombia`)}`;
 
-// Aviso de "gracias" en el negocio después de publicar una reseña (lo lee la pantalla del negocio).
-let thanksFor: string | null = null;
-export const markReviewed = (businessId: string) => { thanksFor = businessId; };
-export const takeReviewed = (businessId: string) => {
-  const yes = thanksFor === businessId;
-  if (yes) thanksFor = null;
-  return yes;
+// Aviso después de publicar una reseña (lo lee la pantalla del negocio): publicada o en revisión.
+let reviewed: { businessId: string; status: string } | null = null;
+export const markReviewed = (businessId: string, status: string) => { reviewed = { businessId, status }; };
+export const takeReviewed = (businessId: string): string | null => {
+  if (reviewed?.businessId !== businessId) return null;
+  const s = reviewed.status;
+  reviewed = null;
+  return s;
+};
+
+// Visita desde el QR del mostrador cuando la persona aún no ha iniciado sesión: se registra
+// apenas entre (ver la pantalla del negocio).
+let pendingVisit: { businessId: string; token: string } | null = null;
+export const setPendingVisit = (businessId: string, token: string) => { pendingVisit = { businessId, token }; };
+export const takePendingVisit = () => {
+  const v = pendingVisit;
+  pendingVisit = null;
+  return v;
 };

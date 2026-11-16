@@ -57,6 +57,7 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-0000000000c1', 'turista@prueba.test', '{"full_name":"Turista Prueba"}'),
   ('00000000-0000-0000-0000-0000000000a1', 'admin@prueba.test', '{"full_name":"Admin Prueba"}'),
   ('00000000-0000-0000-0000-0000000000a2', 'revisor@prueba.test', '{"full_name":"Revisor Prueba"}');
+update auth.users set created_at = now() - interval '3 days' where email like '%@prueba.test';
 
 insert into public.admin_users (user_id, role) values
   ('00000000-0000-0000-0000-0000000000a1', 'admin'),
@@ -107,7 +108,8 @@ set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","r
 
 do $$ begin
   -- Puede: reseñar, reportar, bloquear, aceptar documentos, cambiar su nombre.
-  perform ci_pruebas.debe_funcionar($q$insert into public.reviews (business_id, user_id, stars, text) values ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1', 5, 'Deliciosa la arepa')$q$);
+  perform ci_pruebas.debe_fallar($q$insert into public.reviews (business_id, user_id, stars, text) values ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1', 5, 'Directo')$q$, 'permission denied%');
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b1', 5, 'Deliciosa la arepa')$q$);
   if ci_pruebas.cuenta('select * from public.reviews_public') <> 1 then raise exception 'la turista no ve su reseña en reviews_public'; end if;
   perform ci_pruebas.debe_funcionar($q$insert into public.reports (reporter_id, target_type, target_id, reason) values ('00000000-0000-0000-0000-0000000000c1', 'business', '00000000-0000-0000-0000-0000000000b1', 'spam')$q$);
   perform ci_pruebas.debe_funcionar('select * from public.reports');
@@ -117,7 +119,7 @@ do $$ begin
   perform ci_pruebas.debe_funcionar('select * from public.consents');
   perform ci_pruebas.debe_funcionar($q$update public.profiles set full_name = 'Turista Renombrada' where id = '00000000-0000-0000-0000-0000000000c1'$q$);
   -- El filtro de palabras sigue funcionando con permisos mínimos.
-  perform ci_pruebas.debe_fallar($q$insert into public.reviews (business_id, user_id, stars, text) values ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1', 1, 'son unos malparidos')$q$, '%texto_ofensivo%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b1', 1, 'son unos malparidos')$q$, '%texto_ofensivo%');
   -- No puede: borrar o editar reseñas, cambiar la calificación, tocar datos privados ajenos.
   if ci_pruebas.filas('delete from public.reviews') <> 0 then raise exception 'la turista borró reseñas'; end if;
   perform ci_pruebas.debe_fallar('update public.reviews set stars = 1', 'permission denied%');
@@ -355,6 +357,124 @@ do $$ begin
   if (select stars from public.reviews where business_id = '00000000-0000-0000-0000-0000000000b9' and user_id = '00000000-0000-0000-0000-0000000000c1') <> 5 then raise exception 'la reseña no se actualizó'; end if;
   perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 9, 'x')$q$, 'La calificación va de 1 a 5%');
   perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 1, 'son unos malparidos')$q$, '%texto_ofensivo%');
+end $$;
+reset role;
+
+-- ANTISPAM DE RESEÑAS (migración 0012) ------------------------------------------------------------
+-- Tres negocios publicados de "comer" y "artesanias", un competidor y cuentas nuevas.
+insert into auth.users (id, email, raw_user_meta_data, created_at) values
+  ('00000000-0000-0000-0000-0000000000c2', 'nueva@prueba.test', '{"full_name":"Cuenta Nueva"}', now()),
+  ('00000000-0000-0000-0000-0000000000c3', 'competidor@prueba.test', '{"full_name":"Competidor"}', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-0000000000c4', 'mala1@prueba.test', '{"full_name":"Mala Uno"}', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-0000000000c5', 'mala2@prueba.test', '{"full_name":"Mala Dos"}', now() - interval '3 days'),
+  ('00000000-0000-0000-0000-0000000000c6', 'mala3@prueba.test', '{"full_name":"Mala Tres"}', now() - interval '3 days');
+insert into public.businesses (id, owner_id, name, type, category, address, status) values
+  ('00000000-0000-0000-0000-0000000000ba', '00000000-0000-0000-0000-0000000000d1', 'Comida Atacada', 'emprendimiento', 'comer', 'Calle 10', 'publicado'),
+  ('00000000-0000-0000-0000-0000000000bb', '00000000-0000-0000-0000-0000000000c3', 'Negocio del Competidor', 'emprendimiento', 'comer', 'Calle 11', 'publicado'),
+  ('00000000-0000-0000-0000-0000000000bc', '00000000-0000-0000-0000-0000000000d1', 'Artesanías Vecinas', 'emprendimiento', 'artesanias', 'Calle 12', 'publicado'),
+  ('00000000-0000-0000-0000-0000000000bd', '00000000-0000-0000-0000-0000000000d1', 'Café de la Esquina', 'emprendimiento', 'cafe_dulces', 'Calle 13', 'publicado');
+
+do $$ begin
+  -- A. Cada negocio tiene su código de QR (también los creados después de la migración).
+  if (select count(*) from public.business_qr where business_id in ('00000000-0000-0000-0000-0000000000ba', '00000000-0000-0000-0000-0000000000bb')) <> 2 then
+    raise exception 'los negocios nuevos no tienen código QR';
+  end if;
+end $$;
+
+set local role anon;
+do $$ begin
+  perform ci_pruebas.debe_fallar('select * from public.business_qr', 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_visita('00000000-0000-0000-0000-0000000000ba', 'x')$q$, 'permission denied%');
+end $$;
+reset role;
+
+-- La turista no ve el código ajeno; con el código correcto queda como visitante.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$
+declare v_token text;
+begin
+  if ci_pruebas.cuenta('select * from public.business_qr') <> 0 then raise exception 'la turista ve códigos QR ajenos'; end if;
+  if public.registrar_visita('00000000-0000-0000-0000-0000000000ba', 'codigo-falso') then raise exception 'un código falso registró visita'; end if;
+  reset role;
+  select token into v_token from public.business_qr where business_id = '00000000-0000-0000-0000-0000000000ba';
+  set local role authenticated;
+  if not public.registrar_visita('00000000-0000-0000-0000-0000000000ba', v_token) then raise exception 'el código real no registró la visita'; end if;
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 4, 'Rico y rápido')$q$);
+  if not (select visited from public.reviews where business_id = '00000000-0000-0000-0000-0000000000ba' and user_id = '00000000-0000-0000-0000-0000000000c1') then
+    raise exception 'la reseña con visita no tiene el sello';
+  end if;
+  -- B. Foto: solo de su carpeta en el bucket de reseñas.
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 4, 'x', 'https://x.supabase.co/storage/v1/object/public/resenas/00000000-0000-0000-0000-0000000000c2/a.jpg')$q$, 'Foto no válida%');
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 4, 'Con foto', 'https://x.supabase.co/storage/v1/object/public/resenas/00000000-0000-0000-0000-0000000000c1/ba/foto.jpg')$q$);
+  -- Ni la autora puede escribir la respuesta del negocio.
+  perform ci_pruebas.debe_fallar($q$update public.reviews set photo_url = 'https://otra' where user_id = '00000000-0000-0000-0000-0000000000c1'$q$, 'permission denied%');
+  -- D. Máximo 3 reseñas nuevas al día (cuentan las que existen hoy): la que pase de 3 se frena.
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000bc', 5, 'Bonitas')$q$);
+  if (select count(*) from public.reviews where user_id = '00000000-0000-0000-0000-0000000000c1' and created_at > now() - interval '24 hours') < 3 then
+    perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000b9', 5, 'Relleno')$q$);
+  end if;
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000bd', 5, 'Una más')$q$, 'Llegaste al máximo%');
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 5, 'Edito la mía')$q$);
+end $$;
+reset role;
+
+-- D. Cuenta creada hace menos de 24 horas.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 1, 'Malo')$q$, 'Podrás calificar 24 horas%');
+end $$;
+reset role;
+
+-- C. El competidor (tiene un negocio de "comer") no califica otro de "comer", pero sí de otra categoría.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c3","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 1, 'Pésimo')$q$, 'Las cuentas con un negocio no pueden%');
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000bc', 5, 'Lindas artesanías')$q$);
+end $$;
+reset role;
+
+-- E. Ráfaga: dos reseñas de 1 estrella publicadas; la tercera en pocas horas queda en espera.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c4","role":"authenticated"}';
+do $$ begin if public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 1, 'Horrible') <> 'publicada' then raise exception 'la primera mala no se publicó'; end if; end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c5","role":"authenticated"}';
+do $$ begin if public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 2, 'Feo') <> 'publicada' then raise exception 'la segunda mala no se publicó'; end if; end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c6","role":"authenticated"}';
+do $$ begin
+  if public.guardar_mi_resena('00000000-0000-0000-0000-0000000000ba', 1, 'Malísimo') <> 'en_espera' then raise exception 'la ráfaga no quedó en espera'; end if;
+  -- La autora sí ve su reseña en espera.
+  if ci_pruebas.cuenta($q$select * from public.reviews_public where business_id = '00000000-0000-0000-0000-0000000000ba' and status = 'en_espera'$q$) <> 1 then raise exception 'la autora no ve su reseña en espera'; end if;
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  -- El público no la ve y no cuenta en la calificación.
+  if ci_pruebas.cuenta($q$select * from public.reviews_public where business_id = '00000000-0000-0000-0000-0000000000ba' and status <> 'publicada'$q$) <> 0 then raise exception 'el público ve reseñas en espera'; end if;
+  if (select review_count from public.businesses_public where id = '00000000-0000-0000-0000-0000000000ba') <> 3 then raise exception 'la reseña en espera cuenta en la calificación'; end if;
+end $$;
+reset role;
+
+-- El equipo la modera.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_moderar_resena((select id from public.reviews where user_id = '00000000-0000-0000-0000-0000000000c6'), 'publicada')$q$, 'No autorizado%');
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.admin_moderar_resena((select id from public.reviews where user_id = '00000000-0000-0000-0000-0000000000c6'), 'rechazada')$q$);
+  if (select status from public.reviews where user_id = '00000000-0000-0000-0000-0000000000c6') <> 'rechazada' then raise exception 'la reseña no quedó rechazada'; end if;
 end $$;
 reset role;
 

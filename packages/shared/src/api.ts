@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
-import type { Business, BusinessType, Category, Product, Review } from './types';
+import type { Business, BusinessType, Category, Product, Review, ReviewStatus } from './types';
 
 /** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
 export const normalizeIdNumber = (raw: string) => raw.replace(/[^0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -80,6 +80,9 @@ const toReview = (r: any): Review => ({
   text: r.text,
   reply: r.reply,
   createdAt: r.created_at,
+  status: r.status ?? 'publicada',
+  visited: !!r.visited,
+  photoUrl: r.photo_url ?? null,
 });
 
 /** Archivo local elegido o grabado en el celular. */
@@ -292,19 +295,48 @@ export function createApi(db: SupabaseClient | null) {
      * Crea o edita la reseña de esta persona para el negocio: hay UNA por persona y negocio
      * (migración 0011). Calificar de nuevo reemplaza estrellas y texto.
      */
-    async saveMyReview(businessId: string, userId: string, authorName: string, stars: Review['stars'], text: string) {
+    async saveMyReview(businessId: string, userId: string, authorName: string, stars: Review['stars'], text: string, photo?: LocalFile | null): Promise<ReviewStatus> {
       if (findOffensiveWords(text).length) throw new OffensiveTextError();
       if (!db) {
         demoReviews = [
-          { id: String(Date.now()), businessId, userId, authorName, stars, text, reply: null, createdAt: new Date().toISOString() },
+          { id: String(Date.now()), businessId, userId, authorName, stars, text, reply: null, createdAt: new Date().toISOString(), status: 'publicada', photoUrl: photo?.uri ?? null },
           ...demoReviews.filter((r) => !(r.businessId === businessId && r.userId === userId)),
         ];
-        return;
+        return 'publicada';
       }
-      const { error } = await db.rpc('guardar_mi_resena', { p_business: businessId, p_stars: stars, p_text: text });
+      // La foto va primero al bucket público "resenas", en la carpeta de quien califica.
+      let photoUrl: string | null = null;
+      if (photo) {
+        const mime = photo.mimeType ?? 'image/jpeg';
+        const path = await uploadFile(db, 'resenas', `${userId}/${businessId}/${Date.now()}.${extFor(mime, 'jpg')}`, photo, 'image/jpeg');
+        photoUrl = db.storage.from('resenas').getPublicUrl(path).data.publicUrl;
+      }
+      const { data, error } = await db.rpc('guardar_mi_resena', { p_business: businessId, p_stars: stars, p_text: text, p_photo_url: photoUrl });
       // La base aplica el mismo filtro (trigger) por si alguien publica sin pasar por la app.
       if (error?.message?.includes('texto_ofensivo')) throw new OffensiveTextError();
-      if (error) throw new Error(error.message.includes('No puedes calificar') ? 'No puedes calificar este negocio.' : 'No pudimos guardar tu reseña. Revisa tu conexión e intenta de nuevo.');
+      if (error) {
+        // Las reglas contra el spam (migración 0012) ya vienen explicadas en español.
+        const rules = ['No puedes calificar', 'Podrás calificar', 'Llegaste al máximo', 'Las cuentas con un negocio', 'Foto no válida'];
+        throw new Error(rules.some((r) => error.message.includes(r)) ? error.message + '.' : 'No pudimos guardar tu reseña. Revisa tu conexión e intenta de nuevo.');
+      }
+      return (data as ReviewStatus) ?? 'publicada';
+    },
+
+    /**
+     * Registra que esta persona visitó el negocio (abrió su QR del mostrador). Así su reseña sale
+     * con el sello "Visitó el negocio". El código del QR solo lo tienen el negocio y el equipo.
+     */
+    async registerVisit(businessId: string, token: string): Promise<boolean> {
+      if (!db) return true;
+      const { data, error } = await db.rpc('registrar_visita', { p_business: businessId, p_token: token });
+      return !error && data === true;
+    },
+
+    /** Código que va en el QR del negocio (solo lo ve su dueño). */
+    async myQrToken(businessId: string): Promise<string | null> {
+      if (!db) return 'demo';
+      const { data } = await db.from('business_qr').select('token').eq('business_id', businessId).maybeSingle();
+      return (data?.token as string | undefined) ?? null;
     },
 
     /** La reseña que esta persona ya dejó en el negocio, si existe. */
