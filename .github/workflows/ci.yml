@@ -6,8 +6,8 @@ name: CI
 on:
   pull_request:
   push:
-    # main y las ramas ci/** (para probar cambios del propio CI antes de llevarlos a main).
-    branches: [main, 'ci/**']
+    # main, las ramas ci/** (cambios del propio CI) y feature/** (entregas antes de llevarlas a main).
+    branches: [main, 'ci/**', 'feature/**']
   workflow_dispatch:
 
 concurrency:
