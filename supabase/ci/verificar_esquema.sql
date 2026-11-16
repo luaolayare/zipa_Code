@@ -11,9 +11,9 @@ begin
   select count(*) into n from pg_tables
   where schemaname = 'public'
     and tablename in ('profiles', 'businesses', 'business_verifications', 'products',
-                      'reviews', 'consents', 'reports', 'blocks');
-  if n <> 8 then
-    raise exception 'Faltan tablas en public: se esperaban 8 y hay %', n;
+                      'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions');
+  if n <> 10 then
+    raise exception 'Faltan tablas en public: se esperaban 10 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.

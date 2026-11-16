@@ -431,6 +431,7 @@ enabled = true
 [functions.eliminar-cuenta]
 verify_jwt = true
 
-# revisar-negocio: la llama el equipo con REVISION_TOKEN, no con una sesión de usuario.
+# revisar-negocio: la llama el panel con la sesión de alguien del equipo (JWT obligatorio;
+# la función exige además is_admin(), es decir, rol en admin_users y MFA).
 [functions.revisar-negocio]
-verify_jwt = false
+verify_jwt = true
