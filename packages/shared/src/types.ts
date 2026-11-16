@@ -19,6 +19,7 @@ export interface Business {
   priceLevel: 1 | 2 | 3 | null; // $, $$ o $$$
   distanceM: number | null; // distancia al cliente en metros (se calculará con la ubicación)
   productCount: number; // productos con modelo 3D
+  reviewNote?: string | null; // motivo del rechazo (solo lo ve el dueño)
 }
 
 export interface Product {

@@ -8,6 +8,7 @@
   "scripts": {
     "clientes": "npm run start --workspace=clientes",
     "negocios": "npm run start --workspace=negocios",
+    "admin": "npm run dev --workspace=admin",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "negocios:tunel": "npm run start --workspace=negocios -- --tunnel",
     "clientes:tunel": "npm run start --workspace=clientes -- --tunnel",

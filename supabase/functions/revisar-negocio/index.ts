@@ -11,14 +11,16 @@
 // Usar (desde el panel, con el access token de la sesión aal2):
 //   POST https://<proyecto>.supabase.co/functions/v1/revisar-negocio
 //   Authorization: Bearer <access token>
-//   {"business_id":"<uuid>","decision":"publicado"}      (o "rechazado")
+//   {"business_id":"<uuid>","decision":"publicado"}
+//   {"business_id":"<uuid>","decision":"rechazado","nota":"La foto no muestra el local."}
 //
 // Qué hace:
 // 1. Cambia el negocio de "en_revision" a "publicado" o "rechazado".
 // 2. Borra la foto del local del bucket privado "verificaciones".
 // 3. Deja constancia en business_verifications (reviewed_at, photo_deleted_at) y vacía photo_path.
 //    La cédula/NIT se conserva como soporte de la verificación.
-// 4. Registra la decisión en admin_actions (quién, qué y cuándo).
+// 4. Guarda el motivo del rechazo (businesses.review_note, migración 0010), que ve el dueño.
+// 5. Registra la decisión en admin_actions (quién, qué y cuándo).
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const DECISIONES = ['publicado', 'rechazado'] as const;
@@ -57,7 +59,7 @@ Deno.serve(async (req) => {
   if (rolError) return json(500, { error: 'No se pudo comprobar el rol' });
   if (esEquipo !== true) return json(403, { error: 'Solo el equipo de revisión, con verificación en dos pasos' });
 
-  let body: { business_id?: string; decision?: string };
+  let body: { business_id?: string; decision?: string; nota?: string };
   try {
     body = await req.json();
   } catch {
@@ -67,13 +69,16 @@ Deno.serve(async (req) => {
   const decision = body.decision as Decision;
   if (!/^[0-9a-f-]{36}$/i.test(businessId)) return json(400, { error: 'business_id no válido' });
   if (!DECISIONES.includes(decision)) return json(400, { error: 'decision debe ser "publicado" o "rechazado"' });
+  const nota = (body.nota ?? '').trim();
+  if (decision === 'rechazado' && nota.length < 10) return json(400, { error: 'Explica al negocio por qué no se aprueba (mínimo 10 caracteres).' });
+  if (nota.length > 500) return json(400, { error: 'La nota es muy larga (máximo 500 caracteres).' });
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   // 1. Solo se decide sobre negocios que están en revisión.
   const { data: updated, error: statusError } = await admin
     .from('businesses')
-    .update({ status: decision })
+    .update({ status: decision, review_note: decision === 'rechazado' ? nota : null })
     .eq('id', businessId)
     .eq('status', 'en_revision')
     .select('id');
@@ -102,13 +107,13 @@ Deno.serve(async (req) => {
     if (logError) fotoError = logError.message;
   }
 
-  // 4. Bitácora: se registra la decisión aunque haya fallado el borrado de la foto.
+  // 5. Bitácora: se registra la decisión aunque haya fallado el borrado de la foto.
   const { error: auditError } = await admin.from('admin_actions').insert({
     admin_id: user.id,
     action: decision === 'publicado' ? 'publicar_negocio' : 'rechazar_negocio',
     target_type: 'business',
     target_id: businessId,
-    details: { foto_borrada: !!verification?.photo_path && !fotoError, error_foto: fotoError },
+    details: { foto_borrada: !!verification?.photo_path && !fotoError, error_foto: fotoError, nota: nota || null },
   });
   if (auditError) console.error('revisar-negocio: no se pudo escribir la bitácora', businessId, auditError.message);
 

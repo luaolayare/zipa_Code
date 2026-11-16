@@ -54,6 +54,7 @@ const toBusiness = (r: any): Business => ({
   priceLevel: r.price_level ?? null,
   distanceM: null, // pendiente: calcular con la ubicación del cliente
   productCount: r.product_count ?? 0,
+  reviewNote: r.review_note ?? null,
 });
 
 const toProduct = (r: any): Product => ({

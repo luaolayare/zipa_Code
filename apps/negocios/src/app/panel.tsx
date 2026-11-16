@@ -90,6 +90,12 @@ export default function Panel() {
             <Notice tone="danger">
               <View style={{ gap: 12 }}>
                 <Text style={[styles.noticeText, { color: colors.danger }]}>Revisamos tu negocio y no pudimos publicarlo. Revisa tus datos y la foto de tu local, y envíalo de nuevo.</Text>
+                {!!business.reviewNote && (
+                  <View style={styles.note}>
+                    <Text style={styles.noteLabel}>Motivo del equipo</Text>
+                    <Text style={styles.noteText}>{business.reviewNote}</Text>
+                  </View>
+                )}
                 <Button title="Revisar y enviar de nuevo" variant="danger" onPress={resume} />
               </View>
             </Notice>
@@ -193,6 +199,9 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.hero, fontSize: 36, lineHeight: 39, letterSpacing: -1, color: '#FFFFFF' },
   body: { padding: 20, gap: 16 },
   noticeText: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22 },
+  note: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, gap: 4 },
+  noteLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.6, textTransform: 'uppercase', color: colors.danger },
+  noteText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
   stats: { flexDirection: 'row', gap: 10 },
   add: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 46, paddingHorizontal: 18, borderRadius: 16, borderWidth: 1.5, borderColor: colors.text },
   addText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },

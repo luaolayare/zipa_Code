@@ -177,6 +177,9 @@ end $$;
 
 reset role;
 
+-- Un producto del negocio en revisión, para ver que el equipo lo puede revisar (migración 0010).
+insert into public.products (business_id, name, price_cop) values ('00000000-0000-0000-0000-0000000000b2', 'Producto en revisión', 5000);
+
 -- REVISORA CON MFA (aal2): ve todo para revisar, pero no borra reseñas ----------------------------
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
@@ -186,6 +189,7 @@ do $$ begin
   if public.is_admin('admin') then raise exception 'la revisora pasa como admin'; end if;
   if ci_pruebas.cuenta($q$select * from public.businesses where status = 'en_revision'$q$) <> 1 then raise exception 'la revisora no ve el negocio en revisión'; end if;
   if ci_pruebas.cuenta('select * from public.business_verifications') <> 1 then raise exception 'la revisora no ve la verificación'; end if;
+  if ci_pruebas.cuenta($q$select * from public.products where business_id = '00000000-0000-0000-0000-0000000000b2'$q$) <> 1 then raise exception 'la revisora no ve los productos del negocio en revisión'; end if;
   if ci_pruebas.cuenta('select * from public.reports') <> 1 then raise exception 'la revisora no ve los reportes'; end if;
   perform ci_pruebas.debe_funcionar('select public.admin_metrics()');
   if ci_pruebas.filas('delete from public.reviews') <> 0 then raise exception 'la revisora borró reseñas'; end if;
@@ -249,6 +253,41 @@ do $$ begin
   if ci_pruebas.filas($q$update public.businesses set hours = 'x' where id = '00000000-0000-0000-0000-0000000000b2'$q$) <> 0 then
     raise exception 'la turista editó un negocio ajeno';
   end if;
+end $$;
+reset role;
+
+-- RESOLVER REPORTES CON admin_resolver_reporte (migración 0010) -----------------------------------
+insert into public.reviews (id, business_id, user_id, stars, text) values
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000c1', 1, 'Reseña reportada de prueba');
+insert into public.reports (id, reporter_id, target_type, target_id, reason) values
+  ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d1', 'review', '00000000-0000-0000-0000-0000000000e1', 'falso');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_resolver_reporte('00000000-0000-0000-0000-0000000000f1', 'revisado')$q$, 'No autorizado%');
+  if ci_pruebas.cuenta('select * from public.businesses where review_note is not null') <> 0 then raise exception 'review_note visible sin motivo'; end if;
+  perform ci_pruebas.debe_fallar('select review_note from public.businesses_public', '%review_note%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  -- La revisora no borra reseñas, pero sí descarta reportes.
+  perform ci_pruebas.debe_fallar($q$select public.admin_resolver_reporte('00000000-0000-0000-0000-0000000000f1', 'revisado', true)$q$, 'Solo un administrador%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_resolver_reporte('00000000-0000-0000-0000-0000000000f1', 'aprobado')$q$, 'Estado no válido%');
+  perform ci_pruebas.debe_funcionar($q$select public.admin_resolver_reporte('00000000-0000-0000-0000-0000000000f1', 'descartado')$q$);
+  if (select status from public.reports where id = '00000000-0000-0000-0000-0000000000f1') <> 'descartado' then raise exception 'el reporte no quedó descartado'; end if;
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.admin_resolver_reporte('00000000-0000-0000-0000-0000000000f1', 'revisado', true)$q$);
+  if exists (select 1 from public.reviews where id = '00000000-0000-0000-0000-0000000000e1') then raise exception 'la admin no borró la reseña reportada'; end if;
+  if ci_pruebas.cuenta($q$select * from public.admin_actions where action = 'borrar_resena'$q$) <> 1 then raise exception 'el borrado no quedó en la bitácora'; end if;
 end $$;
 reset role;
 
