@@ -1,8 +1,8 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { businessCover, businessSpecialty, businessTypeLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+import { WhatsAppIcon, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { Ban, BadgeCheck, Camera, Flag, MapPin, MessageCircle } from 'lucide-react-native';
+import { Ban, BadgeCheck, Camera, Flag, MapPin } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -71,7 +71,8 @@ export default function NegocioDetalle() {
 
   const { cover } = businessCover(business);
   const comer = business.category === 'comer';
-  const meta = [businessSpecialty(business), formatPriceLevel(business.priceLevel)].filter(Boolean).join(' · ');
+  // "Pizzerías · Pizza al horno de leña · $$" (subcategoría, lo que vende en sus palabras y precio).
+  const meta = [business.subcategoryName ?? categoryLabel(business.category), business.specialty, formatPriceLevel(business.priceLevel)].filter(Boolean).join(' · ');
   const wa = whatsappUrl(business.whatsapp);
 
   const rate = () => {
@@ -142,7 +143,7 @@ export default function NegocioDetalle() {
 
         <View style={styles.contact}>
           <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => Linking.openURL(mapsUrl(business.address))} />
-          {wa && <ContactButton icon={<MessageCircle size={20} color={colors.primary} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => Linking.openURL(wa)} />}
+          {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => Linking.openURL(wa)} />}
         </View>
 
         <Text style={styles.h2} accessibilityRole="header">{comer ? 'Menú' : 'Vitrina'}</Text>

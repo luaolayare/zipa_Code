@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { requireAdmin } from '@/lib/auth';
-import { CATEGORIA, ESTADO, TIPO, fecha, pesos } from '@/lib/format';
+import { ESTADO, TIPO, clasificacion, fecha, pesos } from '@/lib/format';
 
 import { VideoReview } from '../../VideoReview';
 
@@ -12,7 +12,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
   const { id } = await params;
   const { supabase } = await requireAdmin();
 
-  const { data: b } = await supabase.from('businesses').select('*, owner:profiles(full_name)').eq('id', id).maybeSingle();
+  const { data: b } = await supabase.from('businesses').select('*, owner:profiles(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
   if (!b) notFound();
 
   const [{ data: v }, { data: products }, { data: acciones }] = await Promise.all([
@@ -35,7 +35,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
       <p><Link href={`/negocios?estado=${b.status}`}>← Negocios</Link></p>
       <div className="page-head">
         <div>
-          <p className="overline">{CATEGORIA[b.category]} · {TIPO[b.type]}</p>
+          <p className="overline">{clasificacion(b)} · {TIPO[b.type]}</p>
           <h1>{b.name}</h1>
           <p>Registrado el {fecha(b.created_at)}</p>
         </div>

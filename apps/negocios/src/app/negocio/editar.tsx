@@ -1,18 +1,20 @@
 // Editar los datos del negocio desde el panel.
-import { Button, CATEGORIES, TextField, useAuth, type Business, type BusinessType, type Category } from '@zipa/shared';
+import { Button, TextField, legacyCategoryFor, useAuth, type Business, type BusinessType } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { BUSINESS_TYPES, Notice, type } from '@/components/kit';
-import { OptionCards, OptionChips } from '@/components/OptionChips';
+import { CategoryPicker, type Classification } from '@/components/CategoryPicker';
+import { OptionCards } from '@/components/OptionChips';
 import { Page } from '@/components/Page';
 import { BackButton } from '@/components/StepHeader';
 
 export default function EditarNegocio() {
   const { api, user } = useAuth();
   const [original, setOriginal] = useState<Business | null>(null);
-  const [f, setF] = useState({ name: '', type: 'emprendimiento' as BusinessType, category: 'comer' as Category, address: '', hours: '', whatsapp: '' });
+  const [f, setF] = useState({ name: '', type: 'emprendimiento' as BusinessType, address: '', hours: '', whatsapp: '' });
+  const [c, setC] = useState<Classification>({ mainCategory: 'restaurantes', subcategoryId: '', tags: [] });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,7 +23,8 @@ export default function EditarNegocio() {
     api.myBusiness(user.id).then((b) => {
       if (!b) return router.replace('/panel');
       setOriginal(b);
-      setF({ name: b.name, type: b.type, category: b.category, address: b.address, hours: b.hours ?? '', whatsapp: b.whatsapp ?? '' });
+      setF({ name: b.name, type: b.type, address: b.address, hours: b.hours ?? '', whatsapp: b.whatsapp ?? '' });
+      setC({ mainCategory: b.mainCategory ?? (b.category === 'comer' ? 'restaurantes' : 'emprendimientos'), subcategoryId: b.subcategoryId ?? '', tags: b.tags });
     }).catch(() => setError('No pudimos cargar tus datos.'));
   }, [api, user]);
 
@@ -30,19 +33,23 @@ export default function EditarNegocio() {
   }
 
   // Cambios que, en un negocio ya publicado, lo devuelven a revisión (migración 0009).
-  const sensitive = f.name.trim() !== original.name || f.address.trim() !== original.address || f.type !== original.type || f.category !== original.category;
+  // La categoría cuenta solo si cambia de grupo (ej.: de restaurante a artesanías).
+  const newLegacy = c.subcategoryId ? legacyCategoryFor(c.subcategoryId, c.mainCategory) : original.category;
+  const sensitive = f.name.trim() !== original.name || f.address.trim() !== original.address || f.type !== original.type || newLegacy !== original.category;
   const backToReview = original.status === 'publicado' && sensitive;
 
   const save = async () => {
     if (f.name.trim().length < 2) return setError('Escribe el nombre del negocio.');
+    if (!c.subcategoryId) return setError('Elige qué ofreces principalmente.');
     if (!f.address.trim()) return setError('Escribe la dirección.');
     setSaving(true);
     setError('');
     try {
-      await api.updateBusiness(original.id, { ...f, hours: f.hours || null, whatsapp: f.whatsapp || null });
+      await api.updateBusiness(original.id, { ...f, subcategoryId: c.subcategoryId, hours: f.hours || null, whatsapp: f.whatsapp || null });
+      await api.setBusinessTags(original.id, c.tags);
       router.back();
-    } catch {
-      setError('No pudimos guardar los cambios. Intenta de nuevo.');
+    } catch (e) {
+      setError(e instanceof Error && e.message.includes('etiqueta') ? e.message : 'No pudimos guardar los cambios. Intenta de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -55,8 +62,8 @@ export default function EditarNegocio() {
         <Text style={type.h1}>Tus datos</Text>
       </View>
       <TextField label="Nombre del negocio" value={f.name} onChangeText={(name) => setF({ ...f, name })} maxLength={80} />
-      <OptionCards<BusinessType> label="¿Qué tipo de negocio es?" options={BUSINESS_TYPES} value={f.type} onChange={(t) => setF({ ...f, type: t })} />
-      <OptionChips<Category> label="Categoría" options={CATEGORIES} value={f.category} onChange={(category) => setF({ ...f, category })} />
+      <CategoryPicker value={c} onChange={({ category: _legacy, ...patch }) => { setC({ ...c, ...patch }); setError(''); }} />
+      <OptionCards<BusinessType> label="¿Cómo se describe?" options={BUSINESS_TYPES} value={f.type} onChange={(t) => setF({ ...f, type: t })} />
       <TextField label="Dirección" value={f.address} onChangeText={(address) => setF({ ...f, address })} />
       <TextField label="Horario" value={f.hours} onChangeText={(hours) => setF({ ...f, hours })} placeholder="Ej: Lun a sáb, 7:00 a. m. a 9:00 p. m." />
       <TextField label="WhatsApp del negocio" value={f.whatsapp} onChangeText={(whatsapp) => setF({ ...f, whatsapp })} keyboardType="phone-pad" />

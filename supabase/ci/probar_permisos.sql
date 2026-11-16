@@ -478,6 +478,169 @@ do $$ begin
 end $$;
 reset role;
 
+-- CATEGORÍAS, ETIQUETAS Y BÚSQUEDA (migración 0013) ------------------------------------------------
+-- Una dueña nueva con dos negocios publicados y un borrador.
+insert into auth.users (id, email, raw_user_meta_data, created_at) values
+  ('00000000-0000-0000-0000-0000000000d2', 'duena2@prueba.test', '{"full_name":"Dueña Dos"}', now() - interval '3 days');
+
+insert into public.businesses (id, owner_id, name, type, subcategory_id, address, status, specialty) values
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000d2', 'Pizzería Doña Ñaña', 'emprendimiento', 'pizzerias', 'Calle 9', 'publicado', null),
+  ('00000000-0000-0000-0000-0000000000e2', '00000000-0000-0000-0000-0000000000d2', 'Helados del Páramo', 'emprendimiento', 'heladerias', 'Calle 10', 'publicado', 'Postres fríos'),
+  ('00000000-0000-0000-0000-0000000000e3', '00000000-0000-0000-0000-0000000000d2', 'Borrador Oculto', 'emprendimiento', 'pizzerias', 'Calle 11', 'borrador', null);
+insert into public.products (business_id, name) values
+  ('00000000-0000-0000-0000-0000000000e2', 'Paleta de Maracuyá'),
+  ('00000000-0000-0000-0000-0000000000e3', 'Pizza secreta');
+
+do $$ begin
+  -- Compatibilidad: un negocio creado solo con la categoría vieja recibe subcategoría.
+  if (select subcategory_id from public.businesses where id = '00000000-0000-0000-0000-0000000000b1') <> 'otros_restaurantes' then
+    raise exception 'un negocio con categoría vieja "comer" no recibió la subcategoría Otros restaurantes';
+  end if;
+  -- Y uno creado con subcategoría recibe la categoría vieja (la leen las apps instaladas).
+  if (select category from public.businesses where id = '00000000-0000-0000-0000-0000000000e1') <> 'comer' then
+    raise exception 'pizzerías no quedó como "comer" para las apps viejas';
+  end if;
+  if (select category from public.businesses where id = '00000000-0000-0000-0000-0000000000e2') <> 'cafe_dulces' then
+    raise exception 'heladerías no quedó como "cafe_dulces" para las apps viejas';
+  end if;
+  if (select count(*) from public.categories where parent_id is null) <> 2 then
+    raise exception 'debe haber exactamente 2 categorías principales';
+  end if;
+  if (select count(*) from public.categories where parent_id is not null) <> 12 then
+    raise exception 'faltan subcategorías iniciales';
+  end if;
+end $$;
+
+-- El público: lee categorías y busca; no escribe categorías.
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta('select * from public.categories') < 14 then raise exception 'anon no ve las categorías'; end if;
+  perform ci_pruebas.debe_fallar($q$insert into public.categories (id, name) values ('hackeo', 'Hackeo')$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$update public.categories set active = false$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', 'Hackeo')$q$, 'permission denied%');
+
+  -- Por nombre, sin tildes ni mayúsculas (ñ = n).
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('dona nana') where id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then raise exception 'la búsqueda por nombre sin tildes no encuentra Doña Ñaña'; end if;
+  -- Por producto o plato, con tildes y mayúsculas distintas.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('MARACUYÁ')$q$) <> 1 then raise exception 'la búsqueda por producto no encuentra la paleta de maracuyá'; end if;
+  -- Por subcategoría escrita.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('heladerias') where id = '00000000-0000-0000-0000-0000000000e2'$q$) <> 1 then raise exception 'la búsqueda por subcategoría no funciona'; end if;
+  -- Un borrador y sus productos no aparecen.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('secreta')$q$) <> 0 then raise exception 'la búsqueda muestra productos de un negocio sin publicar'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('oculto')$q$) <> 0 then raise exception 'la búsqueda muestra un borrador'; end if;
+  -- Filtros de categoría principal y subcategoría.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(null, 'emprendimientos') where id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 0 then raise exception 'una pizzería aparece en Emprendimientos'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(null, 'restaurantes') where id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then raise exception 'la pizzería no aparece en Restaurantes'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(null, null, 'heladerias')$q$) <> 1 then raise exception 'el filtro por subcategoría no funciona'; end if;
+  -- Comodines de LIKE no sirven para listar todo con un texto raro; y el límite máximo es 50.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('zz%zz')$q$) <> 0 then raise exception 'el texto con %% se usó como comodín'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(null, null, null, 'calificacion', 500)$q$) > 50 then raise exception 'la búsqueda devolvió más de 50 filas'; end if;
+  perform ci_pruebas.debe_funcionar($q$select * from public.buscar_negocios('pizza', null, null, 'recientes', 10, 0)$q$);
+  -- La vista pública trae la clasificación.
+  if (select main_category || '|' || subcategory_name from public.businesses_public where id = '00000000-0000-0000-0000-0000000000e1') <> 'restaurantes|Pizzerías' then
+    raise exception 'businesses_public no trae categoría principal y subcategoría';
+  end if;
+end $$;
+reset role;
+
+-- La dueña: cambia su subcategoría y maneja sus etiquetas; nada más.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set subcategory_id = 'comida_rapida' where id = '00000000-0000-0000-0000-0000000000e1'$q$);
+  if (select category || '|' || status from public.businesses where id = '00000000-0000-0000-0000-0000000000e1') <> 'comer|publicado' then
+    raise exception 'cambiar de pizzería a comida rápida no debe sacarla de publicación';
+  end if;
+  perform ci_pruebas.debe_fallar($q$update public.businesses set subcategory_id = 'restaurantes' where id = '00000000-0000-0000-0000-0000000000e1'$q$, 'Elige una subcategoría válida%');
+  perform ci_pruebas.debe_fallar($q$update public.categories set name = 'Mía' where id = 'pizzerias'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', 'Mía')$q$, 'No autorizado%');
+
+  -- Etiquetas: hasta 3, subcategorías, sin repetir la principal, solo en su negocio.
+  perform ci_pruebas.debe_funcionar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'pizzerias')$q$);
+  perform ci_pruebas.debe_funcionar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'parrillas')$q$);
+  perform ci_pruebas.debe_fallar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'comida_rapida')$q$, 'Esa ya es la subcategoría principal%');
+  perform ci_pruebas.debe_fallar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'restaurantes')$q$, 'Las etiquetas deben ser subcategorías%');
+  perform ci_pruebas.debe_funcionar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'reposteria')$q$);
+  perform ci_pruebas.debe_fallar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e1', 'heladerias')$q$, 'Puedes agregar hasta 3%');
+  perform ci_pruebas.debe_fallar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000b1', 'parrillas')$q$, '%row-level security%');
+  if ci_pruebas.filas($q$delete from public.business_tags where business_id = '00000000-0000-0000-0000-0000000000b1'$q$) <> 0 then raise exception 'la dueña borró etiquetas ajenas'; end if;
+  perform ci_pruebas.debe_funcionar($q$delete from public.business_tags where business_id = '00000000-0000-0000-0000-0000000000e1' and category_id = 'reposteria'$q$);
+
+  -- Si la etiqueta pasa a ser la principal, se quita de etiquetas (sin clasificación duplicada).
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set subcategory_id = 'pizzerias' where id = '00000000-0000-0000-0000-0000000000e1'$q$);
+  if exists (select 1 from public.business_tags where business_id = '00000000-0000-0000-0000-0000000000e1' and category_id = 'pizzerias') then
+    raise exception 'la subcategoría principal quedó también como etiqueta';
+  end if;
+
+  -- App vieja: cambia solo la categoría vieja → subcategoría equivalente.
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set category = 'artesanias' where id = '00000000-0000-0000-0000-0000000000e3'$q$);
+  if (select subcategory_id from public.businesses where id = '00000000-0000-0000-0000-0000000000e3') <> 'artesanias' then
+    raise exception 'la app vieja cambió la categoría y la subcategoría no la siguió';
+  end if;
+end $$;
+reset role;
+
+-- La búsqueda por etiqueta encuentra el negocio una sola vez.
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(null, null, 'parrillas') where id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then raise exception 'el filtro por etiqueta no encuentra el negocio una sola vez'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('parrilla') where id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then raise exception 'la búsqueda por etiqueta escrita no funciona'; end if;
+  if ci_pruebas.cuenta($q$select * from public.business_tags where business_id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then raise exception 'anon no ve las etiquetas de un negocio publicado'; end if;
+end $$;
+reset role;
+
+-- Administradora SIN MFA y revisora: no administran categorías.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', 'Comida de mar')$q$, 'No autorizado%');
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', 'Comida de mar')$q$, 'No autorizado%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_borrar_categoria('otros_restaurantes')$q$, 'No autorizado%');
+end $$;
+reset role;
+
+-- Administradora con MFA: crea, edita, desactiva y borra solo lo que no está en uso.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if (select public.admin_guardar_categoria(null, 'restaurantes', 'Comida de mar', 60)) <> 'comida_de_mar' then raise exception 'no creó la subcategoría comida_de_mar'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', 'COMIDA DE MAR')$q$, 'Ya existe%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'pizzerias', 'Nivel tres')$q$, 'Elige la categoría principal%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_guardar_categoria(null, 'restaurantes', ' x ')$q$, 'El nombre debe tener%');
+  perform ci_pruebas.debe_funcionar($q$select public.admin_guardar_categoria('comida_de_mar', null, 'Pescados y mariscos', 55, false)$q$);
+  if (select name || '|' || sort_order || '|' || active from public.categories where id = 'comida_de_mar') <> 'Pescados y mariscos|55|false' then
+    raise exception 'no editó nombre, orden y estado';
+  end if;
+  if (select count(*) from public.admin_actions where action in ('crear_categoria', 'editar_categoria')) <> 2 then raise exception 'los cambios de categorías no quedaron en la bitácora'; end if;
+
+  perform ci_pruebas.debe_fallar($q$select public.admin_borrar_categoria('pizzerias')$q$, 'Tiene % negocio(s) asociados%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_borrar_categoria('parrillas')$q$, 'Tiene % negocio(s) asociados%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_borrar_categoria('restaurantes')$q$, 'Las categorías principales no se borran%');
+  perform ci_pruebas.debe_funcionar($q$select public.admin_borrar_categoria('comida_de_mar')$q$);
+  if exists (select 1 from public.categories where id = 'comida_de_mar') then raise exception 'no borró la subcategoría sin uso'; end if;
+
+  -- Desactiva Parrillas para probar que ya no se puede elegir.
+  perform ci_pruebas.debe_funcionar($q$select public.admin_guardar_categoria('parrillas', null, 'Parrillas', null, false)$q$);
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$update public.businesses set subcategory_id = 'parrillas' where id = '00000000-0000-0000-0000-0000000000e2'$q$, 'Esa subcategoría ya no está disponible%');
+  perform ci_pruebas.debe_fallar($q$insert into public.business_tags (business_id, category_id) values ('00000000-0000-0000-0000-0000000000e2', 'parrillas')$q$, 'Esa subcategoría ya no está disponible%');
+  -- Editar otros datos de un negocio que ya tenía una subcategoría desactivada sigue funcionando.
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set hours = '9 a 5' where id = '00000000-0000-0000-0000-0000000000e1'$q$);
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

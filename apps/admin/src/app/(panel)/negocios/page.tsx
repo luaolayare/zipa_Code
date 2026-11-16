@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { requireAdmin } from '@/lib/auth';
-import { CATEGORIA, ESTADO, TIPO, fecha } from '@/lib/format';
+import { ESTADO, TIPO, clasificacion, fecha } from '@/lib/format';
 
 const FILTROS = ['en_revision', 'publicado', 'rechazado', 'borrador'] as const;
 
@@ -11,7 +11,7 @@ export default async function Negocios({ searchParams }: { searchParams: Promise
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from('businesses')
-    .select('id, name, category, type, address, status, created_at, owner:profiles(full_name)')
+    .select('id, name, category, type, address, status, created_at, owner:profiles(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)')
     .eq('status', estado)
     .order('created_at', { ascending: estado !== 'en_revision' ? false : true }) // en revisión: el más antiguo primero
     .limit(200);
@@ -45,7 +45,7 @@ export default async function Negocios({ searchParams }: { searchParams: Promise
                 <tr key={b.id}>
                   <td><Link href={`/negocios/${b.id}`}>{b.name}</Link><div className="small muted">{b.address}</div></td>
                   <td>{owner?.full_name ?? '—'}</td>
-                  <td>{CATEGORIA[b.category]}<div className="small muted">{TIPO[b.type]}</div></td>
+                  <td>{clasificacion(b)}<div className="small muted">{TIPO[b.type]}</div></td>
                   <td className="small">{fecha(b.created_at)}</td>
                   <td><span className={`pill ${b.status}`}>{ESTADO[b.status]}</span></td>
                 </tr>

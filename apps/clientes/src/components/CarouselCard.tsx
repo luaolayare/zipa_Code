@@ -5,7 +5,7 @@ import { openBusiness } from './BusinessRow';
 import { Cover } from './Cover';
 import { Rating } from './Rating';
 
-/** Tarjeta del carrusel "Emprendimientos del barrio". */
+/** Tarjeta del carrusel "Recién llegados". */
 export function CarouselCard({ business: b }: { business: Business }) {
   const meta = [businessSpecialty(b), formatDistance(b.distanceM)].filter(Boolean).join(' · ');
   return (

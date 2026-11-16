@@ -28,7 +28,7 @@ export default function VistaPrevia() {
       const data = {
         name: draft.name.trim(),
         type: draft.type,
-        category: draft.category,
+        subcategoryId: draft.subcategoryId,
         address: draft.address.trim(),
         hours: draft.hours.trim() || undefined,
         whatsapp: draft.whatsapp.trim() || undefined,
@@ -39,6 +39,7 @@ export default function VistaPrevia() {
         id = await api.registerBusiness(user.id, data);
         update({ businessId: id });
       }
+      await api.setBusinessTags(id, draft.tags);
 
       // 2. Foto al espacio privado y cédula/NIT a la tabla privada.
       if (!draft.verificationSaved && draft.photoUri) {

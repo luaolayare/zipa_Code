@@ -1,15 +1,15 @@
 import { colors, fonts } from '@zipa/shared';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Compass, Store, User, type LucideIcon } from 'lucide-react-native';
+import { House, Store, User, type LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 const TABS: Record<string, { label: string; Icon: LucideIcon }> = {
-  explorar: { label: 'Explorar', Icon: Compass },
+  explorar: { label: 'Inicio', Icon: House },
   negocio: { label: '¿Tienes negocio?', Icon: Store },
   perfil: { label: 'Perfil', Icon: User },
 };
 
-/** Barra inferior: Explorar, ¿Tienes negocio? y Perfil. */
+/** Barra inferior: Inicio, ¿Tienes negocio? y Perfil. */
 export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
   const tab = (key: string, label: string, Icon: LucideIcon, active: boolean, onPress: () => void) => {
     const color = active ? colors.primary : colors.textMuted;

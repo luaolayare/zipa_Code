@@ -1,4 +1,4 @@
-import { Button, DeleteAccountButton, Screen, colors, fonts, useAuth, type MyReview } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, Screen, colors, fonts, useAuth, type MyReview } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { User } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -33,6 +33,7 @@ export default function Perfil() {
         <Text style={styles.meta}>Puedes explorar sin cuenta. Inicia sesión para calificar los negocios que visitas.</Text>
         <Button title="Iniciar sesión" onPress={() => router.push('/login')} />
         <Legal />
+        <AboutCard />
       </Screen>
     );
   }
@@ -76,6 +77,7 @@ export default function Perfil() {
 
       <Button title="Cerrar sesión" variant="danger" onPress={signOut} />
       <Legal />
+      <AboutCard />
       <DeleteAccountButton loses="tu perfil, tus reseñas y tus reportes" onDeleted={() => router.replace('/')} />
     </Screen>
   );

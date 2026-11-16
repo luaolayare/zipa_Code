@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categories';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
-import type { Business, BusinessType, Category, Product, Review, ReviewStatus } from './types';
+import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product, Review, ReviewStatus, SearchOptions } from './types';
 
 /** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
 export const normalizeIdNumber = (raw: string) => raw.replace(/[^0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -44,6 +45,10 @@ const toBusiness = (r: any): Business => ({
   name: r.name,
   type: r.type,
   category: r.category,
+  subcategoryId: r.subcategory_id ?? null,
+  mainCategory: r.main_category ?? r.subcategory?.parent_id ?? null,
+  subcategoryName: r.subcategory_name ?? r.subcategory?.name ?? null,
+  tags: r.tags ?? (Array.isArray(r.business_tags) ? r.business_tags.map((t: { category_id: string }) => t.category_id) : []),
   address: r.address,
   hours: r.hours,
   whatsapp: r.whatsapp,
@@ -84,6 +89,35 @@ const toReview = (r: any): Review => ({
   visited: !!r.visited,
   photoUrl: r.photo_url ?? null,
 });
+
+/**
+ * Búsqueda sobre datos en memoria con las mismas reglas que public.buscar_negocios() (0013).
+ * Solo se usa en desarrollo sin Supabase y en las pruebas.
+ */
+export function searchDemo(
+  businesses: Business[],
+  { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0 }: SearchOptions,
+  products: Product[] = DEMO_PRODUCTS,
+  categories: CategoryNode[] = DEMO_CATEGORIES,
+): Business[] {
+  const q = normalize(text).replace(/[^a-z0-9]+/g, ' ').trim();
+  const has = (value: string | null | undefined) => !!value && normalize(value).replace(/[^a-z0-9]+/g, ' ').includes(q);
+  const catName = (id: string) => categories.find((c) => c.id === id)?.name;
+  const rankable = (b: Business) => (b.reviewCount >= MIN_REVIEWS_FOR_RANKING ? 1 : 0);
+  const list = businesses.filter(
+    (b) =>
+      (!main || b.mainCategory === main) &&
+      (!subcategory || b.subcategoryId === subcategory || b.tags.includes(subcategory)) &&
+      (!q || has(b.name) || has(b.specialty) || has(b.subcategoryName) ||
+        products.some((p) => p.businessId === b.id && has(p.name)) || b.tags.some((t) => has(catName(t)))),
+  );
+  const byRating = (a: Business, b: Business) => rankable(b) - rankable(a) || (b.rating ?? -1) - (a.rating ?? -1) || b.reviewCount - a.reviewCount || a.name.localeCompare(b.name, 'es');
+  const starts = (b: Business) => (q && normalize(b.name).startsWith(q) ? 1 : 0);
+  const sorted = [...list].sort((a, b) =>
+    order === 'recientes' ? 0 : order === 'calificacion' ? byRating(a, b) : starts(b) - starts(a) || byRating(a, b),
+  );
+  return sorted.slice(offset, offset + Math.min(Math.max(limit, 1), 50));
+}
 
 /** Archivo local elegido o grabado en el celular. */
 export interface LocalFile {
@@ -129,6 +163,7 @@ export interface BusinessEdit {
   name?: string;
   type?: BusinessType;
   category?: Category;
+  subcategoryId?: string;
   address?: string;
   hours?: string | null;
   whatsapp?: string | null;
@@ -137,7 +172,7 @@ export interface BusinessEdit {
 export interface NewBusiness {
   name: string;
   type: BusinessType;
-  category: Category;
+  subcategoryId: string;
   address: string;
   hours?: string;
   whatsapp?: string;
@@ -229,11 +264,66 @@ export function createApi(db: SupabaseClient | null) {
       if (error) throw error;
     },
 
-    async listBusinesses(): Promise<Business[]> {
-      if (!db) return DEMO_BUSINESSES;
-      const { data, error } = await db.from('businesses_public').select('*');
+    /** Categorías y subcategorías (también las inactivas, para poder mostrar su nombre). */
+    async listCategories(): Promise<CategoryNode[]> {
+      if (!db) return DEMO_CATEGORIES;
+      const { data, error } = await db.from('categories').select('id, parent_id, name, sort_order, active').order('sort_order');
       if (error) throw error;
-      return (data ?? []).map(toBusiness);
+      return (data ?? []).map((c) => ({ id: c.id, parentId: c.parent_id, name: c.name, sortOrder: c.sort_order, active: c.active }));
+    },
+
+    /**
+     * Búsqueda y listados en el servidor (buscar_negocios, migración 0013): por nombre del negocio,
+     * producto o plato, y subcategoría; con filtros y en páginas de hasta 50.
+     */
+    async searchBusinesses(options: SearchOptions = {}): Promise<Business[]> {
+      const { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0 } = options;
+      if (!db) return searchDemo(DEMO_BUSINESSES, { text, main, subcategory, order, limit, offset });
+      const { data, error } = await db.rpc('buscar_negocios', {
+        p_texto: text.trim() || null,
+        p_categoria: main,
+        p_subcategoria: subcategory,
+        p_orden: order,
+        p_limite: limit,
+        p_desde: offset,
+      });
+      if (error) throw error;
+      return ((data as unknown[]) ?? []).map(toBusiness);
+    },
+
+    /** Cuántos negocios publicados tiene cada categoría principal (sin descargarlos). */
+    async countByMainCategory(): Promise<Record<MainCategory, number>> {
+      if (!db) {
+        return {
+          emprendimientos: DEMO_BUSINESSES.filter((b) => b.mainCategory === 'emprendimientos').length,
+          restaurantes: DEMO_BUSINESSES.filter((b) => b.mainCategory === 'restaurantes').length,
+        };
+      }
+      const count = async (main: MainCategory) => {
+        const { count: n, error } = await db.from('businesses_public').select('id', { count: 'exact', head: true }).eq('main_category', main);
+        if (error) throw error;
+        return n ?? 0;
+      };
+      const [emprendimientos, restaurantes] = await Promise.all([count('emprendimientos'), count('restaurantes')]);
+      return { emprendimientos, restaurantes };
+    },
+
+    /** Etiquetas secundarias del negocio propio: reemplaza las que tenía por estas (hasta 3). */
+    async setBusinessTags(businessId: string, tags: string[]) {
+      if (!db) return;
+      const { data, error } = await db.from('business_tags').select('category_id').eq('business_id', businessId);
+      if (error) throw error;
+      const current = (data ?? []).map((t) => t.category_id as string);
+      const remove = current.filter((t) => !tags.includes(t));
+      const add = tags.filter((t) => !current.includes(t));
+      if (remove.length) {
+        const { error: e } = await db.from('business_tags').delete().eq('business_id', businessId).in('category_id', remove);
+        if (e) throw e;
+      }
+      if (add.length) {
+        const { error: e } = await db.from('business_tags').insert(add.map((category_id) => ({ business_id: businessId, category_id })));
+        if (e) throw new Error(e.message.includes('hasta 3') ? 'Puedes agregar hasta 3 etiquetas.' : e.message.includes('no está disponible') ? 'Una de las etiquetas ya no está disponible.' : 'No pudimos guardar las etiquetas.');
+      }
     },
 
     async getBusiness(id: string): Promise<Business | null> {
@@ -359,7 +449,11 @@ export function createApi(db: SupabaseClient | null) {
 
     async myBusiness(ownerId: string): Promise<Business | null> {
       if (!db) return null;
-      const { data, error } = await db.from('businesses').select('*').eq('owner_id', ownerId).maybeSingle();
+      const { data, error } = await db
+        .from('businesses')
+        .select('*, subcategory:categories!businesses_subcategory_id_fkey(name, parent_id), business_tags(category_id)')
+        .eq('owner_id', ownerId)
+        .maybeSingle();
       if (error) throw error;
       return data ? toBusiness({ ...data, rating: null, review_count: 0, product_count: 0 }) : null;
     },
@@ -368,7 +462,8 @@ export function createApi(db: SupabaseClient | null) {
       if (!db) return 'demo-' + Date.now();
       const { data, error } = await db
         .from('businesses')
-        .insert({ owner_id: ownerId, ...input, status: 'borrador' })
+        // La base pone la categoría vieja a partir de la subcategoría (trigger businesses_clasificar).
+        .insert({ owner_id: ownerId, name: input.name, type: input.type, subcategory_id: input.subcategoryId, address: input.address, hours: input.hours, whatsapp: input.whatsapp, status: 'borrador' })
         .select('id')
         .single();
       if (error) throw error;
@@ -493,11 +588,12 @@ export function createApi(db: SupabaseClient | null) {
       const row: Record<string, unknown> = {};
       if (edit.name !== undefined) row.name = edit.name.trim();
       if (edit.type !== undefined) row.type = edit.type;
-      if (edit.category !== undefined) row.category = edit.category;
+      if (edit.subcategoryId !== undefined) row.subcategory_id = edit.subcategoryId;
+      else if (edit.category !== undefined) row.category = edit.category;
       if (edit.address !== undefined) row.address = edit.address.trim();
       if (edit.hours !== undefined) row.hours = edit.hours?.trim() || null;
       if (edit.whatsapp !== undefined) row.whatsapp = edit.whatsapp?.trim() || null;
-      const { data, error } = await db.from('businesses').update(row).eq('id', businessId).select('*').single();
+      const { data, error } = await db.from('businesses').update(row).eq('id', businessId).select('*, subcategory:categories!businesses_subcategory_id_fkey(name, parent_id), business_tags(category_id)').single();
       if (error) throw error;
       return toBusiness({ ...data, rating: null, review_count: 0, product_count: 0 });
     },

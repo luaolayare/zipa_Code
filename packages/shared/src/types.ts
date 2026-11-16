@@ -1,4 +1,28 @@
+/** Categoría vieja (antes de la Beta 2). Se conserva por compatibilidad y para los colores. */
 export type Category = 'comer' | 'artesanias' | 'cafe_dulces';
+
+/** Las dos categorías principales (migración 0013). */
+export type MainCategory = 'emprendimientos' | 'restaurantes';
+
+/** Categoría o subcategoría administrada por el equipo (tabla categories). */
+export interface CategoryNode {
+  id: string;
+  parentId: MainCategory | null; // null: es una categoría principal
+  name: string;
+  sortOrder: number;
+  active: boolean;
+}
+
+export type SearchOrder = 'relevancia' | 'calificacion' | 'recientes';
+
+export interface SearchOptions {
+  text?: string;
+  main?: MainCategory | null;
+  subcategory?: string | null;
+  order?: SearchOrder;
+  limit?: number;
+  offset?: number;
+}
 export type BusinessType = 'emprendimiento' | 'establecido';
 export type BusinessStatus = 'borrador' | 'en_revision' | 'publicado' | 'rechazado';
 export type ProductStatus = 'procesando' | 'listo' | 'error';
@@ -8,7 +32,11 @@ export interface Business {
   ownerId: string;
   name: string;
   type: BusinessType;
-  category: Category;
+  category: Category; // vieja: la sincroniza la base desde subcategoryId
+  subcategoryId: string | null; // subcategoría principal (de ahí sale la categoría principal)
+  mainCategory: MainCategory | null;
+  subcategoryName: string | null;
+  tags: string[]; // etiquetas secundarias ("también ofrece"), hasta 3
   address: string;
   hours: string | null;
   whatsapp: string | null;

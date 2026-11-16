@@ -1,4 +1,9 @@
 export const CATEGORIA: Record<string, string> = { comer: 'Comer', artesanias: 'Artesanías', cafe_dulces: 'Café y dulces' };
+/** Subcategoría (migración 0013) o, si no viene, la categoría vieja. */
+export const clasificacion = (b: { category: string; subcategory?: unknown }) => {
+  const s = (Array.isArray(b.subcategory) ? b.subcategory[0] : b.subcategory) as { name: string; parent_id: string | null } | null | undefined;
+  return s ? ` · ` : CATEGORIA[b.category] ?? b.category;
+};
 export const TIPO: Record<string, string> = { emprendimiento: 'Emprendimiento', establecido: 'Negocio establecido' };
 export const ESTADO: Record<string, string> = { en_revision: 'En revisión', publicado: 'Publicado', rechazado: 'No aprobado', borrador: 'Sin terminar' };
 export const MOTIVO: Record<string, string> = {

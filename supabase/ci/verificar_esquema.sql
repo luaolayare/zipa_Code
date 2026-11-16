@@ -11,9 +11,10 @@ begin
   select count(*) into n from pg_tables
   where schemaname = 'public'
     and tablename in ('profiles', 'businesses', 'business_verifications', 'products',
-                      'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions');
-  if n <> 10 then
-    raise exception 'Faltan tablas en public: se esperaban 10 y hay %', n;
+                      'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions',
+                      'categories', 'business_tags');
+  if n <> 12 then
+    raise exception 'Faltan tablas en public: se esperaban 12 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.
@@ -37,6 +38,24 @@ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'reviews_filtro_ofensivo' and not tgisinternal) then
     raise exception 'Falta el trigger reviews_filtro_ofensivo';
+  end if;
+
+  if not exists (select 1 from pg_trigger where tgname = 'businesses_clasificar' and not tgisinternal) then
+    raise exception 'Falta el trigger businesses_clasificar (categoría vieja y subcategoría sincronizadas)';
+  end if;
+
+  -- 4b. Categorías y búsqueda (migración 0013).
+  if (select count(*) from public.categories where parent_id is null) <> 2 then
+    raise exception 'Deben existir las 2 categorías principales';
+  end if;
+  if exists (select 1 from public.businesses where subcategory_id is null) then
+    raise exception 'Hay negocios sin subcategoría';
+  end if;
+  if to_regprocedure('public.buscar_negocios(text, text, text, text, integer, integer)') is null then
+    raise exception 'Falta la función buscar_negocios';
+  end if;
+  if public.normalizar('  Doña ÑAÑA: ¡Café! ') <> 'dona nana cafe' then
+    raise exception 'normalizar() no quita tildes, mayúsculas y signos: %', public.normalizar('  Doña ÑAÑA: ¡Café! ');
   end if;
 
   -- 5. Bucket privado de verificaciones.

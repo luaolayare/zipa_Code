@@ -11,14 +11,14 @@ export const openBusiness = (id: string) => router.push({ pathname: '/negocio/[i
 /**
  * Fila de lista.
  * - `classic` (Clásicos de la zona): miniatura 76, "especialidad · distancia · $$" y sello "N en 3D".
- * - `result` (resultados de búsqueda): miniatura 64, "categoría · distancia" y etiqueta de tipo.
+ * - `result` (búsqueda y categorías): miniatura 64, "subcategoría · distancia" y etiqueta de tipo.
  */
 export function BusinessRow({ business: b, variant }: { business: Business; variant: 'classic' | 'result' }) {
   const classic = variant === 'classic';
   const emp = b.type === 'emprendimiento';
   const meta = (classic
     ? [businessSpecialty(b), formatDistance(b.distanceM), formatPriceLevel(b.priceLevel)]
-    : [categoryLabel(b.category), formatDistance(b.distanceM)]
+    : [b.subcategoryName ?? categoryLabel(b.category), formatDistance(b.distanceM)]
   ).filter(Boolean).join(' · ');
 
   return (

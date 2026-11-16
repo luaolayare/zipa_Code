@@ -29,9 +29,40 @@ describe('createApi en modo demo', () => {
   it('lista los negocios de ejemplo', async () => {
     const api = createApi(null);
     expect(api.isDemo).toBe(true);
-    const list = await api.listBusinesses();
+    const list = await api.searchBusinesses();
     expect(list.length).toBeGreaterThan(0);
     expect(list.every((b) => b.status === 'publicado')).toBe(true);
+  });
+
+  it('busca por nombre, plato o producto y subcategoría, sin importar tildes', async () => {
+    const api = createApi(null);
+    expect((await api.searchBusinesses({ text: 'mama ines' })).map((b) => b.id)).toEqual(['b1']);
+    expect((await api.searchBusinesses({ text: 'BANDEJA' })).map((b) => b.id)).toEqual(['b4']); // plato
+    expect((await api.searchBusinesses({ text: 'cafeterías' })).map((b) => b.id)).toEqual(['b3']); // subcategoría
+    expect(await api.searchBusinesses({ text: 'no existe nada así' })).toEqual([]);
+  });
+
+  it('filtra por categoría principal y subcategoría, y limita las páginas', async () => {
+    const api = createApi(null);
+    const rest = await api.searchBusinesses({ main: 'restaurantes' });
+    expect(rest.length).toBeGreaterThan(0);
+    expect(rest.every((b) => b.mainCategory === 'restaurantes')).toBe(true);
+    expect((await api.searchBusinesses({ subcategory: 'reposteria' })).map((b) => b.id)).toEqual(['b7']);
+    expect(await api.searchBusinesses({ limit: 2 })).toHaveLength(2);
+    expect((await api.searchBusinesses({ limit: 500 })).length).toBeLessThanOrEqual(50);
+  });
+
+  it('ordena por calificación con los negocios de muchas reseñas primero', async () => {
+    const api = createApi(null);
+    const list = await api.searchBusinesses({ order: 'calificacion' });
+    const ratings = list.map((b) => b.rating ?? 0);
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+  });
+
+  it('cuenta los negocios por categoría principal', async () => {
+    const api = createApi(null);
+    const n = await api.countByMainCategory();
+    expect(n.emprendimientos + n.restaurantes).toBe((await api.searchBusinesses({ limit: 50 })).length);
   });
 
   it('rechaza reseñas con palabras ofensivas y publica las normales', async () => {

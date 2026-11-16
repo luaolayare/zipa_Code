@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -158,7 +158,7 @@ export default function Panel() {
 
           <SectionTitle title="Datos del negocio" style={{ marginTop: 10 }} />
           <Pressable accessibilityRole="button" accessibilityLabel="Editar los datos del negocio" onPress={() => router.push('/negocio/editar')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
-            <DataRow label="Tipo" value={`${businessTypeLabel(business.type)} · ${categoryLabel(business.category)}`} />
+            <DataRow label="Tipo" value={`${businessTypeLabel(business.type)} · ${business.subcategoryName ?? categoryLabel(business.category)}`} />
             <DataRow label="Dirección" value={business.address} />
             <DataRow label="Horario" value={business.hours || 'Sin horario'} />
             <DataRow label="WhatsApp" value={business.whatsapp || 'Sin número'} />
@@ -182,6 +182,7 @@ export default function Panel() {
               onDeleted={() => { reset(); router.replace('/'); }}
             />
           </View>
+          <AboutCard suffix="Negocios" />
         </View>
       </ScrollView>
     </View>

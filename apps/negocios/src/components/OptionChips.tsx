@@ -1,5 +1,5 @@
 import { colors, fonts } from '@zipa/shared';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 /** Elección única en forma de píldoras (categorías). */
 export function OptionChips<T extends string>({
@@ -42,15 +42,17 @@ export function OptionCards<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  // En celulares angostos van una debajo de otra, para que los títulos no se partan.
+  const stacked = useWindowDimensions().width < 400;
   return (
     <View style={{ gap: 10 }}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.cards} accessibilityRole="radiogroup" accessibilityLabel={label}>
+      <View style={[styles.cards, stacked && styles.cardsStacked]} accessibilityRole="radiogroup" accessibilityLabel={label}>
         {options.map((o) => {
           const on = o.id === value;
           return (
             <Pressable key={o.id} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => onChange(o.id)} style={({ pressed }) => [styles.card, on && styles.cardOn, pressed && { opacity: 0.85 }]}>
-              <Text style={styles.cardTitle}>{o.title}</Text>
+              <Text style={[styles.cardTitle, stacked && styles.cardTitleStacked]}>{o.title}</Text>
               <Text style={styles.cardBody}>{o.description}</Text>
             </Pressable>
           );
@@ -68,8 +70,11 @@ const styles = StyleSheet.create({
   text: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
   textOn: { color: '#FFFFFF' },
   cards: { flexDirection: 'row', gap: 12 },
+  cardsStacked: { flexDirection: 'column', gap: 10 },
+  cardTitleStacked: { fontSize: 18, lineHeight: 22 },
   card: { flex: 1, padding: 16, gap: 6, borderRadius: 22, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface },
   cardOn: { borderColor: colors.primary, backgroundColor: colors.stage3d },
-  cardTitle: { fontFamily: fonts.display, fontSize: 18, lineHeight: 22, color: colors.text },
+  // 16: "Emprendimiento" cabe completo en media pantalla sin partirse.
+  cardTitle: { fontFamily: fonts.display, fontSize: 16, lineHeight: 20, letterSpacing: -0.2, color: colors.text },
   cardBody: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19, color: colors.textMuted },
 });

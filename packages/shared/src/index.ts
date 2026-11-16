@@ -20,3 +20,6 @@ export { TextField } from './ui/TextField';
 export { Screen } from './ui/Screen';
 export { Card } from './ui/Card';
 export { PlateArt } from './ui/PlateArt';
+export { Logo } from './ui/Logo';
+export { WhatsAppIcon, WHATSAPP_GREEN } from './ui/WhatsAppIcon';
+export { AboutCard } from './ui/AboutCard';

@@ -1,4 +1,4 @@
-import type { Business, BusinessType, Category } from '@zipa/shared';
+import type { Business, BusinessType, Category, MainCategory } from '@zipa/shared';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 
 import type { ProductForm } from './ProductEditor';
@@ -11,7 +11,10 @@ export interface DraftProduct {
 export interface RegistroDraft {
   name: string;
   type: BusinessType;
-  category: Category;
+  mainCategory: MainCategory;
+  subcategoryId: string; // '' mientras no elija
+  tags: string[]; // etiquetas secundarias, hasta 3
+  category: Category; // vieja: se deriva de la subcategoría (colores y textos)
   address: string;
   hours: string;
   whatsapp: string;
@@ -26,6 +29,9 @@ export interface RegistroDraft {
 const empty: RegistroDraft = {
   name: '',
   type: 'emprendimiento',
+  mainCategory: 'restaurantes',
+  subcategoryId: '',
+  tags: [],
   category: 'comer',
   address: '',
   hours: '',
@@ -42,6 +48,9 @@ const empty: RegistroDraft = {
 export const draftFromBusiness = (b: Business): Partial<RegistroDraft> => ({
   name: b.name,
   type: b.type,
+  mainCategory: b.mainCategory ?? (b.category === 'comer' ? 'restaurantes' : 'emprendimientos'),
+  subcategoryId: b.subcategoryId ?? '',
+  tags: b.tags,
   category: b.category,
   address: b.address,
   hours: b.hours ?? '',

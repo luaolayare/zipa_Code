@@ -1,4 +1,5 @@
-import type { Business, Product, Review } from './types';
+import { DEMO_CATEGORIES } from './categories';
+import type { Business, MainCategory, Product, Review } from './types';
 
 // Datos de ejemplo para desarrollar sin Supabase configurado (los mismos del prototipo).
 
@@ -20,18 +21,29 @@ export const DEMO_PRODUCTS: Product[] = [
 
 const productCount = (businessId: string) => DEMO_PRODUCTS.filter((p) => p.businessId === businessId).length;
 
-type DemoBusiness = Omit<Business, 'ownerId' | 'status' | 'productCount'>;
+type DemoBusiness = Omit<Business, 'ownerId' | 'status' | 'productCount' | 'mainCategory' | 'subcategoryName' | 'tags'> & { subcategoryId: string };
 
-const demo = (b: DemoBusiness): Business => ({ ...b, ownerId: 'demo', status: 'publicado', productCount: productCount(b.id) });
+const demo = (b: DemoBusiness): Business => {
+  const sub = DEMO_CATEGORIES.find((c) => c.id === b.subcategoryId);
+  return {
+    ...b,
+    ownerId: 'demo',
+    status: 'publicado',
+    productCount: productCount(b.id),
+    mainCategory: (sub?.parentId ?? null) as MainCategory | null,
+    subcategoryName: sub?.name ?? null,
+    tags: [],
+  };
+};
 
 export const DEMO_BUSINESSES: Business[] = [
-  demo({ id: 'b1', name: 'Arepas Mamá Inés', type: 'emprendimiento', category: 'comer', specialty: 'Comida callejera', priceLevel: 1, distanceM: 200, address: 'Calle del Arsenal #8-12', hours: 'Lunes a sábado, 8 a. m. a 9 p. m.', whatsapp: '3001234567', rating: 4.8, reviewCount: 38 }),
-  demo({ id: 'b2', name: 'Tejidos Kaashi', type: 'emprendimiento', category: 'artesanias', specialty: 'Artesanías wayuu', priceLevel: 2, distanceM: 300, address: 'Calle de la Moneda #7-40', hours: 'Todos los días, 9 a. m. a 7 p. m.', whatsapp: null, rating: 4.9, reviewCount: 24 }),
-  demo({ id: 'b3', name: 'Café Sierra Viva', type: 'emprendimiento', category: 'cafe_dulces', specialty: 'Café de origen', priceLevel: 2, distanceM: 450, address: 'Plaza San Diego', hours: '7 a. m. a 8 p. m.', whatsapp: null, rating: 4.7, reviewCount: 19 }),
-  demo({ id: 'b4', name: 'La Fogata de Doña Rosa', type: 'establecido', category: 'comer', specialty: 'Comida típica', priceLevel: 2, distanceM: 350, address: 'Calle del Cuartel #36-77', hours: '12 m. a 10 p. m.', whatsapp: null, rating: 4.7, reviewCount: 212 }),
-  demo({ id: 'b6', name: 'Mar y Coco', type: 'establecido', category: 'comer', specialty: 'Mariscos', priceLevel: 3, distanceM: 600, address: 'Calle Santo Domingo #33-10', hours: '12 m. a 11 p. m.', whatsapp: null, rating: 4.5, reviewCount: 486 }),
-  demo({ id: 'b5', name: 'Galería Manos de Bolívar', type: 'establecido', category: 'artesanias', specialty: 'Artesanías del Caribe', priceLevel: 3, distanceM: 500, address: 'Las Bóvedas, local 12', hours: '9 a. m. a 8 p. m.', whatsapp: null, rating: 4.6, reviewCount: 132 }),
-  demo({ id: 'b7', name: 'Dulces de Palenque', type: 'emprendimiento', category: 'cafe_dulces', specialty: 'Dulces típicos', priceLevel: 1, distanceM: 150, address: 'Portal de los Dulces', hours: '8 a. m. a 6 p. m.', whatsapp: null, rating: 4.9, reviewCount: 56 }),
+  demo({ id: 'b1', name: 'Arepas Mamá Inés', type: 'emprendimiento', category: 'comer', subcategoryId: 'comida_rapida', specialty: 'Comida callejera', priceLevel: 1, distanceM: 200, address: 'Calle del Arsenal #8-12', hours: 'Lunes a sábado, 8 a. m. a 9 p. m.', whatsapp: '3001234567', rating: 4.8, reviewCount: 38 }),
+  demo({ id: 'b2', name: 'Tejidos Kaashi', type: 'emprendimiento', category: 'artesanias', subcategoryId: 'artesanias', specialty: 'Artesanías wayuu', priceLevel: 2, distanceM: 300, address: 'Calle de la Moneda #7-40', hours: 'Todos los días, 9 a. m. a 7 p. m.', whatsapp: null, rating: 4.9, reviewCount: 24 }),
+  demo({ id: 'b3', name: 'Café Sierra Viva', type: 'emprendimiento', category: 'cafe_dulces', subcategoryId: 'cafeterias', specialty: 'Café de origen', priceLevel: 2, distanceM: 450, address: 'Plaza San Diego', hours: '7 a. m. a 8 p. m.', whatsapp: null, rating: 4.7, reviewCount: 19 }),
+  demo({ id: 'b4', name: 'La Fogata de Doña Rosa', type: 'establecido', category: 'comer', subcategoryId: 'comida_tipica', specialty: 'Comida típica', priceLevel: 2, distanceM: 350, address: 'Calle del Cuartel #36-77', hours: '12 m. a 10 p. m.', whatsapp: null, rating: 4.7, reviewCount: 212 }),
+  demo({ id: 'b6', name: 'Mar y Coco', type: 'establecido', category: 'comer', subcategoryId: 'otros_restaurantes', specialty: 'Mariscos', priceLevel: 3, distanceM: 600, address: 'Calle Santo Domingo #33-10', hours: '12 m. a 11 p. m.', whatsapp: null, rating: 4.5, reviewCount: 486 }),
+  demo({ id: 'b5', name: 'Galería Manos de Bolívar', type: 'establecido', category: 'artesanias', subcategoryId: 'artesanias', specialty: 'Artesanías del Caribe', priceLevel: 3, distanceM: 500, address: 'Las Bóvedas, local 12', hours: '9 a. m. a 8 p. m.', whatsapp: null, rating: 4.6, reviewCount: 132 }),
+  demo({ id: 'b7', name: 'Dulces de Palenque', type: 'emprendimiento', category: 'cafe_dulces', subcategoryId: 'reposteria', specialty: 'Dulces típicos', priceLevel: 1, distanceM: 150, address: 'Portal de los Dulces', hours: '8 a. m. a 6 p. m.', whatsapp: null, rating: 4.9, reviewCount: 56 }),
 ];
 
 export const DEMO_REVIEWS: Review[] = [

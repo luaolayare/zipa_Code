@@ -18,7 +18,7 @@ export function PlateArt({ category, size = 160, seed = 0 }: { category: Categor
   const u = useId().replace(/[^a-zA-Z0-9]/g, ''); // ids únicos: varias ilustraciones en la misma pantalla
 
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: h }}>
+    <View aria-hidden style={{ width: size, height: h }}>
     <Svg width={size} height={h} viewBox="0 0 200 144">
       <Defs>
         <RadialGradient id={`shadow${u}`} cx="50%" cy="50%" r="50%">

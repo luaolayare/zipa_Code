@@ -10,8 +10,14 @@ import {
   formatDistance,
   formatPriceLevel,
   formatRating,
+  isRestaurant,
+  legacyCategoryFor,
   normalize,
+  subcategoriesOf,
+  DEMO_CATEGORIES,
+  MAIN_CATEGORIES,
 } from '../categories';
+import { CREDITS } from '../brand';
 import { DEMO_BUSINESSES } from '../demo';
 
 const base = DEMO_BUSINESSES[0];
@@ -59,7 +65,7 @@ describe('formatos', () => {
 describe('datos de presentación del negocio', () => {
   it('usa la especialidad o, si no hay, la categoría', () => {
     expect(businessSpecialty({ ...base, specialty: 'Comida callejera' })).toBe('Comida callejera');
-    expect(businessSpecialty({ ...base, specialty: null, category: 'artesanias' })).toBe('Artesanías');
+    expect(businessSpecialty({ ...base, specialty: null, subcategoryName: null, category: 'artesanias' })).toBe('Artesanías');
   });
 
   it('portada: colores propios de los negocios de ejemplo y por categoría para los nuevos', () => {
@@ -69,5 +75,48 @@ describe('datos de presentación del negocio', () => {
 
   it('el ranking exige un mínimo de reseñas', () => {
     expect(MIN_REVIEWS_FOR_RANKING).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe('categorías de la Beta 2', () => {
+  it('hay dos categorías principales con sus subcategorías iniciales', () => {
+    expect(MAIN_CATEGORIES.map((m) => m.id)).toEqual(['emprendimientos', 'restaurantes']);
+    expect(subcategoriesOf(DEMO_CATEGORIES, 'emprendimientos').map((c) => c.name)).toEqual([
+      'Artesanías', 'Repostería', 'Heladerías', 'Productos locales', 'Regalos y detalles', 'Otros emprendimientos',
+    ]);
+    expect(subcategoriesOf(DEMO_CATEGORIES, 'restaurantes').map((c) => c.name)).toEqual([
+      'Comida típica', 'Comida rápida', 'Parrillas', 'Pizzerías', 'Cafeterías', 'Otros restaurantes',
+    ]);
+  });
+
+  it('oculta subcategorías desactivadas y respeta el orden del equipo', () => {
+    const all = DEMO_CATEGORIES.map((c) => (c.id === 'parrillas' ? { ...c, active: false } : c.id === 'pizzerias' ? { ...c, sortOrder: 1 } : c));
+    const names = subcategoriesOf(all, 'restaurantes').map((c) => c.id);
+    expect(names).not.toContain('parrillas');
+    expect(names[0]).toBe('pizzerias');
+  });
+
+  it('la categoría vieja sale igual que en la base (categoria_heredada)', () => {
+    expect(legacyCategoryFor('pizzerias', 'restaurantes')).toBe('comer');
+    expect(legacyCategoryFor('cafeterias', 'restaurantes')).toBe('cafe_dulces');
+    expect(legacyCategoryFor('heladerias', 'emprendimientos')).toBe('cafe_dulces');
+    expect(legacyCategoryFor('artesanias', 'emprendimientos')).toBe('artesanias');
+    expect(legacyCategoryFor('nueva_del_equipo', 'emprendimientos')).toBe('artesanias');
+    expect(legacyCategoryFor('nueva_del_equipo', 'restaurantes')).toBe('comer');
+  });
+
+  it('distingue restaurantes de emprendimientos', () => {
+    expect(isRestaurant({ mainCategory: 'restaurantes', category: 'cafe_dulces' })).toBe(true);
+    expect(isRestaurant({ mainCategory: 'emprendimientos', category: 'cafe_dulces' })).toBe(false);
+    expect(isRestaurant({ mainCategory: null, category: 'comer' })).toBe(true);
+  });
+
+  it('la subcategoría reemplaza a la categoría vieja como especialidad por defecto', () => {
+    expect(businessSpecialty({ ...base, specialty: null, subcategoryName: 'Pizzerías' })).toBe('Pizzerías');
+  });
+
+  it('los créditos de «Acerca de» están en un solo lugar', () => {
+    expect(CREDITS.developedBy).toBe('SCALIX Cloud');
+    expect(CREDITS.site).toMatch(/^https:\/\//);
   });
 });

@@ -1,7 +1,7 @@
-import { BRAND, colors, fonts } from '@zipa/shared';
+import { BRAND, Logo, colors, fonts } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { Box, ScanQrCode, Store } from 'lucide-react-native';
+import { Box, ScanQrCode } from 'lucide-react-native';
 import { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,16 +24,13 @@ export default function Welcome() {
   return (
     <View style={[styles.screen, { paddingTop: 28 + insets.top, paddingBottom: 32 + insets.bottom }]}>
       {/* Decoración: anillo que sale por la derecha y cuadro mostaza. */}
-      <View style={styles.ring} accessible={false} importantForAccessibility="no-hide-descendants" />
-      <View style={styles.cube} accessible={false} importantForAccessibility="no-hide-descendants">
+      <View style={styles.ring} aria-hidden />
+      <View style={styles.cube} aria-hidden>
         <Box size={48} color={colors.text} strokeWidth={1.8} />
       </View>
 
-      <View style={styles.logoRow} accessibilityRole="header">
-        <View style={styles.logo}>
-          <Store size={20} color={colors.text} strokeWidth={2.2} />
-        </View>
-        <Text style={styles.brand}>{BRAND.name}</Text>
+      <View accessibilityRole="header">
+        <Logo size={36} tone="light" />
       </View>
 
       <View style={styles.spacer} />
@@ -71,9 +68,6 @@ const styles = StyleSheet.create({
   ring: { position: 'absolute', right: -70, top: 120, width: 332, height: 332, borderRadius: 166, borderWidth: 36, borderColor: colors.primaryDeep },
   cube: { position: 'absolute', right: 30, top: 210, width: 90, height: 90, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '14deg' }] },
 
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  logo: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  brand: { fontSize: 20, fontFamily: fonts.display, color: '#FFFFFF' },
 
   spacer: { flex: 1 },
 
