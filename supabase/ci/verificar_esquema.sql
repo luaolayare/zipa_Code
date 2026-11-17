@@ -12,9 +12,9 @@ begin
   where schemaname = 'public'
     and tablename in ('profiles', 'businesses', 'business_verifications', 'products',
                       'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions',
-                      'categories', 'business_tags', 'analytics_events');
-  if n <> 13 then
-    raise exception 'Faltan tablas en public: se esperaban 13 y hay %', n;
+                      'categories', 'business_tags', 'analytics_events', 'product_photos', 'featured_placements');
+  if n <> 15 then
+    raise exception 'Faltan tablas en public: se esperaban 15 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.

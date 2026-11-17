@@ -29,6 +29,8 @@ export default function ProductoScreen() {
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [business, setBusiness] = useState<Business | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [slide, setSlide] = useState(0);
+  const [slideWidth, setSlideWidth] = useState(0);
 
   // Analítica: producto o plato consultado.
   useEffect(() => { api.track('product_view', { productId: id }); }, [api, id]);
@@ -56,6 +58,12 @@ export default function ProductoScreen() {
 
   const comer = business?.category === 'comer';
   const ar = product.modelUrl ? arUrl(product.modelUrl) : null;
+  // Galería: primero el video (si el equipo lo aprobó), luego la foto principal y las demás.
+  const slides: { key: string; kind: 'video' | 'photo'; url: string; label: string | null }[] = [
+    ...(videoUrl ? [{ key: 'video', kind: 'video' as const, url: videoUrl, label: 'Video del negocio' }] : []),
+    ...(product.photoUrl ? [{ key: 'main', kind: 'photo' as const, url: product.photoUrl, label: product.photoLabel }] : []),
+    ...product.photos.map((p) => ({ key: p.id, kind: 'photo' as const, url: p.url, label: p.label })),
+  ];
   const rate = () => {
     if (!user) return router.push({ pathname: '/login', params: { desde: 'calificar', negocio: product.businessId } });
     router.push({ pathname: '/calificar/[id]', params: { id: product.businessId } });
@@ -66,17 +74,44 @@ export default function ProductoScreen() {
       <View style={[styles.stage, { paddingTop: insets.top + 12 }]}>
         <View style={styles.stageTop}>
           <BackButton onDark />
-          <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : videoUrl ? 'Video del negocio' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
+          <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : slides.length > 1 ? `${slide + 1} de ${slides.length}` : videoUrl ? 'Video del negocio' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
         </View>
-        <View style={styles.stageArt}>
-          {videoUrl ? (
-            <ProductVideo url={videoUrl} label={`Video de ${product.name}`} />
-          ) : product.photoUrl ? (
-            <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={`Foto de ${product.name}`} />
-          ) : (
-            <PlateArt category={business?.category ?? 'comer'} size={300} />
-          )}
-        </View>
+        {slides.length > 1 ? (
+          <View>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onLayout={(e) => setSlideWidth(e.nativeEvent.layout.width)}
+              onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / Math.max(slideWidth, 1)))}
+              onScroll={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / Math.max(slideWidth, 1)))}
+              scrollEventThrottle={32}
+              style={styles.gallery}
+              accessibilityLabel={`Galería de ${product.name}: ${slides.length} elementos. Desliza para ver más.`}>
+              {slides.map((s, i) => (
+                <View key={s.key} style={{ width: slideWidth || 1, height: '100%' }}>
+                  {s.kind === 'video'
+                    ? <ProductVideo url={s.url} label={`Video de ${product.name}`} />
+                    : <Image source={{ uri: s.url }} style={styles.photo} accessibilityLabel={s.label ?? `Foto ${i + 1} de ${product.name}`} />}
+                </View>
+              ))}
+            </ScrollView>
+            <View style={styles.dots} accessibilityElementsHidden>
+              {slides.map((s, i) => <View key={s.key} style={[styles.dot, i === slide && styles.dotOn]} />)}
+            </View>
+            {!!slides[slide]?.label && <Text style={styles.caption}>{slides[slide].label}</Text>}
+          </View>
+        ) : (
+          <View style={styles.stageArt}>
+            {videoUrl ? (
+              <ProductVideo url={videoUrl} label={`Video de ${product.name}`} />
+            ) : product.photoUrl ? (
+              <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={product.photoLabel ?? `Foto de ${product.name}`} />
+            ) : (
+              <PlateArt category={business?.category ?? 'comer'} size={300} />
+            )}
+          </View>
+        )}
       </View>
 
       <View style={styles.body}>
@@ -112,6 +147,11 @@ const styles = StyleSheet.create({
   stageBadge: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, overflow: 'hidden' },
   stageArt: { height: 340, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   photo: { width: '100%', height: '100%', borderRadius: 28 },
+  gallery: { height: 340, marginTop: 12 },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(20,33,31,0.25)' },
+  dotOn: { width: 20, backgroundColor: colors.text },
+  caption: { textAlign: 'center', marginTop: 6, fontFamily: fonts.semibold, fontSize: 14.5, color: colors.textBody },
   body: { padding: 22, gap: 12 },
   businessName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.textMuted, textDecorationLine: 'underline' },
   h1: { fontFamily: fonts.hero, fontSize: 34, lineHeight: 37, letterSpacing: -1, color: colors.text, textAlign: 'left' },

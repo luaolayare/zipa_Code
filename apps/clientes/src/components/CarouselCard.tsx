@@ -6,11 +6,12 @@ import { Cover } from './Cover';
 import { Rating } from './Rating';
 
 /** Tarjeta del carrusel "Recién llegados". */
-export function CarouselCard({ business: b }: { business: Business }) {
+export function CarouselCard({ business: b, badge }: { business: Business; badge?: string }) {
   const meta = [businessSpecialty(b), formatDistance(b.distanceM)].filter(Boolean).join(' · ');
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={b.name} onPress={() => openBusiness(b.id)} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
       <Cover business={b} circle={76} ring={6} style={styles.cover}>
+        {!!badge && <Text style={styles.badgeFeatured}>{badge}</Text>}
         {b.productCount > 0 && <Text style={styles.badge3d}>{b.productCount} en 3D</Text>}
       </Cover>
       <View style={styles.body}>
@@ -30,6 +31,7 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85 },
   cover: { height: 120 },
   badge3d: { position: 'absolute', left: 10, bottom: 10, fontSize: 11, fontFamily: fonts.bold, backgroundColor: colors.accent, color: colors.text, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
+  badgeFeatured: { position: 'absolute', left: 10, top: 10, fontSize: 11.5, fontFamily: fonts.bold, backgroundColor: colors.text, color: colors.accent, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
   body: { padding: 12, gap: 4 },
   name: { fontSize: 15, lineHeight: 19, fontFamily: fonts.bold, color: colors.text },
   meta: { fontSize: 12, fontFamily: fonts.regular, color: colors.textMuted },

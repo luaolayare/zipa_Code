@@ -6,7 +6,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { BusinessPreview } from '@/components/BusinessPreview';
 import { type } from '@/components/kit';
 import { Page } from '@/components/Page';
-import { priceFrom } from '@/components/ProductEditor';
+import { priceFrom, productInputFrom } from '@/components/ProductEditor';
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';
 
@@ -73,6 +73,7 @@ export default function VistaPrevia() {
           video: p.form.video,
           available: p.form.available,
           section: p.form.section,
+          ...productInputFrom(p.form),
         });
         products[i] = { ...p, savedId: saved.id };
         update({ products: [...products] });

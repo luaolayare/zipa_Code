@@ -5,7 +5,7 @@ import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categorie
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
-import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product, Review, ReviewStatus, SearchOptions } from './types';
+import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product, ProductPhoto, Review, ReviewStatus, SearchOptions } from './types';
 
 /** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
 export const normalizeIdNumber = (raw: string) => raw.replace(/[^0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -79,7 +79,20 @@ const toProduct = (r: any): Product => ({
   available: r.available ?? true,
   section: r.section ?? null,
   sortOrder: r.sort_order ?? 0,
+  photoLabel: r.photo_label ?? null,
+  photos: ((r.product_photos ?? []) as ProductPhoto[]).slice().sort((a, b) => a.position - b.position),
 });
+
+/** Columnas de producto con sus fotos adicionales (migración 0017). */
+const PRODUCT_SELECT = '*, product_photos(id, url, label, position)';
+
+/** Foto adicional tal como la edita el negocio. */
+export interface ExtraPhotoInput {
+  id?: string; // ya guardada
+  url?: string | null; // dirección si ya estaba guardada (o si era la principal)
+  file?: LocalFile | null; // foto nueva
+  label?: string | null;
+}
 
 const toReview = (r: any): Review => ({
   id: r.id,
@@ -138,6 +151,9 @@ export interface ProductInput {
   video?: LocalFile | null; // nuevo video para el 3D (si no cambia, se omite)
   available?: boolean; // por defecto, disponible
   section?: string | null; // sección del menú
+  photoLabel?: string | null; // descripción de la foto principal
+  photoUrl?: string | null; // principal: una foto ya guardada (al elegir otra como principal)
+  extras?: ExtraPhotoInput[]; // hasta 3 fotos más; si se omite, no se tocan
 }
 
 const extFor = (mime: string, fallback: string) => {
@@ -308,6 +324,22 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       return ((data as unknown[]) ?? []).map(toBusiness);
     },
 
+    /** Negocios destacados ahora mismo (suscripción), en el orden del equipo (migración 0017). */
+    async featuredBusinesses(limit = 10): Promise<Business[]> {
+      if (!db) return [];
+      const { data, error } = await db.rpc('negocios_destacados', { p_limite: limit });
+      if (error) throw error;
+      return ((data as unknown[]) ?? []).map(toBusiness);
+    },
+
+    /** Hasta cuándo está destacado el negocio propio (null si no lo está). */
+    async myFeaturedUntil(businessId: string): Promise<string | null> {
+      if (!db) return null;
+      const now = new Date().toISOString();
+      const { data } = await db.from('featured_placements').select('ends_at').eq('business_id', businessId).lte('starts_at', now).gt('ends_at', now).order('ends_at', { ascending: false }).limit(1);
+      return (data?.[0]?.ends_at as string | undefined) ?? null;
+    },
+
     /** Cuántos negocios publicados tiene cada categoría principal (sin descargarlos). */
     async countByMainCategory(): Promise<Record<MainCategory, number>> {
       if (!db) {
@@ -352,7 +384,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
 
     async listProducts(businessId: string): Promise<Product[]> {
       if (!db) return demoProducts.filter((p) => p.businessId === businessId);
-      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('sort_order').order('created_at');
+      const { data, error } = await db.from('products').select(PRODUCT_SELECT).eq('business_id', businessId).order('sort_order').order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
     },
@@ -370,7 +402,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
     /** Un producto de un negocio publicado (o del propio negocio). */
     async getProduct(id: string): Promise<Product | null> {
       if (!db) return demoProducts.find((p) => p.id === id) ?? null;
-      const { data, error } = await db.from('products').select('*').eq('id', id).maybeSingle();
+      const { data, error } = await db.from('products').select(PRODUCT_SELECT).eq('id', id).maybeSingle();
       if (error) throw error;
       return data ? toProduct(data) : null;
     },
@@ -556,7 +588,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
     /** Productos del negocio propio (incluye los de un negocio aún no publicado). */
     async myProducts(businessId: string): Promise<Product[]> {
       if (!db) return demoProducts.filter((p) => p.businessId === businessId);
-      const { data, error } = await db.from('products').select('*').eq('business_id', businessId).order('sort_order').order('created_at');
+      const { data, error } = await db.from('products').select(PRODUCT_SELECT).eq('business_id', businessId).order('sort_order').order('created_at');
       if (error) throw error;
       return (data ?? []).map(toProduct);
     },
@@ -573,6 +605,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
         description: input.description?.trim() || null,
         available: input.available ?? true,
         section: input.section?.trim() || null,
+        photo_label: input.photoLabel?.trim() || null,
       };
       if (!db) {
         const existing = demoProducts.find((p) => p.id === productId);
@@ -591,7 +624,12 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
           available: fields.available,
           section: fields.section,
           sortOrder: existing?.sortOrder ?? 0,
+          photoLabel: fields.photo_label,
+          photos: input.extras
+            ? input.extras.slice(0, 3).map((e, i) => ({ id: e.id ?? `demo-f-${Date.now()}-${i}`, url: e.file?.uri ?? e.url ?? '', label: e.label?.trim() || null, position: i + 1 }))
+            : existing?.photos ?? [],
         };
+        if (!input.photo && input.photoUrl) p.photoUrl = input.photoUrl;
         demoProducts = [...demoProducts.filter((x) => x.id !== p.id), p];
         return p;
       }
@@ -599,7 +637,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       let id = productId;
       let old: Product | null = null;
       if (id) {
-        const { data, error } = await db.from('products').select('*').eq('id', id).single();
+        const { data, error } = await db.from('products').select(PRODUCT_SELECT).eq('id', id).single();
         if (error) throw error;
         old = toProduct(data);
         const { error: e2 } = await db.from('products').update(fields).eq('id', id);
@@ -613,11 +651,18 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       const folder = `${ownerId}/${businessId}/${id}`;
       const patch: Record<string, string> = {};
       const toRemove: { bucket: string; path: string }[] = [];
+      // Fotos que siguen en uso después de guardar (la principal y las adicionales que quedan):
+      // ninguna de ellas se borra aunque cambie de lugar.
+      const keptUrls = new Set<string>([input.photoUrl, ...(input.extras ?? []).map((e) => e.url)].filter((u): u is string => !!u));
       if (input.photo) {
         const mime = input.photo.mimeType ?? 'image/jpeg';
         const path = await uploadFile(db, 'productos', `${folder}/foto-${Date.now()}.${extFor(mime, 'jpg')}`, input.photo, 'image/jpeg');
         patch.photo_url = db.storage.from('productos').getPublicUrl(path).data.publicUrl;
-        const oldPath = publicPathOf(old?.photoUrl ?? null);
+      } else if (input.photoUrl && input.photoUrl !== old?.photoUrl) {
+        patch.photo_url = input.photoUrl; // otra foto ya guardada pasa a ser la principal
+      }
+      if (patch.photo_url && old?.photoUrl && !keptUrls.has(old.photoUrl)) {
+        const oldPath = publicPathOf(old.photoUrl);
         if (oldPath) toRemove.push({ bucket: 'productos', path: oldPath });
       }
       if (input.video) {
@@ -629,10 +674,43 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
         const { error } = await db.from('products').update(patch).eq('id', id);
         if (error) throw error;
       }
+
+      // Fotos adicionales: primero se quitan las que ya no están (el máximo es 3) y luego se
+      // guardan las demás en su orden.
+      if (input.extras) {
+        const extras = input.extras.slice(0, 3);
+        const mainNow = patch.photo_url ?? old?.photoUrl ?? null;
+        const keepIds = new Set(extras.map((e) => e.id).filter(Boolean));
+        for (const ph of old?.photos ?? []) {
+          if (keepIds.has(ph.id)) continue;
+          const { error } = await db.from('product_photos').delete().eq('id', ph.id);
+          if (error) throw error;
+          if (ph.url !== mainNow && !keptUrls.has(ph.url)) {
+            const path = publicPathOf(ph.url);
+            if (path) toRemove.push({ bucket: 'productos', path });
+          }
+        }
+        for (let i = 0; i < extras.length; i++) {
+          const e = extras[i];
+          let url = e.url ?? null;
+          if (e.file) {
+            const mime = e.file.mimeType ?? 'image/jpeg';
+            const path = await uploadFile(db, 'productos', `${folder}/extra-${Date.now()}-${i}.${extFor(mime, 'jpg')}`, e.file, 'image/jpeg');
+            url = db.storage.from('productos').getPublicUrl(path).data.publicUrl;
+          }
+          if (!url) continue;
+          const row = { url, label: e.label?.trim() || null, position: i + 1 };
+          const { error } = e.id
+            ? await db.from('product_photos').update(row).eq('id', e.id)
+            : await db.from('product_photos').insert({ product_id: id, ...row });
+          if (error) throw new Error(error.message.includes('hasta 4 fotos') ? 'Cada producto puede tener hasta 4 fotos.' : 'No pudimos guardar las fotos. Intenta de nuevo.');
+        }
+      }
+
       // Los archivos reemplazados ya no se usan: se borran (si falla, no afecta al producto).
       for (const f of toRemove) await db.storage.from(f.bucket).remove([f.path]);
 
-      const { data, error } = await db.from('products').select('*').eq('id', id).single();
+      const { data, error } = await db.from('products').select(PRODUCT_SELECT).eq('id', id).single();
       if (error) throw error;
       return toProduct(data);
     },
@@ -645,8 +723,8 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       }
       const { error } = await db.from('products').delete().eq('id', product.id);
       if (error) throw error;
-      const photo = publicPathOf(product.photoUrl);
-      if (photo) await db.storage.from('productos').remove([photo]);
+      const photos = [product.photoUrl, ...product.photos.map((p) => p.url)].map(publicPathOf).filter((p): p is string => !!p);
+      if (photos.length) await db.storage.from('productos').remove(photos);
       if (product.videoPath) await db.storage.from('videos').remove([product.videoPath]);
     },
 

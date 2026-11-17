@@ -25,6 +25,7 @@ export default function Inicio() {
 
   // Portada: destacados (solo con reseñas suficientes), recién llegados y cuántos hay por categoría.
   const [top, setTop] = useState<Business[]>([]);
+  const [featured, setFeatured] = useState<Business[]>([]);
   const [recent, setRecent] = useState<Business[]>([]);
   const [counts, setCounts] = useState<Record<MainCategory, number> | null>(null);
   const [status, setStatus] = useState<Load>('cargando');
@@ -34,8 +35,10 @@ export default function Inicio() {
       api.searchBusinesses({ order: 'calificacion', limit: 3 }),
       api.searchBusinesses({ order: 'recientes', limit: 8 }),
       api.countByMainCategory(),
+      api.featuredBusinesses(10).catch(() => [] as Business[]),
     ])
-      .then(([best, newest, n]) => {
+      .then(([best, newest, n, feat]) => {
+        setFeatured(feat);
         setTop(best.filter((b) => b.rating != null && b.reviewCount >= MIN_REVIEWS_FOR_RANKING));
         setRecent(newest);
         setCounts(n);
@@ -147,11 +150,23 @@ export default function Inicio() {
                 </View>
               ) : (
                 <>
+                  {/* Destacados: negocios con suscripción, elegidos por el equipo (no por calificación). */}
+                  {featured.length > 0 && (
+                    <View style={styles.section}>
+                      <View style={styles.sectionHead}>
+                        <Text style={styles.h2} accessibilityRole="header">Destacados</Text>
+                        <Text style={styles.sub}>Negocios que te recomendamos visitar</Text>
+                      </View>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.carousel} contentContainerStyle={styles.carouselContent}>
+                        {featured.map((b) => <CarouselCard key={b.id} business={b} badge="Destacado" />)}
+                      </ScrollView>
+                    </View>
+                  )}
                   {top.length > 0 && (
                     <View style={styles.section}>
                       <View style={styles.sectionHead}>
-                        <Text style={styles.h2} accessibilityRole="header">Lo más destacado</Text>
-                        <Text style={styles.sub}>Los mejor calificados por otros viajeros</Text>
+                        <Text style={styles.h2} accessibilityRole="header">Los mejor calificados</Text>
+                        <Text style={styles.sub}>Según las reseñas de otros viajeros</Text>
                       </View>
                       {top.map((b, i) => <RankCard key={b.id} business={b} rank={i + 1} badge={b.subcategoryName ?? 'Destacado'} />)}
                     </View>

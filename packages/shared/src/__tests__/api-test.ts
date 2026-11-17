@@ -67,6 +67,37 @@ describe('createApi en modo demo', () => {
     expect((await api.listProducts('b1')).find((x) => x.id === saved.id)?.available).toBe(false);
   });
 
+  it('guarda hasta 3 fotos adicionales con descripción, además de la principal', async () => {
+    const api = createApi(null);
+    const saved = await api.saveProduct('demo', 'b2', {
+      name: 'Mochila',
+      priceCop: 150000,
+      photo: { uri: 'file://principal.jpg' },
+      photoLabel: 'Clásica',
+      extras: [
+        { file: { uri: 'file://azul.jpg' }, label: 'Diseño azul' },
+        { file: { uri: 'file://roja.jpg' }, label: 'Diseño rojo' },
+        { file: { uri: 'file://verde.jpg' }, label: null },
+        { file: { uri: 'file://sobra.jpg' }, label: 'No cabe' },
+      ],
+    });
+    expect(saved.photoLabel).toBe('Clásica');
+    expect(saved.photos.map((p) => p.label)).toEqual(['Diseño azul', 'Diseño rojo', null]);
+    expect(saved.photos.map((p) => p.position)).toEqual([1, 2, 3]);
+  });
+
+  it('una foto adicional puede pasar a ser la principal', async () => {
+    const api = createApi(null);
+    const p = await api.saveProduct('demo', 'b2', { name: 'Sombrero', priceCop: 90000, photo: { uri: 'file://a.jpg' }, extras: [{ file: { uri: 'file://b.jpg' }, label: 'B' }] });
+    const swapped = await api.saveProduct('demo', 'b2', { name: 'Sombrero', priceCop: 90000, photoUrl: 'file://b.jpg', photoLabel: 'B', extras: [{ url: 'file://a.jpg', label: 'A' }] }, p.id);
+    expect(swapped.photoUrl).toBe('file://b.jpg');
+    expect(swapped.photos.map((x) => x.url)).toEqual(['file://a.jpg']);
+  });
+
+  it('sin Supabase no hay destacados inventados', async () => {
+    expect(await createApi(null).featuredBusinesses()).toEqual([]);
+  });
+
   it('cuenta los negocios por categoría principal', async () => {
     const api = createApi(null);
     const n = await api.countByMainCategory();

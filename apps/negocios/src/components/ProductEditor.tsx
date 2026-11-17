@@ -7,6 +7,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { type } from './kit';
 import { pickPhoto, pickVideo, recordVideo, takePhoto, type MediaResult } from './media';
+import { MorePhotos, extraUri, type ExtraPhoto } from './MorePhotos';
 
 export interface ProductForm {
   name: string;
@@ -18,9 +19,22 @@ export interface ProductForm {
   hasSavedVideo: boolean; // ya había un video guardado
   available: boolean; // false: "No disponible hoy"
   section: string; // sección del menú ('' = sin sección)
+  photoLabel: string; // descripción corta de la foto principal
+  extras: ExtraPhoto[]; // hasta 3 fotos más
 }
 
-export const emptyProductForm: ProductForm = { name: '', price: '', description: '', photo: null, photoUrl: null, video: null, hasSavedVideo: false, available: true, section: '' };
+export const emptyProductForm: ProductForm = { name: '', price: '', description: '', photo: null, photoUrl: null, video: null, hasSavedVideo: false, available: true, section: '', photoLabel: '', extras: [] };
+
+/** Lo que se envía a saveProduct a partir del formulario. */
+export const productInputFrom = (f: ProductForm) => ({
+  photoLabel: f.photoLabel,
+  photoUrl: f.photo ? null : f.photoUrl,
+  extras: f.extras.map((e) => ({ id: e.id, url: e.url ?? null, file: e.file ?? null, label: e.label })),
+});
+
+/** Formulario a partir de un producto guardado. */
+export const extrasFrom = (photos: { id: string; url: string; label: string | null }[]): ExtraPhoto[] =>
+  photos.map((p) => ({ key: p.id, id: p.id, url: p.url, label: p.label ?? '' }));
 
 export const priceFrom = (price: string) => {
   const digits = price.replace(/\D/g, '');
@@ -37,6 +51,7 @@ export function productFormError(f: ProductForm, word: string): string | null {
   if (price > MAX_PRICE_COP) return `Revisa el precio: ${formatCop(price)} parece demasiado alto.`;
   if (f.section.trim().length > 40) return 'El nombre de la sección es muy largo (máximo 40 caracteres).';
   if (!f.photo && !f.photoUrl) return `Agrega una foto del ${word}. Es lo primero que ven los clientes.`;
+  if (f.extras.length > 3) return 'Puedes agregar hasta 3 fotos más.';
   return null;
 }
 
@@ -122,6 +137,30 @@ export function ProductEditor({ value, onChange, category }: { value: ProductFor
           <MediaButton icon={<ImageIcon size={20} color={colors.text} />} label="De mis fotos" onPress={async () => apply(await pickPhoto(), 'photo')} />
         </View>
       </View>
+
+      <TextField label="Descripción de la foto principal (opcional)" value={value.photoLabel} onChangeText={(photoLabel) => onChange({ ...value, photoLabel })} placeholder="Ej: Diseño clásico" maxLength={40} />
+
+      <MorePhotos
+        word={word}
+        photos={value.extras}
+        onChange={(extras) => onChange({ ...value, extras })}
+        onMakeMain={(i) => {
+          // Intercambia: la foto elegida pasa a principal y la principal actual queda como adicional.
+          const chosen = value.extras[i];
+          const currentMain: ExtraPhoto | null = value.photo || value.photoUrl
+            ? { key: `m${Date.now()}`, file: value.photo, url: value.photo ? null : value.photoUrl, label: value.photoLabel }
+            : null;
+          const rest = value.extras.filter((_, j) => j !== i);
+          onChange({
+            ...value,
+            photo: chosen.file ?? null,
+            photoUrl: chosen.file ? null : chosen.url ?? null,
+            photoLabel: chosen.label,
+            extras: currentMain ? [currentMain, ...rest] : rest,
+          });
+        }}
+      />
+      {value.extras.some((e) => !extraUri(e)) && <Text style={type.error}>Hay una foto sin imagen.</Text>}
 
       <View style={[styles.videoBox, hasVideo && styles.videoDone]}>
         <View style={[styles.videoIcon, hasVideo && { backgroundColor: colors.success }]}>

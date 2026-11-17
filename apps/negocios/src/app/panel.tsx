@@ -17,6 +17,7 @@ export default function Panel() {
   const { update, reset } = useRegistro();
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [featuredUntil, setFeaturedUntil] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,7 @@ export default function Panel() {
       setQrToken(t);
       setBusiness(b);
       setProducts(p);
+      api.myFeaturedUntil(b.id).then(setFeaturedUntil).catch(() => {});
       setReviews(r);
       setError('');
     } catch {
@@ -95,6 +97,9 @@ export default function Panel() {
 
         <View style={styles.body}>
           {!!error && <Notice tone="danger">{error}</Notice>}
+          {!!featuredUntil && (
+            <Notice tone="success">{`Tu negocio está en «Destacados», en el inicio de la app, hasta el ${new Date(featuredUntil).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', timeZone: 'America/Bogota' })}.`}</Notice>
+          )}
           {business.status === 'en_revision' && (
             <Notice tone="warn">Estamos revisando tus datos. Cuando tu negocio quede publicado lo verás aquí. Mientras tanto puedes agregar y mejorar tus productos.</Notice>
           )}

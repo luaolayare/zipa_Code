@@ -63,12 +63,22 @@ export interface Product {
   videoStatus: VideoStatus | null; // el equipo lo revisa antes de que lo vean los clientes
   videoNote: string | null; // motivo si el equipo no aprobó el video
   status: ProductStatus;
+  photoLabel: string | null; // descripción corta de la foto principal
+  photos: ProductPhoto[]; // hasta 3 fotos más (otros diseños o presentaciones)
   available: boolean; // false: "No disponible hoy" (sigue en el menú)
   section: string | null; // sección del menú: "Entradas", "Bebidas"...
   sortOrder: number;
 }
 
 export type VideoStatus = 'pendiente' | 'aprobado' | 'rechazado';
+
+/** Foto adicional de un producto (migración 0017). */
+export interface ProductPhoto {
+  id: string;
+  url: string;
+  label: string | null;
+  position: number;
+}
 
 /** Estado del video de un producto, para el panel del negocio. */
 export type ProductVideoState = 'sin_video' | VideoStatus;

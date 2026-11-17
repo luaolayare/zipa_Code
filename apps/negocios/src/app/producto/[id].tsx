@@ -6,7 +6,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 
 import { Notice, type } from '@/components/kit';
 import { Page } from '@/components/Page';
-import { ProductEditor, emptyProductForm, priceFrom, productFormError, type ProductForm } from '@/components/ProductEditor';
+import { ProductEditor, emptyProductForm, extrasFrom, priceFrom, productFormError, productInputFrom, type ProductForm } from '@/components/ProductEditor';
 import { BackButton } from '@/components/StepHeader';
 
 export default function ProductoScreen() {
@@ -30,7 +30,7 @@ export default function ProductoScreen() {
         if (!isNew) {
           const p = (await api.myProducts(b.id)).find((x) => x.id === id);
           if (!p) return router.back();
-          setForm({ name: p.name, price: p.priceCop ? String(p.priceCop) : '', description: p.description ?? '', photo: null, photoUrl: p.photoUrl, video: null, hasSavedVideo: !!p.videoPath, available: p.available, section: p.section ?? '' });
+          setForm({ name: p.name, price: p.priceCop ? String(p.priceCop) : '', description: p.description ?? '', photo: null, photoUrl: p.photoUrl, video: null, hasSavedVideo: !!p.videoPath, available: p.available, section: p.section ?? '', photoLabel: p.photoLabel ?? '', extras: extrasFrom(p.photos) });
           setSaved(p);
         }
       } catch {
@@ -53,7 +53,7 @@ export default function ProductoScreen() {
     setError('');
     setSaving(form.video ? 'Subiendo el video…' : form.photo ? 'Subiendo la foto…' : 'Guardando…');
     try {
-      await api.saveProduct(user.id, business.id, { name: form.name, priceCop: priceFrom(form.price), description: form.description, photo: form.photo, video: form.video, available: form.available, section: form.section }, isNew ? undefined : id);
+      await api.saveProduct(user.id, business.id, { name: form.name, priceCop: priceFrom(form.price), description: form.description, photo: form.photo, video: form.video, available: form.available, section: form.section, ...productInputFrom(form) }, isNew ? undefined : id);
       router.back();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos guardar. Intenta de nuevo.');

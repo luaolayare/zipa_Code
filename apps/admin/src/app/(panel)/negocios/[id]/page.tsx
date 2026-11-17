@@ -17,7 +17,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
 
   const [{ data: v }, { data: products }, { data: acciones }] = await Promise.all([
     supabase.from('business_verifications').select('*').eq('business_id', id).maybeSingle(),
-    supabase.from('products').select('*').eq('business_id', id).order('created_at'),
+    supabase.from('products').select('*, product_photos(id, url, label, position)').eq('business_id', id).order('created_at'),
     supabase.from('admin_actions').select('action, details, created_at').eq('target_id', id).order('created_at', { ascending: false }).limit(10),
   ]);
 
@@ -70,6 +70,15 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
                       <strong>{p.name}</strong>
                       <span className="small muted">{pesos(p.price_cop)}{p.section ? ` · ${p.section}` : ''}{p.available === false ? ' · No disponible hoy' : ''}</span>
                       {p.description && <span className="small">{p.description}</span>}
+                      {!!p.product_photos?.length && (
+                        <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {(p.product_photos as { id: string; url: string; label: string | null }[]).map((f) => (
+                            <a key={f.id} href={f.url} target="_blank" rel="noreferrer" title={f.label ?? 'Foto adicional'}>
+                              <img src={f.url} alt={f.label ?? 'Foto adicional'} width={48} height={48} style={{ borderRadius: 8, objectFit: 'cover' }} />
+                            </a>
+                          ))}
+                        </span>
+                      )}
                       {p.video_path ? <VideoReview productId={p.id} url={videos[p.id] ?? null} status={p.video_status} note={p.video_note} /> : <span className="small muted">Sin video</span>}
                     </div>
                   </div>

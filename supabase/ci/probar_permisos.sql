@@ -765,6 +765,109 @@ do $$ begin
 end $$;
 reset role;
 
+-- GALERÍA Y DESTACADOS (migración 0017) ---------------------------------------------------------------
+-- Una foto adicional en el borrador (no debe verse en público).
+insert into public.product_photos (product_id, url, position)
+select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e3/secreta.jpg', 1
+from public.products where name = 'Pizza secreta';
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$update public.products set photo_label = 'Margarita clásica' where name = 'Pizza margarita'$q$);
+  perform ci_pruebas.debe_funcionar($q$insert into public.product_photos (product_id, url, label, position) select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e1/a.jpg', 'Con albahaca', 1 from public.products where name = 'Pizza margarita'$q$);
+  perform ci_pruebas.debe_funcionar($q$insert into public.product_photos (product_id, url, label, position) select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e1/b.jpg', 'Familiar', 2 from public.products where name = 'Pizza margarita'$q$);
+  perform ci_pruebas.debe_funcionar($q$insert into public.product_photos (product_id, url, position) select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e1/c.jpg', 3 from public.products where name = 'Pizza margarita'$q$);
+  perform ci_pruebas.debe_fallar($q$insert into public.product_photos (product_id, url, position) select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e1/d.jpg', 3 from public.products where name = 'Pizza margarita'$q$, 'Cada producto puede tener hasta 4 fotos%');
+  perform ci_pruebas.debe_fallar($q$update public.product_photos set url = 'https://otro-sitio.com/x.jpg' where label = 'Familiar'$q$, 'Foto no válida%');
+  perform ci_pruebas.debe_fallar($q$update public.product_photos set label = repeat('x', 41) where label = 'Familiar'$q$, '%check constraint%');
+  perform ci_pruebas.debe_funcionar($q$delete from public.product_photos where label = 'Familiar'$q$);
+  if (select count(*) from public.product_photos f join public.products p on p.id = f.product_id where p.name = 'Pizza margarita') <> 2 then raise exception 'no quedaron 2 fotos adicionales'; end if;
+  -- Destacados: el dueño no se destaca solo.
+  perform ci_pruebas.debe_fallar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e1', (now() at time zone 'America/Bogota')::date, (now() at time zone 'America/Bogota')::date + 30)$q$, 'No autorizado%');
+  perform ci_pruebas.debe_fallar($q$insert into public.featured_placements (business_id, starts_at, ends_at) values ('00000000-0000-0000-0000-0000000000e1', now(), now() + interval '1 day')$q$, 'permission denied%');
+end $$;
+reset role;
+
+-- Otra dueña no toca las fotos ajenas.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$insert into public.product_photos (product_id, url, position) select id, 'https://x.supabase.co/storage/v1/object/public/productos/00000000-0000-0000-0000-0000000000d2/e1/intruso.jpg', 1 from public.products where name = 'Pizza margarita'$q$, '%row-level security%');
+  if ci_pruebas.filas($q$delete from public.product_photos$q$) <> 0 then raise exception 'borró fotos ajenas'; end if;
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.product_photos f join public.products p on p.id = f.product_id where p.name = 'Pizza margarita'$q$) <> 2 then raise exception 'el público no ve la galería de un producto publicado'; end if;
+  if ci_pruebas.cuenta($q$select * from public.product_photos where url like '%secreta%'$q$) <> 0 then raise exception 'el público ve fotos de un borrador'; end if;
+  if ci_pruebas.cuenta('select * from public.negocios_destacados()') <> 0 then raise exception 'hay destacados sin que el equipo los cree'; end if;
+  perform ci_pruebas.debe_fallar('select note from public.featured_placements', 'permission denied%');
+  perform ci_pruebas.debe_fallar('select public.admin_destacados()', 'permission denied%');
+end $$;
+reset role;
+
+-- Revisora: ve la lista, no destaca.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar('select public.admin_destacados()');
+  perform ci_pruebas.debe_fallar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e1', (now() at time zone 'America/Bogota')::date, (now() at time zone 'America/Bogota')::date + 30)$q$, 'No autorizado%');
+end $$;
+reset role;
+
+-- Admin con MFA: destaca, programa y quita.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e1', (now() at time zone 'America/Bogota')::date, (now() at time zone 'America/Bogota')::date + 30, 1, 'Plan mensual')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e2', (now() at time zone 'America/Bogota')::date + 5, (now() at time zone 'America/Bogota')::date + 35)$q$);
+  perform ci_pruebas.debe_fallar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e3', (now() at time zone 'America/Bogota')::date, (now() at time zone 'America/Bogota')::date + 30)$q$, 'Solo se pueden destacar negocios publicados%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_destacar('00000000-0000-0000-0000-0000000000e1', (now() at time zone 'America/Bogota')::date, (now() at time zone 'America/Bogota')::date - 1)$q$, 'Revisa las fechas%');
+  if jsonb_array_length(public.admin_destacados()) <> 2 then raise exception 'admin_destacados no lista los 2 destacados'; end if;
+  if (public.admin_destacados() -> 0 ->> 'estado') <> 'vigente' then raise exception 'el vigente no va primero'; end if;
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if (select string_agg(id::text, ',') from public.negocios_destacados()) <> '00000000-0000-0000-0000-0000000000e1' then raise exception 'negocios_destacados debe traer solo el vigente'; end if;
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  -- La dueña ve sus dos destacados (el vigente y el programado).
+  if ci_pruebas.cuenta('select id, starts_at, ends_at from public.featured_placements') <> 2 then raise exception 'la dueña no ve sus destacados'; end if;
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$
+declare v uuid; p uuid;
+begin
+  select id into v from public.featured_placements where business_id = '00000000-0000-0000-0000-0000000000e1';
+  select id into p from public.featured_placements where business_id = '00000000-0000-0000-0000-0000000000e2';
+  perform public.admin_quitar_destacado(v);
+  perform public.admin_quitar_destacado(p);
+  if exists (select 1 from public.featured_placements where id = p) then raise exception 'el programado no se borró'; end if;
+  if not exists (select 1 from public.featured_placements where id = v and ends_at <= now()) then raise exception 'el vigente no terminó'; end if;
+  if (select count(*) from public.admin_actions where action in ('destacar_negocio', 'quitar_destacado')) <> 4 then raise exception 'los destacados no quedaron en la bitácora'; end if;
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta('select * from public.negocios_destacados()') <> 0 then raise exception 'sigue destacado después de quitarlo'; end if;
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

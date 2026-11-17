@@ -12,6 +12,7 @@ export function ProductCard({ product: p, category, seed }: { product: Product; 
       <View style={[styles.thumb, { backgroundColor: seed % 2 ? colors.stage3d : '#F1ECE3' }]}>
         {p.photoUrl ? <Image source={{ uri: p.photoUrl }} style={styles.photo} /> : <PlateArt category={category} size={120} seed={seed} />}
         {!p.available && <Text style={styles.badgeOff}>No disponible hoy</Text>}
+        {p.available && p.photos.length > 0 && <Text style={styles.badgeOff}>{p.photos.length + 1} fotos</Text>}
         {hasVideo && (
           <View style={styles.badgeVideo}>
             <Play size={16} color={colors.text} fill={colors.text} strokeWidth={2} />
