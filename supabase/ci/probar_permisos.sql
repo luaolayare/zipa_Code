@@ -736,6 +736,35 @@ do $$ begin
 end $$;
 reset role;
 
+-- LOGO Y BÚSQUEDA RÁPIDA (migración 0016) ----------------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  -- Logo en su propia carpeta del bucket "negocios": sí. De otro sitio o de otra persona: no.
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set logo_url = 'https://x.supabase.co/storage/v1/object/public/negocios/00000000-0000-0000-0000-0000000000d2/e1/logo.png' where id = '00000000-0000-0000-0000-0000000000e1'$q$);
+  perform ci_pruebas.debe_fallar($q$update public.businesses set logo_url = 'https://otro-sitio.com/logo.png' where id = '00000000-0000-0000-0000-0000000000e1'$q$, 'Logo no válido%');
+  perform ci_pruebas.debe_fallar($q$update public.businesses set logo_url = 'https://x.supabase.co/storage/v1/object/public/negocios/00000000-0000-0000-0000-0000000000d1/b1/logo.png' where id = '00000000-0000-0000-0000-0000000000e1'$q$, 'Logo no válido%');
+  -- Cambiar el logo no saca el negocio de publicación.
+  if (select status from public.businesses where id = '00000000-0000-0000-0000-0000000000e1') <> 'publicado' then raise exception 'cambiar el logo despublicó el negocio'; end if;
+  -- Logo de un negocio ajeno: no.
+  if ci_pruebas.filas($q$update public.businesses set logo_url = null where id = '00000000-0000-0000-0000-0000000000b1'$q$) <> 0 then raise exception 'cambió el logo de un negocio ajeno'; end if;
+  -- Las columnas de búsqueda las calcula la base.
+  perform ci_pruebas.debe_fallar($q$update public.products set nombre_busqueda = 'trampa' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%nombre_busqueda%');
+  perform ci_pruebas.debe_fallar($q$update public.businesses set nombre_busqueda = 'trampa' where id = '00000000-0000-0000-0000-0000000000e1'$q$, '%nombre_busqueda%');
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if (select logo_url from public.businesses_public where id = '00000000-0000-0000-0000-0000000000e1') not like '%/negocios/%' then raise exception 'el público no ve el logo'; end if;
+  if (select nombre_busqueda from public.businesses_public where id = '00000000-0000-0000-0000-0000000000e1') <> 'pizzeria dona nana' then raise exception 'nombre_busqueda no quedó normalizado'; end if;
+  -- La búsqueda sigue encontrando por nombre, producto y subcategoría con las columnas guardadas.
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('DOÑA ÑAÑA')$q$) <> 1 then raise exception 'la búsqueda rápida no encuentra por nombre'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios('maracuya')$q$) <> 1 then raise exception 'la búsqueda rápida no encuentra por producto'; end if;
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

@@ -11,6 +11,8 @@ import { BackButton } from '@/components/BackButton';
 import { ProductCard } from '@/components/ProductCard';
 import { mapsUrl, setPendingVisit, takePendingVisit, takeReviewed, whatsappUrl } from '@/lib/contacto';
 
+const REVIEWS_PAGE = 20;
+
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
 export default function NegocioDetalle() {
@@ -21,12 +23,37 @@ export default function NegocioDetalle() {
   const [business, setBusiness] = useState<Business | null | undefined>(undefined); // undefined = cargando
   const [products, setProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [myReview, setMyReview] = useState<Review | null>(null);
+  const [moreReviews, setMoreReviews] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [thanks, setThanks] = useState<string | null>(null); // 'publicada' o 'en_espera'
   const [visit, setVisit] = useState(false);
-  const mine = reviews.find((r) => r.userId === user?.id) ?? null; // una reseña por persona y negocio
+  const mine = myReview ?? reviews.find((r) => r.userId === user?.id) ?? null; // una reseña por persona y negocio
   const [error, setError] = useState(false);
 
-  const loadReviews = useCallback(() => api.listReviews(id, user?.id).then(setReviews), [api, id, user?.id]);
+  // Primera página de reseñas (20) y la propia, aunque no esté en esa página.
+  const loadReviews = useCallback(async () => {
+    const [page, own] = await Promise.all([
+      api.listReviews(id, user?.id, { limit: REVIEWS_PAGE, offset: 0 }),
+      user ? api.getMyReview(id, user.id) : Promise.resolve(null),
+    ]);
+    setReviews(page);
+    setMyReview(own);
+    setMoreReviews(page.length === REVIEWS_PAGE);
+  }, [api, id, user]);
+
+  const loadMoreReviews = async () => {
+    setLoadingMore(true);
+    try {
+      const next = await api.listReviews(id, user?.id, { limit: REVIEWS_PAGE, offset: reviews.length });
+      setReviews((list) => [...list, ...next.filter((r) => !list.some((x) => x.id === r.id))]);
+      setMoreReviews(next.length === REVIEWS_PAGE);
+    } catch {
+      // Se puede volver a intentar con el mismo botón.
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -101,7 +128,11 @@ export default function NegocioDetalle() {
       <View style={[styles.header, { backgroundColor: cover, paddingTop: insets.top + 12 }]}>
         <BackButton onDark />
         <View style={styles.identity}>
-          <View style={styles.logo}><Text style={styles.logoText}>{initials(business.name)}</Text></View>
+          <View style={styles.logo}>
+            {business.logoUrl
+              ? <Image source={{ uri: business.logoUrl }} style={styles.logoImage} accessibilityLabel={`Logo de ${business.name}`} />
+              : <Text style={styles.logoText}>{initials(business.name)}</Text>}
+          </View>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.name} accessibilityRole="header">{business.name}</Text>
             <Text style={styles.headerMeta}>{meta}</Text>
@@ -166,7 +197,7 @@ export default function NegocioDetalle() {
 
         <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
         {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}
-        {reviews.map((r) => {
+        {(myReview && !reviews.some((r) => r.id === myReview.id) ? [myReview, ...reviews] : reviews).map((r) => {
           const isMine = r.userId === user?.id;
           return (
             <View key={r.id} style={styles.review}>
@@ -210,6 +241,11 @@ export default function NegocioDetalle() {
             </View>
           );
         })}
+        {moreReviews && (
+          <Pressable accessibilityRole="button" onPress={loadMoreReviews} disabled={loadingMore} style={({ pressed }) => [styles.moreReviews, pressed && { opacity: 0.85 }]}>
+            {loadingMore ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.moreReviewsText}>Ver más reseñas</Text>}
+          </Pressable>
+        )}
 
         <Pressable accessibilityRole="button" onPress={() => report('business', business.id, business.name)} style={[styles.action, { alignSelf: 'center', marginTop: 8 }]}>
           <Flag size={14} color={colors.textMuted} />
@@ -237,6 +273,7 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 20, paddingBottom: 28, gap: 22 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   logo: { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  logoImage: { width: '100%', height: '100%' },
   logoText: { fontFamily: fonts.display, fontSize: 30, letterSpacing: -0.5, color: colors.text },
   name: { fontFamily: fonts.hero, fontSize: 32, lineHeight: 35, letterSpacing: -0.8, color: '#FFFFFF' },
   headerMeta: { fontFamily: fonts.medium, fontSize: 16, color: 'rgba(255,255,255,0.85)' },
@@ -283,4 +320,6 @@ const styles = StyleSheet.create({
   action: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
   actionText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.textMuted },
   menuSection: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginTop: 4 },
+  moreReviews: { minHeight: 48, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  moreReviewsText: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary },
 });

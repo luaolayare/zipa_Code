@@ -50,6 +50,7 @@ const toBusiness = (r: any): Business => ({
   mainCategory: r.main_category ?? r.subcategory?.parent_id ?? null,
   subcategoryName: r.subcategory_name ?? r.subcategory?.name ?? null,
   tags: r.tags ?? (Array.isArray(r.business_tags) ? r.business_tags.map((t: { category_id: string }) => t.category_id) : []),
+  logoUrl: r.logo_url ?? null,
   address: r.address,
   hours: r.hours,
   whatsapp: r.whatsapp,
@@ -157,6 +158,12 @@ async function uploadFile(db: SupabaseClient, bucket: string, path: string, file
 }
 
 /** Ruta de Storage a partir de la URL pública de un archivo del bucket "productos". */
+/** Ruta dentro del bucket "negocios" de un logo guardado. */
+const logoPathOf = (url: string | null) => {
+  const tail = url?.split('/object/public/negocios/')[1];
+  return tail ? decodeURIComponent(tail) : null;
+};
+
 const publicPathOf = (url: string | null) => {
   const tail = url?.split('/object/public/productos/')[1];
   return tail ? decodeURIComponent(tail) : null;
@@ -389,16 +396,51 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
     },
 
     /** Reseñas del negocio. Con `viewerId`, sin las de personas que esa persona bloqueó. */
-    async listReviews(businessId: string, viewerId?: string): Promise<Review[]> {
-      if (!db) return demoReviews.filter((r) => r.businessId === businessId && !demoBlocks.has(`${viewerId}:${r.userId}`));
+    /**
+     * Reseñas de un negocio, las más recientes primero. Con `page` trae solo esa página (la ficha
+     * del cliente pide de a 20, ver docs/PRUEBAS_DE_CARGA.md); sin `page`, todas (panel del negocio).
+     */
+    async listReviews(businessId: string, viewerId?: string, page?: { limit: number; offset: number }): Promise<Review[]> {
+      if (!db) {
+        const all = demoReviews.filter((r) => r.businessId === businessId && !demoBlocks.has(`${viewerId}:${r.userId}`));
+        return page ? all.slice(page.offset, page.offset + page.limit) : all;
+      }
       // En la base, la vista reviews_public ya oculta las de usuarios bloqueados (migración 0004).
-      const { data, error } = await db
-        .from('reviews_public')
-        .select('*')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
+      let q = db.from('reviews_public').select('*').eq('business_id', businessId).order('created_at', { ascending: false }).order('id');
+      if (page) q = q.range(page.offset, page.offset + page.limit - 1);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).map(toReview);
+    },
+
+    /**
+     * Sube el logo del negocio propio al bucket público "negocios" (carpeta del dueño), lo guarda
+     * en businesses.logo_url y borra el anterior. Devuelve la dirección pública del logo.
+     */
+    async uploadBusinessLogo(ownerId: string, businessId: string, file: LocalFile): Promise<string> {
+      if (!db) return file.uri;
+      const mime = file.mimeType ?? 'image/jpeg';
+      const path = await uploadFile(db, 'negocios', `${ownerId}/${businessId}/logo-${Date.now()}.${extFor(mime, 'jpg')}`, file, 'image/jpeg');
+      const url = db.storage.from('negocios').getPublicUrl(path).data.publicUrl;
+      const { data: before } = await db.from('businesses').select('logo_url').eq('id', businessId).maybeSingle();
+      const { error } = await db.from('businesses').update({ logo_url: url }).eq('id', businessId);
+      if (error) {
+        await db.storage.from('negocios').remove([path]);
+        throw new Error('No pudimos guardar el logo. Intenta de nuevo.');
+      }
+      const oldPath = logoPathOf(before?.logo_url ?? null);
+      if (oldPath) await db.storage.from('negocios').remove([oldPath]);
+      return url;
+    },
+
+    /** Quita el logo del negocio propio (y borra el archivo). */
+    async removeBusinessLogo(businessId: string) {
+      if (!db) return;
+      const { data: before } = await db.from('businesses').select('logo_url').eq('id', businessId).maybeSingle();
+      const { error } = await db.from('businesses').update({ logo_url: null }).eq('id', businessId);
+      if (error) throw new Error('No pudimos quitar el logo. Intenta de nuevo.');
+      const oldPath = logoPathOf(before?.logo_url ?? null);
+      if (oldPath) await db.storage.from('negocios').remove([oldPath]);
     },
 
     /**

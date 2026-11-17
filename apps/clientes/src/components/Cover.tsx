@@ -1,6 +1,6 @@
 import { businessCover, type Business } from '@zipa/shared';
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { Image, StyleSheet, View, type ViewStyle } from 'react-native';
 
 /**
  * Portada de color con un círculo al centro, mientras el negocio no tenga foto.
@@ -10,7 +10,10 @@ export function Cover({ business, circle, ring, style, children }: { business: B
   const { cover, inner } = businessCover(business);
   return (
     <View style={[styles.cover, { backgroundColor: cover }, style]}>
-      <View style={{ width: circle, height: circle, borderRadius: circle / 2, borderWidth: ring, borderColor: 'rgba(255,255,255,0.85)', backgroundColor: inner }} />
+      {/* Con logo, el círculo muestra el logo del negocio; sin logo, el color de su categoría. */}
+      <View style={{ width: circle, height: circle, borderRadius: circle / 2, borderWidth: ring, borderColor: 'rgba(255,255,255,0.85)', backgroundColor: business.logoUrl ? '#FFFFFF' : inner, overflow: 'hidden' }}>
+        {!!business.logoUrl && <Image source={{ uri: business.logoUrl }} style={{ width: '100%', height: '100%' }} accessibilityLabel={`Logo de ${business.name}`} />}
+      </View>
       {children}
     </View>
   );

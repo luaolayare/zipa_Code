@@ -41,6 +41,17 @@ export default function VistaPrevia() {
       }
       await api.setBusinessTags(id, draft.tags);
 
+      // Logo (opcional): se sube una vez; si falla, el registro sigue y se puede poner desde el panel.
+      if (draft.logo) {
+        setProgress('Subiendo tu logo…');
+        try {
+          const logoUrl = await api.uploadBusinessLogo(user.id, id, draft.logo);
+          update({ logo: null, logoUrl });
+        } catch {
+          // No bloquea el envío.
+        }
+      }
+
       // 2. Foto al espacio privado y cédula/NIT a la tabla privada.
       if (!draft.verificationSaved && draft.photoUri) {
         setProgress('Subiendo la foto de tu local…');
@@ -84,7 +95,7 @@ export default function VistaPrevia() {
     <Page>
       <StepHeader step={5} title="Vista previa" />
       <Text style={type.body}>Así verán tu negocio los clientes en la app.</Text>
-      <BusinessPreview name={draft.name} category={draft.category} type={draft.type} address={draft.address} productCount={draft.products.length} />
+      <BusinessPreview logoUri={draft.logo?.uri ?? draft.logoUrl} name={draft.name} category={draft.category} type={draft.type} address={draft.address} productCount={draft.products.length} />
 
       <View style={styles.summary}>
         <Row label="Horario" value={draft.hours.trim() || 'Sin horario'} />

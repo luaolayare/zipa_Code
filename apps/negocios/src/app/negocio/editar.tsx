@@ -6,6 +6,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 
 import { BUSINESS_TYPES, Notice, type } from '@/components/kit';
 import { CategoryPicker, type Classification } from '@/components/CategoryPicker';
+import { LogoPicker } from '@/components/LogoPicker';
 import { OptionCards } from '@/components/OptionChips';
 import { Page } from '@/components/Page';
 import { BackButton } from '@/components/StepHeader';
@@ -16,6 +17,7 @@ export default function EditarNegocio() {
   const [f, setF] = useState({ name: '', type: 'emprendimiento' as BusinessType, address: '', hours: '', whatsapp: '' });
   const [c, setC] = useState<Classification>({ mainCategory: 'restaurantes', subcategoryId: '', tags: [] });
   const [saving, setSaving] = useState(false);
+  const [logoBusy, setLogoBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -61,6 +63,35 @@ export default function EditarNegocio() {
         <BackButton />
         <Text style={type.h1}>Tus datos</Text>
       </View>
+      <LogoPicker
+        name={f.name}
+        uri={original.logoUrl}
+        busy={logoBusy}
+        onPick={async (file) => {
+          if (!user) return;
+          setLogoBusy(true);
+          setError('');
+          try {
+            const logoUrl = await api.uploadBusinessLogo(user.id, original.id, file);
+            setOriginal({ ...original, logoUrl });
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'No pudimos guardar el logo.');
+          } finally {
+            setLogoBusy(false);
+          }
+        }}
+        onRemove={async () => {
+          setLogoBusy(true);
+          try {
+            await api.removeBusinessLogo(original.id);
+            setOriginal({ ...original, logoUrl: null });
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'No pudimos quitar el logo.');
+          } finally {
+            setLogoBusy(false);
+          }
+        }}
+      />
       <TextField label="Nombre del negocio" value={f.name} onChangeText={(name) => setF({ ...f, name })} maxLength={80} />
       <CategoryPicker value={c} onChange={({ category: _legacy, ...patch }) => { setC({ ...c, ...patch }); setError(''); }} />
       <OptionCards<BusinessType> label="¿Cómo se describe?" options={BUSINESS_TYPES} value={f.type} onChange={(t) => setF({ ...f, type: t })} />

@@ -36,7 +36,10 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
       <div className="page-head">
         <div>
           <p className="overline">{clasificacion(b)} · {TIPO[b.type]}</p>
-          <h1>{b.name}</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {b.logo_url && <img src={b.logo_url} alt={`Logo de ${b.name}`} width={56} height={56} style={{ borderRadius: 14, objectFit: 'cover', border: '1px solid var(--border)' }} />}
+            {b.name}
+          </h1>
           <p>Registrado el {fecha(b.created_at)}</p>
         </div>
         <span className={`pill ${b.status}`}>{ESTADO[b.status]}</span>

@@ -1,18 +1,20 @@
 // La tarjeta del negocio tal como sale en la app de clientes.
 import { businessTypeLabel, categoryLabel, colors, fonts, type BusinessType, type Category } from '@zipa/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { initials } from './kit';
 
 export const COVER: Record<Category, string> = { comer: '#C2381B', artesanias: '#0F6E6E', cafe_dulces: '#5A3A22' };
 
 export function BusinessPreview({
+  logoUri = null,
   name,
   category,
   type: businessType,
   address,
   productCount,
 }: {
+  logoUri?: string | null;
   name: string;
   category: Category;
   type: BusinessType;
@@ -23,7 +25,9 @@ export function BusinessPreview({
     <View style={styles.frame}>
       <View style={styles.card}>
         <View style={[styles.cover, { backgroundColor: COVER[category] }]}>
-          <View style={styles.logo}><Text style={styles.logoText}>{initials(name)}</Text></View>
+          <View style={styles.logo}>
+            {logoUri ? <Image source={{ uri: logoUri }} style={styles.logoImage} accessibilityLabel={`Logo de ${name || 'tu negocio'}`} /> : <Text style={styles.logoText}>{initials(name)}</Text>}
+          </View>
           {productCount > 0 && (
             <View style={styles.badge}><Text style={styles.badgeText}>{productCount} {productCount === 1 ? 'producto' : 'productos'}</Text></View>
           )}
@@ -45,7 +49,8 @@ const styles = StyleSheet.create({
   frame: { backgroundColor: colors.stage3d, borderRadius: 30, padding: 14 },
   card: { backgroundColor: colors.surface, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
   cover: { height: 150, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 84, height: 84, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  logo: { width: 84, height: 84, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logoImage: { width: '100%', height: '100%' },
   logoText: { fontFamily: fonts.display, fontSize: 32, color: colors.text, letterSpacing: -0.5 },
   badge: { position: 'absolute', left: 14, bottom: 14, backgroundColor: colors.accent, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
   badgeText: { fontFamily: fonts.bold, fontSize: 14, color: colors.text },

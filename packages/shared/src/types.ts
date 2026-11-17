@@ -37,6 +37,7 @@ export interface Business {
   mainCategory: MainCategory | null;
   subcategoryName: string | null;
   tags: string[]; // etiquetas secundarias ("también ofrece"), hasta 3
+  logoUrl: string | null; // logo que subió el negocio (bucket público "negocios")
   address: string;
   hours: string | null;
   whatsapp: string | null;

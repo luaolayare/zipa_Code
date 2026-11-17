@@ -80,6 +80,24 @@ Ninguna está aplicada. Cada una va en su propia migración y necesita autorizac
 3. **Mantener la búsqueda con espera de 300 ms y un mínimo de 2 letras**, como ya hace la app. Así se evita una consulta por cada letra.
 4. **Medir de nuevo en un proyecto de Supabase de pruebas** (Paso 9 del plan de infraestructura) antes del lanzamiento. El servidor de Supabase tiene mucha menos CPU que este computador, así que los tiempos allá serán mayores.
 
+## Después de la migración 0016 (optimización aplicada)
+
+Se aplicaron las recomendaciones 1 y 2:
+- **Texto de búsqueda precalculado:** las columnas generadas `nombre_busqueda` y `especialidad_busqueda`.
+- **`buscar_negocios()` sin `set search_path`:** con esa cláusula, Postgres no podía integrar la función en la consulta y la replanificaba sin conocer los valores. Medida sola, la búsqueda pasó de 27–37 ms a 2–9 ms.
+- **Reseñas de la ficha en páginas de 20**, con índice `(business_id, created_at)`.
+
+Se usaron la misma semilla y el mismo escenario, con 60 s por perfil:
+
+| Usuarios virtuales | Búsqueda p50 / p95 / máx. (antes) | Búsqueda p50 / p95 / máx. (después) | Listado de categoría p95 (antes → después) | Errores |
+|---|---|---|---|---|
+| 50 | 29,5 / 111,5 / 245 ms | 22,3 / 85,2 / 189 ms | 7,9 → 6,2 ms | 0 % |
+| 100 | 39,1 / 287,8 / 682 ms | 22,2 / **149,0** / 372 ms | 12,0 → 5,7 ms | 0 % |
+
+Los archivos `perfil-50.json` y `perfil-100.json` de `pruebas/carga/resultados/` ya contienen estas mediciones nuevas. Las de antes quedan registradas en la tabla de arriba.
+
+La búsqueda sigue siendo la operación más costosa. El siguiente paso, cuando haya miles de negocios, es un índice trigram sobre las columnas `*_busqueda`. Con el tamaño actual Postgres no lo usaría.
+
 ## Lo que estas pruebas NO dicen
 
 - **No dicen cuántas personas aguanta la app en producción.** Se midió en un computador de 16 núcleos sin red de por medio. El plan de Supabase contratado tiene otros límites de CPU, conexiones y ancho de banda.

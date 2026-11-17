@@ -5,6 +5,7 @@ import { Text } from 'react-native';
 
 import { BUSINESS_TYPES, Notice, type } from '@/components/kit';
 import { CategoryPicker } from '@/components/CategoryPicker';
+import { LogoPicker } from '@/components/LogoPicker';
 import { OptionCards } from '@/components/OptionChips';
 import { Page } from '@/components/Page';
 import { useRegistro } from '@/components/RegistroContext';
@@ -34,6 +35,7 @@ export default function Datos() {
         </Notice>
       )}
       <TextField label="Nombre del negocio" value={draft.name} onChangeText={(name) => update({ name })} placeholder="Ej: Arepas Mamá Inés" maxLength={80} />
+      <LogoPicker name={draft.name} uri={draft.logo?.uri ?? draft.logoUrl} onPick={(logo) => update({ logo })} onRemove={() => update({ logo: null, logoUrl: null })} />
       <CategoryPicker value={draft} onChange={(patch) => { update(patch); setError(''); }} />
       <OptionCards<BusinessType> label="¿Cómo se describe?" options={BUSINESS_TYPES} value={draft.type} onChange={(t) => update({ type: t })} />
       <TextField label="Dirección" value={draft.address} onChangeText={(address) => update({ address })} placeholder="Ej: Calle 4 # 8-12, Centro" />

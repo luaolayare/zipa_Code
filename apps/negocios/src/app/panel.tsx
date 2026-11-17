@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Notice, SectionTitle, StatusPill, type } from '@/components/kit';
@@ -79,7 +79,16 @@ export default function Panel() {
         <View style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerInner}>
             <Text style={styles.kicker}>Panel de tu negocio</Text>
-            <Text style={styles.name}>{business.name}</Text>
+            <View style={styles.titleRow}>
+              {business.logoUrl ? (
+                <Image source={{ uri: business.logoUrl }} style={styles.headerLogo} accessibilityLabel={`Logo de ${business.name}`} />
+              ) : (
+                <Pressable accessibilityRole="button" accessibilityLabel="Agregar el logo de tu negocio" onPress={() => router.push('/negocio/editar')} style={styles.headerLogoEmpty}>
+                  <Text style={styles.headerLogoText}>+ Logo</Text>
+                </Pressable>
+              )}
+              <Text style={[styles.name, { flex: 1 }]}>{business.name}</Text>
+            </View>
             <StatusPill status={business.status} />
           </SafeAreaView>
         </View>
@@ -215,6 +224,10 @@ const styles = StyleSheet.create({
   header: { backgroundColor: colors.dark, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
   headerInner: { paddingHorizontal: 24, paddingTop: 18, paddingBottom: 28, gap: 12 },
   kicker: { fontFamily: fonts.semibold, fontSize: 15, color: '#AFC2BE' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  headerLogo: { width: 64, height: 64, borderRadius: 18, backgroundColor: colors.surface },
+  headerLogoEmpty: { width: 64, height: 64, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  headerLogoText: { fontFamily: fonts.bold, fontSize: 13, color: '#FFFFFF' },
   name: { fontFamily: fonts.hero, fontSize: 36, lineHeight: 39, letterSpacing: -1, color: '#FFFFFF' },
   body: { padding: 20, gap: 16 },
   noticeText: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22 },

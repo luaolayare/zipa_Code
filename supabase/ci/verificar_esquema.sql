@@ -58,6 +58,14 @@ begin
     raise exception 'normalizar() no quita tildes, mayúsculas y signos: %', public.normalizar('  Doña ÑAÑA: ¡Café! ');
   end if;
 
+  -- 4c. Logo y búsqueda rápida (migración 0016).
+  if not exists (select 1 from storage.buckets where id = 'negocios' and public = true) then
+    raise exception 'Falta el bucket público negocios (logos)';
+  end if;
+  if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'products' and column_name = 'nombre_busqueda' and is_generated = 'ALWAYS') then
+    raise exception 'Falta products.nombre_busqueda (columna generada)';
+  end if;
+
   -- 5. Bucket privado de verificaciones.
   if not exists (select 1 from storage.buckets where id = 'verificaciones' and public = false) then
     raise exception 'Falta el bucket privado verificaciones';

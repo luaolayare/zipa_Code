@@ -1,4 +1,4 @@
-import type { Business, BusinessType, Category, MainCategory } from '@zipa/shared';
+import type { Business, BusinessType, Category, LocalFile, MainCategory } from '@zipa/shared';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 
@@ -20,6 +20,8 @@ export interface RegistroDraft {
   hours: string;
   whatsapp: string;
   photoUri: string | null; // foto del local o puesto (archivo local hasta enviar el registro)
+  logo: LocalFile | null; // logo elegido en el celular (se sube al enviar el registro)
+  logoUrl: string | null; // logo ya guardado (si se retoma un registro)
   photoMimeType: string | null;
   idNumber: string; // cédula o NIT, solo visible para el equipo de revisión
   products: DraftProduct[];
@@ -38,6 +40,8 @@ const empty: RegistroDraft = {
   hours: '',
   whatsapp: '',
   photoUri: null,
+  logo: null,
+  logoUrl: null,
   photoMimeType: null,
   idNumber: '',
   products: [],
@@ -57,6 +61,7 @@ export const draftFromBusiness = (b: Business): Partial<RegistroDraft> => ({
   hours: b.hours ?? '',
   whatsapp: b.whatsapp ?? '',
   businessId: b.id,
+  logoUrl: b.logoUrl,
   verificationSaved: false,
 });
 
