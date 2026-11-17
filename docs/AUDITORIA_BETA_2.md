@@ -200,11 +200,29 @@ Después de las correcciones: typecheck, lint, 63/63 pruebas, esquema y permisos
 
 ## 8. Estado de los APK (Fase 8)
 
-**No generados todavía.** Se espera la autorización y la decisión sobre H1.
+**Generados y verificados (16 de noviembre de 2026).** El usuario autorizó la opción (a) de H1: generarlos contra el proyecto actual, sabiendo que es el real.
 
-- **Cuota de EAS:** plan gratuito, 3 de 30 builds usados en el periodo del 1 al 30 de noviembre, sin cargos extra. Dos APK (clientes y negocios, perfil `preview`) cabrían en el plan sin costo.
-- **Variables de `preview`:** existen en las dos apps (`EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY`). Apuntan al proyecto real (H1).
-- **Sesión de EAS:** activa como `luisdev1796`. No requiere intervención interactiva.
+- **Origen:** rama `feature/auditoria-beta-2` (commit `40ad02a`), con las correcciones M1 y M2. El CI de esa rama está en verde.
+- **Perfil `preview`:** APK de distribución interna. No es un build de producción y no se publicó en ninguna tienda.
+- **Cuota antes de lanzar:** plan gratuito, 3 de 30 builds, sin cargos extra. Los 2 builds entraron en el plan.
+
+| | Clientes | Negocios |
+|---|---|---|
+| Nombre visible | Zipa lo tiene | Zipa lo tiene Negocios |
+| Paquete Android | `co.zipa.vitrinalocal` (comprobado en el manifiesto) | `co.zipa.vitrinanegocios` (comprobado en el manifiesto) |
+| Versión | 0.1.0 (build 1) | 0.1.0 (build 1) |
+| Estado en EAS | FINISHED | FINISHED |
+| Descarga | https://expo.dev/artifacts/eas/FMAv9V-0Uj-CrJzTalXrtMWSiIKK6gkhUzNza9Pso88.apk | https://expo.dev/artifacts/eas/KMeQ-cdITbIU8-eR-wI5J08KTcjfUlPVOLpduUFFcgo.apk |
+| Tamaño | 97,8 MB | 118,4 MB |
+| Proyecto de Supabase | `auilsjqprobmhusvxmmz` (el real, por decisión H1-a) | `auilsjqprobmhusvxmmz` |
+
+**Revisión de secretos en los APK** [Auto]:
+- Se descargaron los dos APK y se inspeccionó el código empaquetado (`index.android.bundle`).
+- La única clave es la pública `sb_publishable_…`, pública por diseño. No hay JWT con rol `service_role`.
+- El texto `sb_secret_` aparece una vez en cada APK. No es una clave: es el literal que usa `supabase-js` para reconocer el tipo de clave (`src/lib/fetch.ts`, línea 31: `key.startsWith('sb_secret_')`). En el bundle de Hermes queda pegado a los textos vecinos; en negocios lo sigue «… is not set, cannot invoke nat…», un mensaje de React Native.
+- El build solo recibió dos variables: `EXPO_PUBLIC_SUPABASE_URL` y `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+
+**Instalación en un dispositivo:** [Pendiente]. No hay un celular ni un emulador conectados (`adb` no está instalado). Hay que instalarlos en un Android real y repetir allí N07, N13 y M5.
 
 ## 9. Recomendaciones para la siguiente beta
 
