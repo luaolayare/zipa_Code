@@ -1,6 +1,6 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
 import { AboutCard, Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -14,6 +14,7 @@ import { draftFromBusiness, useRegistro } from '@/components/RegistroContext';
 
 export default function Panel() {
   const { api, user, signOut } = useAuth();
+  const { aviso } = useLocalSearchParams<{ aviso?: string }>();
   const { update, reset } = useRegistro();
   const [business, setBusiness] = useState<Business | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -97,6 +98,9 @@ export default function Panel() {
 
         <View style={styles.body}>
           {!!error && <Notice tone="danger">{error}</Notice>}
+          {aviso === 'logo' && !business.logoUrl && (
+            <Notice tone="warn">No pudimos subir tu logo. Agrégalo desde «Tus datos» o tocando «+ Logo» arriba.</Notice>
+          )}
           {!!featuredUntil && (
             <Notice tone="success">{`Tu negocio está en «Destacados», en el inicio de la app, hasta el ${new Date(featuredUntil).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', timeZone: 'America/Bogota' })}.`}</Notice>
           )}

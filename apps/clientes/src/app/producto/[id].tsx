@@ -1,5 +1,5 @@
 // Producto: foto grande (o vista 3D cuando exista), datos y calificar.
-import { PlateArt, colors, fonts, formatCop, useAuth, type Business, type Product } from '@zipa/shared';
+import { PlateArt, colors, fonts, formatCop, slideIndex, useAuth, type Business, type Product } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScanLine } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -38,10 +38,17 @@ export default function ProductoScreen() {
   useEffect(() => {
     api.getProduct(id)
       .then(async (p) => {
-        setProduct(p);
-        if (p) setBusiness(await api.getBusiness(p.businessId));
+        // Negocio y video en paralelo, y la pantalla se muestra cuando ya se sabe si hay video:
+        // así la galería se arma una sola vez y empieza en el primer elemento (antes el video
+        // llegaba después y se insertaba delante, y la galería quedaba en la segunda posición).
         // Solo los videos aprobados por el equipo (la base de datos no entrega los demás).
-        if (p?.videoPath && p.videoStatus === 'aprobado') setVideoUrl(await api.videoUrl(p.videoPath));
+        const [b, v] = await Promise.all([
+          p ? api.getBusiness(p.businessId).catch(() => null) : null,
+          p?.videoPath && p.videoStatus === 'aprobado' ? api.videoUrl(p.videoPath).catch(() => null) : null,
+        ]);
+        setBusiness(b);
+        setVideoUrl(v);
+        setProduct(p);
       })
       .catch(() => setProduct(null));
   }, [api, id]);
@@ -83,8 +90,10 @@ export default function ProductoScreen() {
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               onLayout={(e) => setSlideWidth(e.nativeEvent.layout.width)}
-              onMomentumScrollEnd={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / Math.max(slideWidth, 1)))}
-              onScroll={(e) => setSlide(Math.round(e.nativeEvent.contentOffset.x / Math.max(slideWidth, 1)))}
+              // Solo con el ancho ya medido: antes, un desplazamiento al montar dividía por 1 y el
+              // contador marcaba «2 de N» mostrando el primero (auditoría Beta 2, C10).
+              onMomentumScrollEnd={(e) => slideWidth > 0 && setSlide(slideIndex(e.nativeEvent.contentOffset.x, slideWidth, slides.length))}
+              onScroll={(e) => slideWidth > 0 && setSlide(slideIndex(e.nativeEvent.contentOffset.x, slideWidth, slides.length))}
               scrollEventThrottle={32}
               style={styles.gallery}
               accessibilityLabel={`Galería de ${product.name}: ${slides.length} elementos. Desliza para ver más.`}>

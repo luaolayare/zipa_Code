@@ -41,14 +41,16 @@ export default function VistaPrevia() {
       }
       await api.setBusinessTags(id, draft.tags);
 
-      // Logo (opcional): se sube una vez; si falla, el registro sigue y se puede poner desde el panel.
+      // Logo (opcional): se sube una vez; si falla, el registro sigue y el panel lo avisa para que
+      // se agregue desde «Tus datos» (antes el error se perdía sin que nadie se enterara).
+      let logoFailed = false;
       if (draft.logo) {
         setProgress('Subiendo tu logo…');
         try {
           const logoUrl = await api.uploadBusinessLogo(user.id, id, draft.logo);
           update({ logo: null, logoUrl });
         } catch {
-          // No bloquea el envío.
+          logoFailed = true;
         }
       }
 
@@ -84,7 +86,7 @@ export default function VistaPrevia() {
       await api.submitForReview(id);
       reset();
       router.dismissAll();
-      router.replace('/panel');
+      router.replace(logoFailed ? { pathname: '/panel', params: { aviso: 'logo' } } : '/panel');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos enviar tu negocio. Revisa tu conexión e intenta de nuevo.');
     } finally {

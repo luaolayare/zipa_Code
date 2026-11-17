@@ -1,0 +1,206 @@
+[
+  {
+    "id": "S0",
+    "descripcion": "La dueña sube su propia foto de verificación y su video",
+    "resultado": "OK",
+    "detalle": ""
+  },
+  {
+    "id": "S1",
+    "descripcion": "Visitante sin sesión NO lee cédulas/NIT",
+    "resultado": "OK",
+    "detalle": "permission denied for table business_verifications"
+  },
+  {
+    "id": "S2",
+    "descripcion": "Otra dueña NO lee la verificación ajena",
+    "resultado": "OK",
+    "detalle": "0 filas"
+  },
+  {
+    "id": "S3",
+    "descripcion": "Otra dueña NO descarga la foto de verificación ajena",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S4",
+    "descripcion": "Otra dueña NO obtiene enlace firmado de la foto ajena",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S5",
+    "descripcion": "Visitante NO ve un video pendiente de aprobación",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S6",
+    "descripcion": "Turista con sesión NO obtiene enlace de un video pendiente",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S7",
+    "descripcion": "Otra dueña NO sube archivos a la carpeta ajena en «productos»",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S8",
+    "descripcion": "Otra dueña NO sube archivos a la carpeta ajena en «negocios»",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S9",
+    "descripcion": "Otra dueña NO sube archivos a la carpeta ajena en «resenas»",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S10",
+    "descripcion": "Otra dueña NO sube archivos a la carpeta ajena en «verificaciones»",
+    "resultado": "OK",
+    "detalle": "rechazado"
+  },
+  {
+    "id": "S11",
+    "descripcion": "Otra dueña NO edita un negocio ajeno",
+    "resultado": "OK",
+    "detalle": "0 filas"
+  },
+  {
+    "id": "S12",
+    "descripcion": "La dueña NO se publica a sí misma",
+    "resultado": "OK",
+    "detalle": "Solo el equipo de revisión puede publicar o rechazar un negocio"
+  },
+  {
+    "id": "S13",
+    "descripcion": "La dueña NO pone como logo una imagen de otro sitio",
+    "resultado": "OK",
+    "detalle": "Logo no válido: súbelo desde la app"
+  },
+  {
+    "id": "S14",
+    "descripcion": "Turista NO inserta reseñas saltándose las reglas",
+    "resultado": "OK",
+    "detalle": "permission denied for table reviews"
+  },
+  {
+    "id": "S15",
+    "descripcion": "Turista SÍ califica con la función de reseñas",
+    "resultado": "OK",
+    "detalle": "publicada"
+  },
+  {
+    "id": "S16",
+    "descripcion": "Una sola reseña por persona y negocio (calificar de nuevo la edita)",
+    "resultado": "OK",
+    "detalle": "1|5"
+  },
+  {
+    "id": "S17",
+    "descripcion": "Turista NO cambia estrellas directamente (sin las reglas)",
+    "resultado": "OK",
+    "detalle": "permission denied for table reviews"
+  },
+  {
+    "id": "S18",
+    "descripcion": "La dueña NO califica su propio negocio",
+    "resultado": "OK",
+    "detalle": "No puedes calificar este negocio"
+  },
+  {
+    "id": "S19",
+    "descripcion": "La dueña NO edita el texto de reseñas de clientes",
+    "resultado": "OK",
+    "detalle": "permission denied for table reviews"
+  },
+  {
+    "id": "S20",
+    "descripcion": "Cuenta creada hace menos de 24 h NO califica",
+    "resultado": "OK",
+    "detalle": "Podrás calificar 24 horas después de crear tu cuenta"
+  },
+  {
+    "id": "S21",
+    "descripcion": "La dueña NO aprueba su propio video",
+    "resultado": "OK",
+    "detalle": "permission denied for table products"
+  },
+  {
+    "id": "S22",
+    "descripcion": "Turista NO usa admin_destacar",
+    "resultado": "OK",
+    "detalle": "No autorizado"
+  },
+  {
+    "id": "S23",
+    "descripcion": "Turista NO usa admin_revisar_video",
+    "resultado": "OK",
+    "detalle": "No autorizado"
+  },
+  {
+    "id": "S24",
+    "descripcion": "Turista NO usa admin_analitica",
+    "resultado": "OK",
+    "detalle": "No autorizado"
+  },
+  {
+    "id": "S25",
+    "descripcion": "Turista NO usa admin_guardar_categoria",
+    "resultado": "OK",
+    "detalle": "No autorizado"
+  },
+  {
+    "id": "S26",
+    "descripcion": "Administradora SIN verificación en dos pasos NO usa funciones del equipo",
+    "resultado": "OK",
+    "detalle": "No autorizado"
+  },
+  {
+    "id": "S27",
+    "descripcion": "revisar-negocio SIN sesión: rechazado",
+    "resultado": "OK",
+    "detalle": "HTTP 401"
+  },
+  {
+    "id": "S28",
+    "descripcion": "revisar-negocio con turista: rechazado",
+    "resultado": "OK",
+    "detalle": "HTTP 403"
+  },
+  {
+    "id": "S29",
+    "descripcion": "revisar-negocio con admin SIN MFA: rechazado",
+    "resultado": "OK",
+    "detalle": "HTTP 403"
+  },
+  {
+    "id": "S30",
+    "descripcion": "El negocio sigue en revisión tras los intentos",
+    "resultado": "OK",
+    "detalle": ""
+  },
+  {
+    "id": "S31",
+    "descripcion": "eliminar-cuenta SIN sesión: rechazado",
+    "resultado": "OK",
+    "detalle": "HTTP 401"
+  },
+  {
+    "id": "S32",
+    "descripcion": "eliminar-cuenta borra usuario, negocio, reseñas y archivos",
+    "resultado": "OK",
+    "detalle": "HTTP 200 · antes archivos|reseñas=3|1 · después usuario|negocios|reseñas|archivos=0|0|0|0"
+  },
+  {
+    "id": "S33",
+    "descripcion": "Nadie lee los eventos de analítica por la API",
+    "resultado": "OK",
+    "detalle": "permission denied for table analytics_events"
+  }
+]
