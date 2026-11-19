@@ -1,0 +1,96 @@
+{
+  "fecha": "2026-11-19T05:27:56.430Z",
+  "resultados": [
+    {
+      "id": "B-1",
+      "prueba": "Un horario con la hora final antes de la inicial se avisa y no se guarda",
+      "resultado": "OK",
+      "detalle": "{\"avisoHorario\":1,\"sinGuardar\":true}"
+    },
+    {
+      "id": "B-2",
+      "prueba": "El restaurante activa las reservas: 7 horarios, 1 hora de anticipación e instrucciones; el panel muestra «Recibiendo solicitudes»",
+      "resultado": "OK",
+      "detalle": "{\"cfg\":{\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"enabled\":true,\"max_party\":8,\"min_notice_minutes\":60,\"max_advance_days\":30,\"response_hours\":24,\"slot_minutes\":30,\"instructions\":\"Te escribimos por WhatsApp para confirmar.\",\"updated_at\":\"2026-11-19T05:26:20.687438+00:00\"},\"ventanas\":7,\"tar"
+    },
+    {
+      "id": "B-3",
+      "prueba": "Ficha del restaurante: «Solicitar reserva»; sin sesión lleva a iniciar sesión y vuelve al formulario",
+      "resultado": "OK",
+      "detalle": "{\"boton\":1,\"enLogin\":true,\"enFormulario\":true,\"url\":\"http://localhost:8083/reservar/f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\"}"
+    },
+    {
+      "id": "B-4",
+      "prueba": "Formulario: instrucciones, aviso de confirmación y nombre de la cuenta ya puesto",
+      "resultado": "OK",
+      "detalle": "{\"form\":{\"instrucciones\":1,\"aviso\":1,\"nombre\":\"Ana Turista\"},\"avisoPlatos\":1}"
+    },
+    {
+      "id": "B-5",
+      "prueba": "Se crea PENDIENTE con 3 personas, WhatsApp con indicativo, mesa, observaciones y 2 ajiacos con su precio; se muestra el código",
+      "resultado": "OK",
+      "detalle": "{\"r1\":{\"id\":\"70a49465-5315-4bd9-be0e-15e5e2c30741\",\"code\":\"R-GZBE2H\",\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"customer_id\":\"1a44720e-fab6-4cad-8c44-463d9b8e0009\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"573001234567\",\"table_"
+    },
+    {
+      "id": "B-6",
+      "prueba": "Doble toque en «Enviar solicitud»: se crea una sola solicitud",
+      "resultado": "OK",
+      "detalle": "solicitudes: 2 · http://localhost:8083/reserva/103a821e-34a1-403b-8b62-57faafd31083?nueva=1 · ¡Solicitud enviada!\nGuarda tu código. Puedes ver el estado aquí y en Perfil → Mis reservas."
+    },
+    {
+      "id": "B-7",
+      "prueba": "El restaurante ve sus solicitudes pendientes y el detalle: WhatsApp, mesa, platos y el aviso de que no están pagados",
+      "resultado": "OK",
+      "detalle": "{\"lista\":{\"pendientes\":1,\"codigo1\":1},\"ficha\":{\"wa\":1,\"mesa\":1,\"plato\":1,\"aviso\":1}}"
+    },
+    {
+      "id": "B-8",
+      "prueba": "Rechazo: con «Otro motivo» exige explicación; con motivo de la lista queda RECHAZADA con motivo y nota",
+      "resultado": "OK",
+      "detalle": "{\"pideMotivo\":1,\"rr1\":{\"id\":\"70a49465-5315-4bd9-be0e-15e5e2c30741\",\"code\":\"R-GZBE2H\",\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"customer_id\":\"1a44720e-fab6-4cad-8c44-463d9b8e0009\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"57300"
+    },
+    {
+      "id": "B-9",
+      "prueba": "Confirmar (después de aceptar el aviso) deja la reserva CONFIRMADA y registra quién decidió",
+      "resultado": "OK",
+      "detalle": "{\"status\":\"confirmada\"}"
+    },
+    {
+      "id": "B-10",
+      "prueba": "Una reserva confirmada ya no ofrece «No puedo confirmarla» (sí «Cancelar reserva»)",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "B-11",
+      "prueba": "El cliente ve el motivo del rechazo y «Solicitar otro horario» abre el formulario con sus datos (sin crear nada solo)",
+      "resultado": "OK",
+      "detalle": "{\"rech\":{\"noConf\":1,\"motivo\":1},\"prellenado\":{\"url\":true,\"wa\":\"+573001234567\",\"mesa\":\"Terraza\"}}"
+    },
+    {
+      "id": "B-12",
+      "prueba": "Perfil → «Mis reservas» lista las dos solicitudes con su estado",
+      "resultado": "OK",
+      "detalle": "{\"titulo\":1,\"r1\":1,\"r2\":1}"
+    },
+    {
+      "id": "B-13",
+      "prueba": "El cliente cancela su reserva confirmada: CANCELADA por el cliente",
+      "resultado": "OK",
+      "detalle": "{\"status\":\"cancelada\",\"por\":\"cliente\"}"
+    },
+    {
+      "id": "B-14",
+      "prueba": "Ni la heladería ni un restaurante sin reservas muestran el botón; entrar directo al formulario lo explica",
+      "resultado": "OK",
+      "detalle": "{\"enHeladeria\":0,\"enSinReservas\":0,\"directo\":1}"
+    },
+    {
+      "id": "B-15",
+      "prueba": "El panel de un emprendimiento no muestra la sección de reservas",
+      "resultado": "OK",
+      "detalle": ""
+    }
+  ],
+  "erroresConsola": []
+}

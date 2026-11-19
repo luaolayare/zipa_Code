@@ -1,4 +1,4 @@
-import { AboutCard, Button, DeleteAccountButton, Screen, colors, fonts, useAuth, type MyReview } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, ReservationPill, Screen, colors, fonts, reservationWhen, useAuth, type MyReview, type Reservation } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { User } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -18,10 +18,12 @@ function Legal() {
 export default function Perfil() {
   const { user, api, signOut } = useAuth();
   const [reviews, setReviews] = useState<MyReview[] | null>(null);
+  const [reservations, setReservations] = useState<Reservation[] | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       if (user) api.myReviews(user.id).then(setReviews).catch(() => setReviews([]));
+      if (user) api.myReservations(user.id).then(setReservations).catch(() => setReservations([]));
     }, [api, user]),
   );
 
@@ -61,6 +63,21 @@ export default function Perfil() {
         </View>
       </View>
 
+      {!!reservations?.length && (
+        <>
+          <Text style={styles.h2} accessibilityRole="header">Mis reservas</Text>
+          {reservations.slice(0, 10).map((r) => (
+            <Pressable key={r.id} accessibilityRole="button" accessibilityLabel={`Reserva ${r.code} en ${r.businessName}, ${reservationWhen(r.startsAt)}`} onPress={() => router.push({ pathname: '/reserva/[id]', params: { id: r.id } })} style={({ pressed }) => [styles.review, pressed && { opacity: 0.88 }]}>
+              <View style={styles.reviewTop}>
+                <Text style={styles.reviewBusiness} numberOfLines={1}>{r.businessName}</Text>
+                <ReservationPill status={r.status} />
+              </View>
+              <Text style={styles.meta}>{reservationWhen(r.startsAt, new Date())} · {r.partySize} {r.partySize === 1 ? 'persona' : 'personas'} · {r.code}</Text>
+            </Pressable>
+          ))}
+        </>
+      )}
+
       <Text style={styles.h2} accessibilityRole="header">Mis reseñas</Text>
       {reviews?.length === 0 && <Text style={styles.meta}>Aún no has calificado ningún lugar. Entra a un negocio y toca «Calificar».</Text>}
       {reviews?.map((r) => (
@@ -78,7 +95,7 @@ export default function Perfil() {
       <Button title="Cerrar sesión" variant="danger" onPress={signOut} />
       <Legal />
       <AboutCard />
-      <DeleteAccountButton loses="tu perfil, tus reseñas y tus reportes" onDeleted={() => router.replace('/')} />
+      <DeleteAccountButton loses="tu perfil, tus reseñas, tus solicitudes de reserva y tus reportes" onDeleted={() => router.replace('/')} />
     </Screen>
   );
 }

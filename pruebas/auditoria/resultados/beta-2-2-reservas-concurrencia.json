@@ -1,0 +1,53 @@
+{
+  "fecha": "2026-11-19T05:28:03.037Z",
+  "resultados": [
+    {
+      "id": "RC-1",
+      "prueba": "5 envíos simultáneos con la misma clave crean una sola solicitud y todos reciben la misma",
+      "resultado": "OK",
+      "detalle": "[true,false,true,true,true]"
+    },
+    {
+      "id": "RC-2",
+      "prueba": "Dos solicitudes simultáneas para la misma hora (claves distintas): solo una se crea",
+      "resultado": "OK",
+      "detalle": "[\"creada\",\"Ya tienes una solicitud para ese restaurante a esa hora\"]"
+    },
+    {
+      "id": "RC-3",
+      "prueba": "Confirmar y rechazar al mismo tiempo (8 veces): exactamente una gana, el estado coincide y el historial tiene 2 eventos",
+      "resultado": "OK",
+      "detalle": "confirmada/1/2 r:Esta solicitud ya está confirmada | confirmada/1/2 r:Esta solicitud ya está confirmada | confirmada/1/2 r:Esta solicitud ya está confirmada | confirmada/1/2 r:Esta solicitud ya está confirmada | confirmada/1/2 r:Esta solicitud ya está confirmada | rechazada/1/2 c:Esta solicitud ya e"
+    },
+    {
+      "id": "RC-4",
+      "prueba": "Cancelación simultánea de cliente y restaurante: una sola gana y queda un solo evento de cancelación",
+      "resultado": "OK",
+      "detalle": "[\"cancelada\",\"Esta solicitud ya está cancelada\"]"
+    },
+    {
+      "id": "RC-5",
+      "prueba": "Confirmar después del plazo mientras corre la expiración: queda vencida, no confirmada, con historial coherente",
+      "resultado": "OK",
+      "detalle": "{\"confirmar\":\"El plazo para responder esta solicitud ya venció\",\"expiradas\":1,\"estado5\":\"expirada\",\"ev5\":\"pendiente,expirada\"}"
+    },
+    {
+      "id": "RC-6",
+      "prueba": "La expiración es idempotente: correrla otra vez no cambia nada",
+      "resultado": "OK",
+      "detalle": "{\"success\":true,\"error\":null,\"data\":0,\"count\":null,\"status\":200,\"statusText\":\"OK\"}"
+    },
+    {
+      "id": "RC-8",
+      "prueba": "Después de 10 solicitudes en 24 horas, la siguiente se rechaza (protección contra envíos masivos)",
+      "resultado": "OK",
+      "detalle": "Hiciste muchas solicitudes hoy. Intenta de nuevo mañana."
+    },
+    {
+      "id": "RC-7",
+      "prueba": "Un usuario de la app no puede ejecutar la expiración",
+      "resultado": "OK",
+      "detalle": "permission denied for function expirar_reservas"
+    }
+  ]
+}

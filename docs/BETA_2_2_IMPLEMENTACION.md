@@ -8,12 +8,12 @@
 |---|---|
 | Fase 0: auditoría | ✅ Hecha |
 | A: Emprendimientos | ✅ Hecha y probada en local. Falta la prueba en Android real |
-| B: Reservas y seguridad | ⏸️ Espera autorización |
-| C: Notificaciones y contacto | ⏸️ Pendiente |
+| B: Reservas y seguridad | ✅ Hecha y probada en local (ver «Entrega B» al final). Falta la prueba en Android real |
+| C: Notificaciones y contacto | ⏸️ Espera autorización |
 | D: Panel y validación integral | ⏸️ Pendiente |
 
 **Lo que NO se hizo:**
-- No se tocó Supabase remoto: la migración nueva se aplicó solo en la base local de Docker.
+- No se tocó Supabase remoto: las migraciones nuevas (0018 y 0019) se aplicaron solo en la base local de Docker.
 - No hubo builds de EAS, despliegues ni push.
 - No se cambiaron identificadores Android/iOS.
 
@@ -300,3 +300,302 @@ Todavía no se ha implementado: es la Entrega C. Ver los riesgos de la sección 
    ```
 
 4. **Prueba manual en negocios:** entra con una cuenta de negocio publicado → Panel → «Contacto y entregas». Llena las redes y las entregas y guarda. Luego abre la ficha en clientes y compara.
+
+---
+
+# Entrega B: Reservas y seguridad
+
+Fecha: 19-nov-2026. Todo se probó en local.
+
+## B.1 Cómo funciona
+
+- **Son solicitudes, no reservas automáticas.** El restaurante decide siempre. No hay mesas, cupos, inventario ni asignación automática. Los horarios publicados dicen **cuándo se puede pedir**, no que haya mesa.
+- **Es opcional y solo para restaurantes:** la categoría principal debe ser *Restaurantes* y la dueña tiene que activarlo. Un emprendimiento no ve la sección ni puede activarla; el servidor lo impide aunque se intente por la API.
+- **No hay cobros ni anticipos.** Cualquier condición comercial se acuerda directamente entre el cliente y el restaurante.
+- **Zona horaria:** `America/Bogota`.
+  - En la base se guardan instantes (`timestamptz`).
+  - Los horarios del restaurante (hora local) se comparan convirtiendo el instante a hora de Bogotá.
+  - En la app, Colombia es UTC-5 fijo (no hay horario de verano).
+
+## B.2 Configuración del restaurante (app de negocios)
+
+**Dónde está:** Panel → tarjeta «Reservas» → «Activar reservas» o «Configurar reservas».
+
+**Qué se configura:**
+- Activar o desactivar.
+- **Horarios por día de la semana:** hasta 2 franjas por día. La reserva puede empezar desde la hora inicial hasta antes de la final; con 12:00–15:00, la última es 14:30.
+- **Máximo de personas** por solicitud: de 1 a 50.
+- **Anticipación mínima:** 1 hora, 2 horas, 4 horas o 1 día. El servidor no acepta menos de 1 hora.
+- **Anticipación máxima:** 1 semana, 15 días, 1 mes o 2 meses.
+- **Intervalo de horas:** cada 15, 30 o 60 minutos.
+- **Tiempo para responder:** 2, 6, 12 o 24 horas (ver B.5).
+- **Fechas bloqueadas:** festivos, eventos o cierres.
+- **Instrucciones para los clientes:** hasta 300 caracteres, con el filtro de palabras ofensivas.
+
+**Validaciones:**
+- Horarios que se cruzan, horas mal escritas o una hora final antes de la inicial se avisan en la app y se rechazan en el servidor.
+- No se puede activar sin al menos un horario.
+
+## B.3 Solicitud desde clientes
+
+**Dónde está:** en la ficha de un restaurante con reservas activas aparece **«Solicitar reserva»**.
+- Sin sesión, lleva a iniciar sesión y vuelve al formulario.
+
+**El formulario pide:**
+- **Día y hora:** solo los disponibles, sin las horas demasiado cercanas ni los días bloqueados.
+- **Personas:** con el máximo del restaurante.
+- **Nombre:** se llena con el de la cuenta.
+- **WhatsApp:** acepta números de Colombia sin indicativo y de otros países con indicativo.
+- **Preferencia de mesa y observaciones:** opcionales.
+- **Platos (opcional):** se pueden elegir del menú con cantidades.
+  - Se guarda una copia del nombre y del precio de ese momento, solo como información.
+  - El formulario aclara: «Los platos que elijas son solo una preferencia: no están pagados ni garantizados».
+
+**Antes de enviar** se muestra, palabra por palabra: «Tu solicitud será enviada al restaurante. La reserva solo quedará confirmada cuando el establecimiento la acepte».
+
+**Al enviar:**
+1. El servidor valida todo.
+2. Crea la solicitud en estado **PENDIENTE**.
+3. Registra el evento en el historial (`reservation_events`). Ese historial es la base de las notificaciones de la Entrega C.
+4. Muestra el **código** de la solicitud (por ejemplo `R-7K3Q9P`, sin letras que se confunden).
+
+**Después:**
+- La persona consulta el estado en la pantalla de la solicitud y en **Perfil → «Mis reservas»**.
+- Si fue rechazada, vencida o cancelada, ve el motivo y **«Solicitar otro horario»**. Abre el formulario con sus datos; no crea nada por sí solo.
+- Puede **retirar** una solicitud pendiente o **cancelar** una confirmada, antes de la hora.
+
+## B.4 Decisión del restaurante (app de negocios)
+
+**«Solicitudes»**
+- Muestra las pendientes primero (las que vencen antes), luego las confirmadas próximas y después el historial.
+- Cada una muestra el código, la fecha y hora, las personas, el nombre, los platos y el plazo para responder.
+
+**Detalle de una solicitud**
+- Datos completos: WhatsApp, preferencia de mesa, observaciones, platos con total informativo, fecha de recibida e historial.
+- **«Confirmar reserva»:**
+  - Antes, un aviso pide confirmar solo después de acordarlo con el cliente.
+  - Se guarda quién confirmó y cuándo.
+- **«No puedo confirmarla»:**
+  - Exige un motivo de la lista:
+    - No hay mesas disponibles.
+    - No hay disponibilidad en ese horario.
+    - Restaurante cerrado o evento privado.
+    - No se puede atender ese número de personas.
+    - Otro motivo.
+  - Admite un mensaje opcional de hasta 200 caracteres. Con «Otro motivo», el mensaje es obligatorio.
+- **Confirmada y antes de la hora:** «Cancelar reserva», con motivo obligatorio.
+- **Después de la hora:** «Sí, llegó» (FINALIZADA) o «No llegó» (NO_ASISTIO).
+
+**Personal autorizado:** hoy solo la dueña del negocio, porque la app no tiene cuentas de empleados. Agregarlas sería un cambio futuro.
+
+> El botón «Contactar al cliente» por WhatsApp (mensaje prellenado y editable) va en la **Entrega C**. La función que arma el mensaje ya existe y está probada (`restaurantWhatsappMessage`). Mientras tanto, el detalle muestra el número.
+
+## B.5 Estados, transiciones y expiración
+
+| De | A | Quién | Condición |
+|---|---|---|---|
+| PENDIENTE | CONFIRMADA | Restaurante | Antes del plazo para responder y antes de la hora |
+| PENDIENTE | RECHAZADA | Restaurante | Con motivo de la lista |
+| PENDIENTE | CANCELADA | Cliente | Antes de la hora (retira la solicitud) |
+| PENDIENTE | EXPIRADA | Sistema | Al pasar el plazo para responder |
+| CONFIRMADA | CANCELADA | Cliente o restaurante | Antes de la hora; el restaurante con motivo |
+| CONFIRMADA | FINALIZADA / NO_ASISTIO | Restaurante | Desde la hora de la reserva |
+
+**Cualquier otra transición se rechaza en el servidor.** Por ejemplo:
+- confirmar una rechazada o una vencida;
+- rechazar una confirmada;
+- que el restaurante «cancele» una pendiente (debe rechazarla con motivo);
+- cancelar después de la hora.
+
+**Plazo para responder (política de expiración):** lo que ocurra primero entre:
+- el tiempo para responder que eligió el restaurante (2 a 24 horas; por defecto 24), contado desde la solicitud;
+- 30 minutos antes de la hora pedida.
+
+Ese plazo se guarda en `respond_by` al crear la solicitud. Como la anticipación mínima es de 1 hora, el restaurante siempre tiene al menos 30 minutos para responder.
+
+**Expiración:**
+- La función `expirar_reservas()` vence las pendientes cuyo plazo pasó.
+- Es **idempotente**: correrla dos veces no cambia nada la segunda vez.
+- Es **segura frente a una confirmación simultánea**: toma solo filas no bloqueadas y vuelve a revisar el estado.
+- Las apps no pueden ejecutarla.
+- **Su programación automática (cada pocos minutos) es de la Entrega D.** Mientras tanto, una solicitud con el plazo vencido ya **no se puede confirmar**, aunque siga marcada como pendiente hasta que corra la expiración.
+
+## B.6 Seguridad y concurrencia
+
+**Escrituras**
+- Las apps **solo leen** las tablas de reservas. Toda escritura pasa por funciones del servidor (`SECURITY DEFINER`, con `search_path` vacío) que:
+  - validan la sesión y el rol (el rol sale de la sesión, no de lo que envíe la app);
+  - validan fechas, horarios, personas, WhatsApp, platos y textos (con `texto_ofensivo`);
+  - validan la transición de estado.
+- **Sin escrituras directas:** `insert`, `update` y `delete` sobre las tablas dan «permission denied».
+
+**Atomicidad**
+- Cada cambio de estado bloquea la fila (`FOR UPDATE`), revisa el estado y lo cambia en la misma transacción.
+- Si llegan a la vez «Confirmar» y «Rechazar», gana una sola; la otra recibe «Esta solicitud ya está confirmada» (o «rechazada»).
+
+**Idempotencia**
+- La app genera una clave por envío. Si la red reintenta, el servidor devuelve **la misma solicitud** (`repetida: true`).
+- La misma clave con otros datos se rechaza.
+- Un bloqueo por persona (`pg_advisory_xact_lock`) evita carreras entre envíos simultáneos.
+- Además, un índice único impide dos solicitudes vivas de la misma persona para el mismo restaurante a la misma hora.
+
+**Contra solicitudes masivas**
+- Máximo 3 pendientes por persona en el mismo restaurante.
+- Máximo 10 solicitudes por persona en 24 horas.
+- Nadie puede reservar en su propio restaurante.
+
+**Quién ve qué (RLS)**
+- **Una solicitud:** solo quien la hizo y la dueña del restaurante. Incluye sus platos y su historial.
+- **El equipo** del panel **no** ve solicitudes una por una, porque tienen teléfonos y observaciones. En la Entrega D verá estadísticas agregadas sin datos personales.
+- **La configuración** del restaurante (horarios, fechas bloqueadas, instrucciones) es pública si el negocio está publicado, porque la necesita el formulario.
+
+**Eliminar cuenta**
+- Se borran las solicitudes de esa persona, con sus platos e historial.
+- Si se borra el restaurante, se borran sus solicitudes.
+- El restaurante deja de ver las solicitudes de clientes que eliminaron su cuenta. Es intencional, por minimización de datos.
+
+**Logs:** las funciones no registran teléfonos. El historial guarda estados, rol y motivo, no datos de contacto.
+
+## B.7 Migración `0019_reservas.sql`
+
+Es solo aditiva: 6 tablas nuevas, todas con RLS.
+
+| Tabla | Para qué |
+|---|---|
+| `reservation_settings` | Configuración del restaurante |
+| `reservation_windows` | Horarios por día de la semana |
+| `reservation_blocked_dates` | Fechas sin reservas |
+| `reservations` | Las solicitudes |
+| `reservation_items` | Platos de preferencia, con copia del nombre y el precio |
+| `reservation_events` | Historial y auditoría |
+
+**Funciones nuevas:**
+- **Para las apps:** `guardar_config_reservas`, `solicitar_reserva`, `confirmar_reserva`, `rechazar_reserva`, `cancelar_reserva` y `marcar_asistencia`.
+- **Del sistema:** `expirar_reservas`.
+- **Ayudantes internos:** `normalizar_whatsapp`, `es_restaurante` y `estado_reserva_texto`.
+
+**Índices:**
+- único contra duplicados vivos;
+- por restaurante y estado;
+- por cliente;
+- de pendientes por vencer.
+
+**Aplicación:** solo en la base local; hay 19 migraciones aplicadas. **No se aplicó en remoto.**
+
+## B.8 Archivos (Entrega B)
+
+**Nuevos:**
+- `supabase/migrations/0019_reservas.sql`
+- `packages/shared/src/reservations.ts`: tipos, estados, motivos, WhatsApp, días y horas disponibles, textos.
+- `packages/shared/src/ui/ReservationPieces.tsx`: etiqueta de estado, selector en píldoras y contador.
+- `packages/shared/src/__tests__/reservations-test.ts`
+- **Negocios:** `app/reservas/index.tsx`, `app/reservas/[id].tsx` y `app/reservas/configuracion.tsx`.
+- **Clientes:** `app/reservar/[id].tsx` (formulario) y `app/reserva/[id].tsx` (estado).
+- **Pruebas:**
+  - `pruebas/auditoria/beta-2-2-entrega-b.js`
+  - `pruebas/auditoria/beta-2-2-reservas-concurrencia.js`
+  - sus resultados en `pruebas/auditoria/resultados/`
+- 7 capturas `b*.png` en `docs/capturas-beta-2-2/`.
+
+**Modificados:**
+- **Compartido:** `api.ts` (10 métodos de reservas) e `index.ts`.
+- **Negocios:** `app/panel.tsx` (tarjeta «Reservas», solo para restaurantes).
+- **Clientes:**
+  - `app/negocio/[id].tsx`: botón «Solicitar reserva».
+  - `app/login.tsx`: vuelve al formulario después de iniciar sesión.
+  - `app/(tabs)/perfil.tsx`: «Mis reservas», y el aviso de «Eliminar cuenta» ahora menciona las solicitudes.
+- **CI:** `supabase/ci/verificar_esquema.sql` (22 tablas) y `supabase/ci/probar_permisos.sql`.
+
+## B.9 Resultados de pruebas (19-nov-2026, todo local)
+
+| Comprobación | Resultado |
+|---|---|
+| `typecheck` y `lint`, en todos los paquetes | ✅ Sin errores ni avisos |
+| Jest | ✅ **111/111** (11 suites; 16 nuevas de reservas) |
+| `verificar_esquema.sql` | ✅ 22 tablas, todas con RLS |
+| `probar_permisos.sql`, con **82 comprobaciones nuevas** de reservas | ✅ Todo pasa (con las tablas vaciadas dentro de una transacción que termina en `ROLLBACK`, como en la Entrega A) |
+| Concurrencia real con sesiones simultáneas (`beta-2-2-reservas-concurrencia.js`) | ✅ **8/8** |
+| Entrega B en el navegador (`beta-2-2-entrega-b.js`) | ✅ **15/15**, 0 errores de consola |
+| Regresión: Entrega A, Beta 2.1 y auditoría funcional completa | ✅ 12/12 · 12/12 · **46 OK, 0 fallas** (2 requieren celular) |
+| Panel `next build`, `expo export` Android de clientes y negocios | ✅ |
+| `expo-doctor` | ⚠️ 19/20: el mismo parche de `expo-router` de la Entrega A |
+
+**Lo que cubren las pruebas SQL**
+- **Configuración:**
+  - solo la dueña configura;
+  - solo restaurantes;
+  - horarios cruzados o vacíos se rechazan;
+  - anticipación menor a 1 hora se rechaza;
+  - palabras ofensivas en las instrucciones se rechazan;
+  - las fechas pasadas no se bloquean;
+  - no se puede escribir directo en las tablas.
+- **Solicitud:**
+  - sin sesión no se puede;
+  - se crea con los datos normalizados;
+  - la idempotencia funciona (mismo resultado, y otra solicitud con la misma clave se rechaza);
+  - se rechazan duplicados, personas fuera de rango, horas que no son del intervalo, horas muy cercanas, horas pasadas, más allá de la anticipación máxima, días bloqueados, fuera del horario, WhatsApp inválido, textos ofensivos, platos de otro negocio, platos repetidos o en cantidad cero, emprendimientos y el propio restaurante;
+  - funcionan el límite de 3 pendientes y el de 10 al día.
+- **Visibilidad:**
+  - otra persona, otra dueña y el equipo no ven solicitudes ajenas;
+  - anon no ve ninguna.
+- **Transiciones:**
+  - confirmar, rechazar con y sin motivo, cancelar como cliente y como restaurante, y asistencia antes y después de la hora;
+  - todas las prohibidas;
+  - el historial completo;
+  - el plazo para responder.
+- **Expiración:**
+  - vence lo que debe;
+  - es idempotente;
+  - después ya no se puede confirmar;
+  - las apps no pueden ejecutarla.
+- **Eliminar cuenta:** se borran sus solicitudes.
+
+**Lo que cubren las pruebas de concurrencia**
+- 5 envíos simultáneos con la misma clave crean 1 sola solicitud.
+- 2 envíos simultáneos para la misma hora con claves distintas: pasa 1.
+- Confirmar y rechazar a la vez, repetido 8 veces: siempre gana 1, con el estado y el historial coherentes.
+- Cliente y restaurante cancelan a la vez: 1 sola cancelación.
+- Confirmar justo cuando vence el plazo mientras corre la expiración: queda vencida, nunca confirmada.
+- El límite diario funciona.
+- Las apps no pueden correr la expiración.
+
+**Lo que cubre la prueba en el navegador**
+- El restaurante:
+  - un horario mal escrito se rechaza;
+  - activa las reservas desde el panel;
+  - ve la lista y el detalle;
+  - al rechazar con «Otro motivo» se le exige la explicación;
+  - rechaza con motivo y confirma;
+  - una reserva confirmada ya no ofrece «rechazar».
+- El cliente:
+  - sin sesión pasa por iniciar sesión;
+  - llena el formulario completo con platos;
+  - recibe el código;
+  - un doble toque en «Enviar» crea una sola solicitud;
+  - ve el motivo del rechazo;
+  - «Solicitar otro horario» llega con sus datos;
+  - ve «Mis reservas» y cancela.
+- La heladería y un restaurante sin reservas no muestran el botón, y el panel del emprendimiento no muestra la sección.
+
+**Errores encontrados por las pruebas y corregidos**
+1. Al abrir el formulario directamente, el nombre quedaba vacío porque la sesión llegaba después del primer render.
+2. El aviso de platos en la app del restaurante le hablaba al cliente («los platos que elijas»). Ahora tiene su propio texto.
+
+## B.10 Riesgos y pendientes (Entrega B)
+
+1. **Política de privacidad: BLOQUEANTE antes de publicar.** Las reservas recogen datos personales nuevos (nombre de contacto, WhatsApp, observaciones y preferencias). La política actual no los menciona.
+   - Hay que agregar la finalidad (gestionar solicitudes de reserva), quién los ve (solo el restaurante elegido), cuánto se guardan y el derecho a borrarlos.
+   - Es un cambio de fondo: subir la versión obliga a aceptar de nuevo. **No se modificó; requiere revisión humana o legal** (Módulo 9.12, previsto para la Entrega D).
+2. **Expiración automática:** hasta la Entrega D, una solicitud vencida sigue mostrándose «Pendiente», aunque ya no se puede confirmar. No hay que publicar reservas sin la tarea programada.
+3. **Notificaciones (Entrega C):** hoy el restaurante solo se entera abriendo la app, y el cliente revisando «Mis reservas».
+4. **Retención de datos:** aún no se borran solicitudes antiguas. Se propondrá en la Entrega D (por ejemplo, borrar los datos de contacto de solicitudes cerradas hace más de 12 meses).
+5. **Personal autorizado:** solo la dueña puede decidir.
+6. **Hora en la app:** se calcula con UTC-5 fijo. Si Colombia adoptara horario de verano habría que cambiarlo. En la base se usa la zona horaria real.
+
+## B.11 Pruebas pendientes en Android físico (Entrega B)
+
+- [ ] El formulario completo con el teclado del celular: la fila de días se desliza de lado, el teclado numérico aparece en WhatsApp y nada queda tapado por el teclado.
+- [ ] La confirmación nativa (`Alert`) al confirmar en negocios y al cancelar o retirar en clientes.
+- [ ] El flujo invitado → iniciar sesión → formulario en la app instalada.
+- [ ] Un doble toque real en «Enviar solicitud» con conexión lenta, y con el modo avión justo al enviar: al reintentar no debe duplicarse.
+- [ ] Las horas mostradas: el celular con otra zona horaria (por ejemplo, un turista con el teléfono en hora de España) debe seguir mostrando la hora de Bogotá.

@@ -38,6 +38,7 @@ export default function Login() {
         if (needsEmailConfirmation) return setSentTo(email.trim());
       }
       if (forReview) router.replace({ pathname: '/calificar/[id]', params: { id: negocio! } });
+      else if (desde === 'reservar' && negocio) router.replace({ pathname: '/reservar/[id]', params: { id: negocio } });
       else router.replace('/explorar');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos iniciar sesión.');

@@ -1,8 +1,8 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks } from '@zipa/shared';
+import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { AtSign, Ban, BadgeCheck, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
+import { AtSign, Ban, BadgeCheck, CalendarDays, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ export default function NegocioDetalle() {
   const [business, setBusiness] = useState<Business | null | undefined>(undefined); // undefined = cargando
   const [products, setProducts] = useState<Product[]>([]);
   const [links, setLinks] = useState<BusinessLinks | null>(null);
+  const [reservable, setReservable] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [myReview, setMyReview] = useState<Review | null>(null);
   const [moreReviews, setMoreReviews] = useState(false);
@@ -73,6 +74,8 @@ export default function NegocioDetalle() {
         .catch(() => setError(true));
       // Aparte y sin bloquear la ficha: si falla, simplemente no se muestran redes ni entregas.
       api.getBusinessLinks(id).then(setLinks).catch(() => setLinks(null));
+      // Reservas: solo si el restaurante las activó. Si falla, no se muestra el botón.
+      api.getReservationSettings(id).then((s) => setReservable(!!s?.enabled)).catch(() => setReservable(false));
       return () => setStatusBarStyle('dark');
     }, [api, id, v, user, loadReviews]),
   );
@@ -180,6 +183,14 @@ export default function NegocioDetalle() {
         </View>
 
         <View style={styles.contact}>
+          {reservable && restaurantOf(business) && (
+            <ContactButton
+              icon={<CalendarDays size={20} color={colors.primary} />}
+              label="Solicitar reserva"
+              sub="El restaurante la confirma"
+              onPress={() => (user ? router.push({ pathname: '/reservar/[id]', params: { id: business.id } }) : router.push({ pathname: '/login', params: { desde: 'reservar', negocio: business.id } }))}
+            />
+          )}
           <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => { api.track('maps_click', { businessId: business.id }); Linking.openURL(mapsUrl(business.address)); }} />
           {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => { api.track('whatsapp_click', { businessId: business.id }); Linking.openURL(wa); }} />}
           {social.length > 0 && (

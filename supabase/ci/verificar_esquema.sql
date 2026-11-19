@@ -13,9 +13,10 @@ begin
     and tablename in ('profiles', 'businesses', 'business_verifications', 'products',
                       'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions',
                       'categories', 'business_tags', 'analytics_events', 'product_photos', 'featured_placements',
-                      'business_links');
-  if n <> 16 then
-    raise exception 'Faltan tablas en public: se esperaban 16 y hay %', n;
+                      'business_links', 'reservation_settings', 'reservation_windows', 'reservation_blocked_dates',
+                      'reservations', 'reservation_items', 'reservation_events');
+  if n <> 22 then
+    raise exception 'Faltan tablas en public: se esperaban 22 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.

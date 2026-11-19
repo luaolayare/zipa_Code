@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createTracker, type KeyValueStore } from './analytics';
 import { emptyLinks, type BusinessLinks, type DeliveryMode } from './contact';
+import type { RejectReason, Reservation, ReservationRequest, ReservationSettings, ReservationStatus } from './reservations';
 import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categories';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
@@ -39,6 +40,35 @@ export interface ReportInput {
   reason: ReportReason;
   details?: string;
 }
+
+// Reservas (migración 0019): las funciones del servidor responden con mensajes ya escritos para la
+// persona (códigos 22023 y 42501). Esos se muestran tal cual; cualquier otro error, con uno general.
+const reservationError = (error: { code?: string; message: string }, fallback: string) =>
+  new Error(['22023', '42501', 'P0001'].includes(error.code ?? '') ? error.message : fallback);
+
+const RESERVATION_SELECT = '*, reservation_items(product_id, name, quantity, unit_price_cop)';
+
+const toReservation = (r: any): Reservation => ({
+  id: r.id,
+  code: r.code,
+  businessId: r.business_id,
+  customerId: r.customer_id,
+  startsAt: r.starts_at,
+  partySize: r.party_size,
+  contactName: r.contact_name,
+  contactWhatsapp: r.contact_whatsapp,
+  tablePreference: r.table_preference ?? null,
+  notes: r.notes ?? null,
+  status: r.status as ReservationStatus,
+  respondBy: r.respond_by,
+  rejectReason: (r.reject_reason ?? null) as RejectReason | null,
+  rejectNote: r.reject_note ?? null,
+  cancelledBy: r.cancelled_by ?? null,
+  cancelReason: r.cancel_reason ?? null,
+  decidedAt: r.decided_at ?? null,
+  createdAt: r.created_at,
+  items: (r.reservation_items ?? []).map((i: any) => ({ productId: i.product_id ?? null, name: i.name, quantity: i.quantity, unitPriceCop: i.unit_price_cop ?? null })),
+});
 
 // Las filas llegan de Supabase sin tipos generados; se convierten aquí al modelo de la app.
 const toBusiness = (r: any): Business => ({
@@ -431,6 +461,131 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
         if (error.code === '23514') throw new Error('Uno de los enlaces no es válido. Revísalo e intenta de nuevo.');
         throw new Error('No pudimos guardar los datos de contacto. Intenta de nuevo.');
       }
+    },
+
+    // ---------------------------------------------------------------- Reservas (Beta 2.2) ----
+
+    /** Configuración de reservas de un restaurante (la lee el formulario del cliente y el panel). */
+    async getReservationSettings(businessId: string): Promise<ReservationSettings | null> {
+      if (!db) return null; // en modo demo no hay reservas
+      const [s, w, b] = await Promise.all([
+        db.from('reservation_settings').select('*').eq('business_id', businessId).maybeSingle(),
+        db.from('reservation_windows').select('weekday, starts, ends').eq('business_id', businessId).order('weekday').order('starts'),
+        db.from('reservation_blocked_dates').select('day').eq('business_id', businessId).order('day'),
+      ]);
+      if (s.error) throw s.error;
+      if (!s.data) return null;
+      return {
+        businessId,
+        enabled: s.data.enabled,
+        maxParty: s.data.max_party,
+        minNoticeMinutes: s.data.min_notice_minutes,
+        maxAdvanceDays: s.data.max_advance_days,
+        responseHours: s.data.response_hours,
+        slotMinutes: s.data.slot_minutes,
+        instructions: s.data.instructions ?? null,
+        windows: (w.data ?? []).map((x: any) => ({ weekday: x.weekday, starts: String(x.starts).slice(0, 5), ends: String(x.ends).slice(0, 5) })),
+        blockedDates: (b.data ?? []).map((x: any) => x.day),
+      };
+    },
+
+    /** El restaurante guarda su configuración (todo de una vez, validado en el servidor). */
+    async saveReservationSettings(s: ReservationSettings) {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { error } = await db.rpc('guardar_config_reservas', {
+        p_business: s.businessId,
+        p_enabled: s.enabled,
+        p_max_party: s.maxParty,
+        p_min_notice_minutes: s.minNoticeMinutes,
+        p_max_advance_days: s.maxAdvanceDays,
+        p_response_hours: s.responseHours,
+        p_slot_minutes: s.slotMinutes,
+        p_instructions: s.instructions,
+        p_windows: s.windows,
+        p_blocked: s.blockedDates,
+      });
+      if (error) throw reservationError(error, 'No pudimos guardar la configuración. Intenta de nuevo.');
+    },
+
+    /** Envía una solicitud. Con la misma idempotencyKey, un reintento devuelve la misma solicitud. */
+    async requestReservation(req: ReservationRequest): Promise<{ id: string; code: string; status: ReservationStatus; repeated: boolean }> {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { data, error } = await db.rpc('solicitar_reserva', {
+        p_business: req.businessId,
+        p_starts_at: req.startsAt,
+        p_party: req.partySize,
+        p_name: req.contactName,
+        p_whatsapp: req.contactWhatsapp,
+        p_table: req.tablePreference ?? null,
+        p_notes: req.notes ?? null,
+        p_items: req.items.map((i) => ({ product_id: i.productId, quantity: i.quantity })),
+        p_idempotency: req.idempotencyKey,
+      });
+      if (error) throw reservationError(error, 'No pudimos enviar la solicitud. Revisa tu conexión e intenta de nuevo.');
+      return { id: data.id, code: data.code, status: data.status, repeated: !!data.repetida };
+    },
+
+    /** Solicitudes de la persona (las más recientes primero), con el nombre del restaurante. */
+    async myReservations(userId: string): Promise<Reservation[]> {
+      if (!db) return [];
+      const { data, error } = await db.from('reservations').select(RESERVATION_SELECT).eq('customer_id', userId).order('created_at', { ascending: false }).limit(100);
+      if (error) throw error;
+      const list = (data ?? []).map(toReservation);
+      const ids = [...new Set(list.map((r) => r.businessId))];
+      if (ids.length) {
+        const { data: names } = await db.from('businesses_public').select('id, name').in('id', ids);
+        const byId: Record<string, string> = Object.fromEntries((names ?? []).map((b: { id: string; name: string }) => [b.id, b.name]));
+        list.forEach((r) => { r.businessName = byId[r.businessId] ?? 'Restaurante'; });
+      }
+      return list;
+    },
+
+    /** Solicitudes que recibió el restaurante propio, por fecha de la visita. */
+    async businessReservations(businessId: string): Promise<Reservation[]> {
+      if (!db) return [];
+      const { data, error } = await db.from('reservations').select(RESERVATION_SELECT).eq('business_id', businessId).order('starts_at').limit(300);
+      if (error) throw error;
+      return (data ?? []).map(toReservation);
+    },
+
+    /** Una solicitud con sus platos y su historial (para quien la hizo o para el restaurante). */
+    async getReservation(id: string): Promise<Reservation | null> {
+      if (!db) return null;
+      const { data, error } = await db.from('reservations').select(`${RESERVATION_SELECT}, reservation_events(from_status, to_status, actor_role, reason, created_at)`).eq('id', id).maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      const r = toReservation(data);
+      r.events = ((data as any).reservation_events ?? [])
+        .map((e: any) => ({ fromStatus: e.from_status, toStatus: e.to_status, actorRole: e.actor_role, reason: e.reason ?? null, createdAt: e.created_at }))
+        .sort((a: { createdAt: string }, b: { createdAt: string }) => a.createdAt.localeCompare(b.createdAt));
+      const { data: b } = await db.from('businesses_public').select('name').eq('id', r.businessId).maybeSingle();
+      r.businessName = b?.name ?? 'Restaurante';
+      return r;
+    },
+
+    async confirmReservation(id: string) {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { error } = await db.rpc('confirmar_reserva', { p_id: id });
+      if (error) throw reservationError(error, 'No pudimos confirmar la reserva. Intenta de nuevo.');
+    },
+
+    async rejectReservation(id: string, reason: RejectReason, note?: string) {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { error } = await db.rpc('rechazar_reserva', { p_id: id, p_reason: reason, p_note: note?.trim() || null });
+      if (error) throw reservationError(error, 'No pudimos guardar el rechazo. Intenta de nuevo.');
+    },
+
+    /** La cancela quien la hizo o el restaurante (el servidor decide el rol por la sesión). */
+    async cancelReservation(id: string, reason?: string) {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { error } = await db.rpc('cancelar_reserva', { p_id: id, p_reason: reason?.trim() || null });
+      if (error) throw reservationError(error, 'No pudimos cancelar. Intenta de nuevo.');
+    },
+
+    async markAttendance(id: string, attended: boolean) {
+      if (!db) throw new Error('Las reservas necesitan conexión.');
+      const { error } = await db.rpc('marcar_asistencia', { p_id: id, p_asistio: attended });
+      if (error) throw reservationError(error, 'No pudimos guardar la asistencia. Intenta de nuevo.');
     },
 
     async listProducts(businessId: string): Promise<Product[]> {

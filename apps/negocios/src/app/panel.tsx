@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -22,6 +22,7 @@ export default function Panel() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [links, setLinks] = useState<BusinessLinks | null>(null);
+  const [reservas, setReservas] = useState<{ settings: ReservationSettings | null; pending: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -37,6 +38,12 @@ export default function Panel() {
       setProducts(p);
       api.myFeaturedUntil(b.id).then(setFeaturedUntil).catch(() => {});
       api.getBusinessLinks(b.id).then(setLinks).catch(() => {});
+      // Reservas (solo restaurantes). Si falla, la tarjeta no se muestra; el resto del panel sigue.
+      if (restaurantOf(b)) {
+        Promise.all([api.getReservationSettings(b.id), api.businessReservations(b.id)])
+          .then(([settings, list]) => setReservas({ settings, pending: list.filter((r) => r.status === 'pendiente').length }))
+          .catch(() => setReservas(null));
+      }
       setReviews(r);
       setError('');
     } catch {
@@ -187,6 +194,21 @@ export default function Panel() {
               <Text style={type.small}>Lleva directo a tu vitrina y a dejar reseña. Toca para verlo grande y compartirlo.</Text>
             </View>
           </Pressable>
+
+          {comer && reservas && (
+            <>
+              <SectionTitle title="Reservas" style={{ marginTop: 10 }} />
+              <Pressable accessibilityRole="button" accessibilityLabel={`Solicitudes de reserva: ${reservas.pending} pendientes`} onPress={() => router.push('/reservas')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
+                <DataRow label="Estado" value={reservas.settings?.enabled ? 'Recibiendo solicitudes' : 'Apagadas'} />
+                <DataRow label="Pendientes" value={reservas.pending ? `${reservas.pending} por responder` : 'Ninguna'} />
+                <View style={styles.edit}>
+                  <Text style={styles.editText}>Ver solicitudes</Text>
+                  <ChevronRight size={18} color={colors.primary} />
+                </View>
+              </Pressable>
+              <Button title={reservas.settings?.enabled ? 'Configurar reservas' : 'Activar reservas'} variant="outline" onPress={() => router.push('/reservas/configuracion')} />
+            </>
+          )}
 
           <SectionTitle title="Datos del negocio" style={{ marginTop: 10 }} />
           <Pressable accessibilityRole="button" accessibilityLabel="Editar los datos del negocio" onPress={() => router.push('/negocio/editar')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>

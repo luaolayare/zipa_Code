@@ -951,6 +951,248 @@ do $$ begin
   end if;
 end $$;
 
+-- Reservas (migración 0019) -------------------------------------------------------------------------
+-- Pizzería e1 (Restaurantes, dueña 2, publicada) y heladería e2 (Emprendimientos, dueña 2).
+-- Turista c1 hace las solicitudes; turista c9 es otra persona.
+insert into auth.users (id, email, raw_user_meta_data, created_at) values
+  ('00000000-0000-0000-0000-0000000000c9', 'turista9@prueba.test', '{"full_name":"Turista Tres"}', now() - interval '3 days');
+insert into public.products (id, business_id, name, price_cop) values
+  ('00000000-0000-0000-0000-0000000000f8', '00000000-0000-0000-0000-0000000000e1', 'Pizza margarita', 25000),
+  ('00000000-0000-0000-0000-0000000000f9', '00000000-0000-0000-0000-0000000000e2', 'Helado de mora', 5000);
+
+-- Instante de una hora local de Bogotá dentro de `dias` días (para no depender de la hora de la prueba).
+create function ci_pruebas.hora(dias int, hhmm text) returns timestamptz
+language sql stable as $$ select (((now() at time zone 'America/Bogota')::date + dias) + hhmm::time) at time zone 'America/Bogota' $$;
+-- Llama a solicitar_reserva con una clave fija (K + número) y valores normales que cada prueba cambia.
+create function ci_pruebas.pedir(k int, cuando timestamptz, personas int default 4, negocio uuid default '00000000-0000-0000-0000-0000000000e1',
+                                 wa text default '300 123 4567', notas text default 'Cumpleaños', platos jsonb default '[]')
+returns jsonb language sql as $$
+  select public.solicitar_reserva(negocio, cuando, personas, 'Ana Turista', wa, 'Terraza', notas, platos,
+                                  ('00000000-0000-0000-0000-' || lpad(k::text, 12, '0'))::uuid)
+$$;
+-- Busca la solicitud sin pasar por RLS (security definer), para probar que otros no pueden tocarla.
+create function ci_pruebas.reserva(k int) returns uuid
+language sql stable security definer as $$ select id from public.reservations where idempotency_key = ('00000000-0000-0000-0000-' || lpad(k::text, 12, '0'))::uuid $$;
+grant execute on all functions in schema ci_pruebas to anon, authenticated;
+
+-- Configuración ---------------------------------------------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', true, 6, 120, 30, 24, 30, null, '[]', '[]')$q$, 'Agrega al menos un horario%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e2', true, 6, 120, 30, 24, 30, null, '[{"weekday":1,"starts":"12:00","ends":"15:00"}]', '[]')$q$, 'Las reservas son solo para restaurantes%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', true, 6, 120, 30, 24, 30, null, '[{"weekday":1,"starts":"12:00","ends":"15:00"},{"weekday":1,"starts":"14:00","ends":"18:00"}]', '[]')$q$, 'Hay horarios que se cruzan%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', true, 6, 30, 30, 24, 30, null, '[{"weekday":1,"starts":"12:00","ends":"15:00"}]', '[]')$q$, '%reservation_settings_min_notice_minutes_check%');
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', true, 6, 120, 30, 24, 30, 'No vengan malparidos', '[{"weekday":1,"starts":"12:00","ends":"15:00"}]', '[]')$q$, 'Las instrucciones tienen palabras%');
+  -- Todos los días de 00:00 a 23:00 (a las 23:30 no), hasta 6 personas, 2 h de anticipación, 30 días,
+  -- y un día bloqueado dentro de 5 días (la fecha pasada no se guarda).
+  perform ci_pruebas.debe_funcionar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', true, 6, 120, 30, 24, 30, 'Llega 10 minutos antes',
+    (select jsonb_agg(jsonb_build_object('weekday', d, 'starts', '00:00', 'ends', '23:00')) from generate_series(1, 7) d),
+    jsonb_build_array(((now() at time zone 'America/Bogota')::date + 5)::text, '2000-01-01'))$q$);
+  if (select count(*) from public.reservation_blocked_dates where business_id = '00000000-0000-0000-0000-0000000000e1') <> 1 then
+    raise exception 'la fecha pasada no debía guardarse como bloqueada';
+  end if;
+  perform ci_pruebas.debe_fallar($q$update public.reservation_settings set max_party = 50$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$insert into public.reservation_windows (business_id, weekday, starts, ends) values ('00000000-0000-0000-0000-0000000000e1', 1, '00:00', '01:00')$q$, 'permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.guardar_config_reservas('00000000-0000-0000-0000-0000000000e1', false, 6, 120, 30, 24, 30, null, '[]', '[]')$q$, 'Solo el dueño del restaurante%');
+end $$;
+reset role;
+
+-- Solicitar -----------------------------------------------------------------------------------------
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  -- Sin sesión no se puede solicitar, pero el formulario sí puede leer la configuración.
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(1, ci_pruebas.hora(2, '13:00'))$q$, 'permission denied%');
+  if ci_pruebas.cuenta('select * from public.reservation_windows') <> 7 then raise exception 'anon no ve los horarios de reserva'; end if;
+  perform ci_pruebas.debe_fallar('select * from public.reservations', 'permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$
+declare r jsonb; r2 jsonb;
+begin
+  r := ci_pruebas.pedir(1, ci_pruebas.hora(2, '13:00'), 4, platos => '[{"product_id":"00000000-0000-0000-0000-0000000000f8","quantity":2}]');
+  if r ->> 'status' <> 'pendiente' or (r ->> 'code') !~ '^R-[A-Z2-9]{6}$' or (r ->> 'repetida')::boolean then raise exception 'solicitud mal creada: %', r; end if;
+  -- Reintento de red con la misma clave: la misma solicitud, no otra.
+  r2 := ci_pruebas.pedir(1, ci_pruebas.hora(2, '13:00'), 4);
+  if r2 ->> 'id' <> r ->> 'id' or not (r2 ->> 'repetida')::boolean then raise exception 'la clave de idempotencia no devolvió la misma solicitud: %', r2; end if;
+  if ci_pruebas.cuenta('select * from public.reservations') <> 1 then raise exception 'el reintento creó otra solicitud'; end if;
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(1, ci_pruebas.hora(2, '13:00'), 5)$q$, 'Esa clave ya se usó para otra solicitud%');
+  -- Datos guardados: WhatsApp con indicativo, platos con copia del nombre y precio, historial.
+  if (select contact_whatsapp from public.reservations where id = ci_pruebas.reserva(1)) <> '573001234567' then raise exception 'el WhatsApp no quedó con indicativo'; end if;
+  if (select name || '|' || quantity || '|' || unit_price_cop from public.reservation_items where reservation_id = ci_pruebas.reserva(1)) <> 'Pizza margarita|2|25000' then raise exception 'los platos no quedaron con su copia'; end if;
+  if (select count(*) from public.reservation_events where reservation_id = ci_pruebas.reserva(1) and to_status = 'pendiente' and actor_role = 'cliente') <> 1 then raise exception 'falta el evento de creación'; end if;
+  -- Política de respuesta: 24 h (la visita es en 2 días, así que no la recorta).
+  if (select abs(extract(epoch from respond_by - (created_at + interval '24 hours'))) from public.reservations where id = ci_pruebas.reserva(1)) > 1 then raise exception 'el plazo para responder no es de 24 h'; end if;
+
+  -- Validaciones del servidor (no se confía en la app).
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '13:00'))$q$, 'Ya tienes una solicitud para ese restaurante a esa hora%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), 7)$q$, 'Este restaurante recibe solicitudes de 1 a 6 personas%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), 0)$q$, 'Este restaurante recibe solicitudes de 1 a 6 personas%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:10'))$q$, 'Elige una de las horas%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, date_trunc('hour', now()) + interval '1 hour')$q$, 'Esa hora está muy cerca%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, now() - interval '1 day')$q$, '%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(40, '12:00'))$q$, 'Solo se puede solicitar con hasta 30 días%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(5, '12:00'))$q$, 'El restaurante no recibe solicitudes para ese día%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '23:30'))$q$, 'El restaurante no recibe solicitudes a esa hora%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), wa => '12345')$q$, 'Escribe un número de WhatsApp válido%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), notas => 'Mesa para el malparido')$q$, 'La solicitud tiene palabras%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), platos => '[{"product_id":"00000000-0000-0000-0000-0000000000f9","quantity":1}]')$q$, 'Revisa los platos elegidos%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), platos => '[{"product_id":"00000000-0000-0000-0000-0000000000f8","quantity":1},{"product_id":"00000000-0000-0000-0000-0000000000f8","quantity":2}]')$q$, 'Revisa los platos elegidos%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), platos => '[{"product_id":"00000000-0000-0000-0000-0000000000f8","quantity":0}]')$q$, 'Revisa los platos elegidos%');
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(90, ci_pruebas.hora(2, '12:00'), negocio => '00000000-0000-0000-0000-0000000000e2')$q$, 'Este restaurante no está recibiendo solicitudes%');
+  -- Escribir directo en las tablas: no.
+  perform ci_pruebas.debe_fallar($q$insert into public.reservations (code, business_id, customer_id, starts_at, party_size, contact_name, contact_whatsapp, respond_by, idempotency_key) values ('R-AAAAAA', '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000c1', now() + interval '2 days', 2, 'Ana', '573001234567', now() + interval '1 day', gen_random_uuid())$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$update public.reservations set status = 'confirmada'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.expirar_reservas()$q$, 'permission denied%');
+
+  -- Contra solicitudes masivas: hasta 3 pendientes por restaurante.
+  perform ci_pruebas.pedir(2, ci_pruebas.hora(2, '14:00'));
+  perform ci_pruebas.pedir(3, ci_pruebas.hora(2, '15:00'));
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(4, ci_pruebas.hora(2, '16:00'))$q$, 'Ya tienes 3 solicitudes pendientes%');
+end $$;
+reset role;
+
+-- La dueña no puede reservar en su propio restaurante.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(80, ci_pruebas.hora(2, '13:00'))$q$, 'No puedes solicitar una reserva en tu propio restaurante%');
+end $$;
+reset role;
+
+-- Límite diario: 10 solicitudes en 24 horas por persona (las 10 anteriores ya canceladas).
+insert into public.reservations (code, business_id, customer_id, starts_at, party_size, contact_name, contact_whatsapp, status, cancelled_by, respond_by, idempotency_key)
+select 'R-CANC' || substr('ABCDEFGHJK', g, 1) || substr('ABCDEFGHJK', g, 1), '00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000c9',
+       now() + make_interval(days => 2, hours => g), 2, 'Turista Tres', '573005556677', 'cancelada', 'cliente', now() + interval '1 day', gen_random_uuid()
+from generate_series(1, 10) g;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c9","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select ci_pruebas.pedir(70, ci_pruebas.hora(3, '13:00'))$q$, 'Hiciste muchas solicitudes hoy%');
+  -- Y no ve las solicitudes de otra persona (ni sus platos ni su historial).
+  if ci_pruebas.cuenta('select * from public.reservations where id = ci_pruebas.reserva(1)') <> 0 then raise exception 'otra persona ve la solicitud de c1'; end if;
+  if ci_pruebas.cuenta('select * from public.reservation_items') <> 0 or ci_pruebas.cuenta('select * from public.reservation_events') <> 0 then raise exception 'otra persona ve platos o historial ajenos'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(1))$q$, 'No encontramos esa solicitud%');
+end $$;
+reset role;
+
+-- Quién ve qué: la dueña de otro negocio y el equipo no ven solicitudes.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d1","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.cuenta('select * from public.reservations') <> 0 then raise exception 'otra dueña ve solicitudes ajenas'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(1))$q$, 'No encontramos esa solicitud%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(1), 'sin_mesas')$q$, 'No encontramos esa solicitud%');
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(1), 'No')$q$, 'No encontramos esa solicitud%');
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if ci_pruebas.cuenta('select * from public.reservations') <> 0 then raise exception 'el equipo no debe ver solicitudes con teléfonos'; end if;
+end $$;
+reset role;
+
+-- Decidir (dueña de la pizzería) -----------------------------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select contact_whatsapp from public.reservations where business_id = '00000000-0000-0000-0000-0000000000e1' and customer_id = '00000000-0000-0000-0000-0000000000c1'$q$) <> 3 then
+    raise exception 'la dueña no ve las solicitudes de su restaurante';
+  end if;
+  perform ci_pruebas.debe_funcionar($q$select public.confirmar_reserva(ci_pruebas.reserva(1))$q$);
+  if (select status || '|' || (decided_by = auth.uid()) from public.reservations where id = ci_pruebas.reserva(1)) <> 'confirmada|true' then raise exception 'no quedó confirmada por la dueña'; end if;
+  -- Transiciones prohibidas.
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(1))$q$, 'Esta solicitud ya está confirmada%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(1), 'sin_mesas')$q$, 'Esta solicitud ya está confirmada%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(2), null)$q$, 'Elige el motivo del rechazo%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(2), 'porque si')$q$, 'Elige el motivo del rechazo%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(2), 'otro')$q$, 'Cuéntale al cliente el motivo%');
+  perform ci_pruebas.debe_funcionar($q$select public.rechazar_reserva(ci_pruebas.reserva(2), 'sin_mesas', 'Ese día tenemos un evento')$q$);
+  if (select status || '|' || reject_reason || '|' || reject_note from public.reservations where id = ci_pruebas.reserva(2)) <> 'rechazada|sin_mesas|Ese día tenemos un evento' then raise exception 'el rechazo no guardó el motivo'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(2))$q$, 'Esta solicitud ya está rechazada%');
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(3), 'Ya no')$q$, 'Una solicitud pendiente no se cancela%');
+  perform ci_pruebas.debe_fallar($q$select public.marcar_asistencia(ci_pruebas.reserva(1), true)$q$, 'La asistencia se marca desde la hora%');
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(1))$q$, 'Cuéntale al cliente por qué cancelas%');
+end $$;
+reset role;
+
+-- Cliente: no decide, pero sí retira o cancela lo suyo ---------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(3))$q$, 'No encontramos esa solicitud%');
+  perform ci_pruebas.debe_fallar($q$select public.rechazar_reserva(ci_pruebas.reserva(3), 'sin_mesas')$q$, 'No encontramos esa solicitud%');
+  perform ci_pruebas.debe_funcionar($q$select public.cancelar_reserva(ci_pruebas.reserva(3))$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.cancelar_reserva(ci_pruebas.reserva(1), 'Cambio de planes')$q$);
+  if (select string_agg(status || ':' || cancelled_by, ',' order by idempotency_key) from public.reservations where id in (ci_pruebas.reserva(1), ci_pruebas.reserva(3))) <> 'cancelada:cliente,cancelada:cliente' then
+    raise exception 'las cancelaciones del cliente no quedaron bien';
+  end if;
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(2))$q$, 'Esta solicitud ya está rechazada%');
+  -- Historial completo de la 1: creada, confirmada y cancelada.
+  if (select string_agg(to_status, ',' order by id) from public.reservation_events where reservation_id = ci_pruebas.reserva(1)) <> 'pendiente,confirmada,cancelada' then
+    raise exception 'el historial de la solicitud 1 está incompleto';
+  end if;
+  -- Para expiración y asistencia.
+  perform ci_pruebas.pedir(5, ci_pruebas.hora(3, '13:00'));
+  perform ci_pruebas.pedir(6, ci_pruebas.hora(3, '14:00'));
+  perform ci_pruebas.pedir(7, ci_pruebas.hora(3, '15:00'));
+end $$;
+reset role;
+
+-- Expiración -----------------------------------------------------------------------------------------
+-- Se simula que pasó el plazo (como postgres). Aun sin la tarea programada, ya no se puede confirmar.
+update public.reservations set respond_by = now() - interval '1 minute' where id in (ci_pruebas.reserva(5), ci_pruebas.reserva(6));
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(6))$q$, 'El plazo para responder esta solicitud ya venció%');
+  perform ci_pruebas.debe_funcionar($q$select public.confirmar_reserva(ci_pruebas.reserva(7))$q$);
+end $$;
+reset role;
+do $$
+declare n int;
+begin
+  n := public.expirar_reservas();
+  if n <> 2 then raise exception 'expirar_reservas debía vencer 2 solicitudes y venció %', n; end if;
+  if public.expirar_reservas() <> 0 then raise exception 'expirar_reservas no es idempotente'; end if;
+  if (select count(*) from public.reservation_events where to_status = 'expirada' and actor_role = 'sistema') <> 2 then raise exception 'falta el historial de la expiración'; end if;
+end $$;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(5))$q$, 'Esta solicitud ya está vencida%');
+end $$;
+reset role;
+
+-- Asistencia: después de la hora de la visita (se simula como postgres) -------------------------------
+update public.reservations set starts_at = now() - interval '1 hour' where id = ci_pruebas.reserva(7);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.cancelar_reserva(ci_pruebas.reserva(7), 'Cerramos')$q$, 'La hora de la reserva ya pasó%');
+  perform ci_pruebas.debe_funcionar($q$select public.marcar_asistencia(ci_pruebas.reserva(7), false)$q$);
+  perform ci_pruebas.debe_fallar($q$select public.marcar_asistencia(ci_pruebas.reserva(7), true)$q$, 'Solo se marca la asistencia de reservas confirmadas%');
+  if (select status from public.reservations where id = ci_pruebas.reserva(7)) <> 'no_asistio' then raise exception 'no quedó como no asistió'; end if;
+end $$;
+reset role;
+
+-- Al eliminar la cuenta, se borran sus solicitudes (con platos e historial).
+delete from auth.users where id = '00000000-0000-0000-0000-0000000000c1';
+do $$ begin
+  if exists (select 1 from public.reservations where customer_id = '00000000-0000-0000-0000-0000000000c1') then raise exception 'quedaron solicitudes de una cuenta eliminada'; end if;
+end $$;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

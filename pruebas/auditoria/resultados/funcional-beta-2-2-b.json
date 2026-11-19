@@ -1,0 +1,341 @@
+{
+  "resultados": [
+    {
+      "id": "C01",
+      "area": "Clientes",
+      "prueba": "Inicio: título, Destacados, Los mejor calificados y Recién llegados",
+      "resultado": "OK",
+      "detalle": "{\"titulo\":1,\"destacados\":1,\"negocio\":3,\"mejores\":1,\"recientes\":1}"
+    },
+    {
+      "id": "C02",
+      "area": "Clientes",
+      "prueba": "Búsqueda por nombre sin tildes («fogon» → «Fogón»)",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C03",
+      "area": "Clientes",
+      "prueba": "Búsqueda por plato o producto",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C04",
+      "area": "Clientes",
+      "prueba": "Búsqueda por subcategoría («comida tipica»)",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C05",
+      "area": "Clientes",
+      "prueba": "Búsqueda sin resultados muestra mensaje",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C06",
+      "area": "Clientes",
+      "prueba": "Categoría Restaurantes: «Ver más» carga más y el filtro por subcategoría funciona",
+      "resultado": "OK",
+      "detalle": "antes 20, después 40, verMás 1, filtro 1"
+    },
+    {
+      "id": "C07",
+      "area": "Clientes",
+      "prueba": "Ficha: logo, subcategoría, menú por secciones, precio y «No disponible hoy»",
+      "resultado": "OK",
+      "detalle": "{\"logo\":1,\"subcategoria\":1,\"secciones\":2,\"precio\":1,\"noDisponible\":1}"
+    },
+    {
+      "id": "C08",
+      "area": "Clientes",
+      "prueba": "Botón WhatsApp abre wa.me con el número y «Cómo llegar» abre el mapa",
+      "resultado": "OK",
+      "detalle": "https://wa.me/573001112233 | https://www.google.com/maps/search/?api=1&query=Calle%202%20%23%203-4%2C%20Zipaquir%C3%A1%2C%20Zipaquir%C3%A1%2C%20Colombia"
+    },
+    {
+      "id": "C09",
+      "area": "Clientes",
+      "prueba": "Reseñas de a 20 con «Ver más reseñas»",
+      "resultado": "OK",
+      "detalle": "20 → 25"
+    },
+    {
+      "id": "C10",
+      "area": "Clientes",
+      "prueba": "Producto: galería de 4 (video aprobado + 3 fotos) que se desliza con descripción",
+      "resultado": "OK",
+      "detalle": "{\"inicial\":\"1 de 4\",\"video\":1,\"trasDeslizar\":\"2 de 4\",\"leyenda\":1}"
+    },
+    {
+      "id": "C11",
+      "area": "Clientes",
+      "prueba": "Credenciales incorrectas muestran mensaje claro",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C12",
+      "area": "Clientes",
+      "prueba": "Registro exige aceptar términos y crea la cuenta con su aceptación",
+      "resultado": "OK",
+      "detalle": "aviso consentimiento 2, aceptaciones guardadas 2"
+    },
+    {
+      "id": "C13",
+      "area": "Clientes",
+      "prueba": "Eliminar mi cuenta borra la cuenta (Edge Function)",
+      "resultado": "OK",
+      "detalle": "cuentas con ese correo: 0"
+    },
+    {
+      "id": "C14",
+      "area": "Clientes",
+      "prueba": "Inicia sesión y la sesión sigue tras recargar",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "C15",
+      "area": "Clientes",
+      "prueba": "QR registra la visita; reseña con foto y sello; editar no duplica",
+      "resultado": "OK",
+      "detalle": "visita 1 · creada 5|true|true · editada 1|4|Muy buena changua"
+    },
+    {
+      "id": "C16",
+      "area": "Clientes",
+      "prueba": "Reportar una reseña crea el reporte",
+      "resultado": "OK",
+      "detalle": "reportes 1"
+    },
+    {
+      "id": "C17",
+      "area": "Clientes",
+      "prueba": "Bloquear oculta las reseñas de esa persona",
+      "resultado": "OK",
+      "detalle": "1 → 0"
+    },
+    {
+      "id": "C18",
+      "area": "Clientes",
+      "prueba": "Perfil: «Mis reseñas», términos, «Acerca de» con SCALIX Cloud y Luis Alfredo Olaya",
+      "resultado": "OK",
+      "detalle": "{\"misResenas\":1,\"scalix\":1,\"credito\":1,\"terminos\":1}"
+    },
+    {
+      "id": "C19",
+      "area": "Clientes",
+      "prueba": "Cerrar sesión deja el perfil como invitado",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N01",
+      "area": "Negocios",
+      "prueba": "Registro completo: revisión, Artesanías, 3 etiquetas, verificación y producto con video pendiente y foto adicional",
+      "resultado": "OK",
+      "detalle": "en_revision|artesanias|3|false|1|pendiente:1"
+    },
+    {
+      "id": "N05",
+      "area": "Negocios",
+      "prueba": "El panel muestra «En revisión»",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N14",
+      "area": "Negocios",
+      "prueba": "Si el logo no se puede subir, el panel lo avisa (antes se perdía en silencio)",
+      "resultado": "OK",
+      "detalle": "logo guardado false · aviso 1"
+    },
+    {
+      "id": "N15",
+      "area": "Negocios",
+      "prueba": "Subir el logo desde el panel («+ Logo» → «Tus datos»)",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N02",
+      "area": "Negocios",
+      "prueba": "El registro se retoma tras recargar",
+      "resultado": "OK",
+      "detalle": "aviso 1, nombre «Tejidos Marta 3258»"
+    },
+    {
+      "id": "N03",
+      "area": "Negocios",
+      "prueba": "La cédula o NIT NO queda guardada en el dispositivo",
+      "resultado": "OK",
+      "detalle": "en almacenamiento: false"
+    },
+    {
+      "id": "N04",
+      "area": "Negocios",
+      "prueba": "Validación de precio obligatorio",
+      "resultado": "OK",
+      "detalle": "Escribe el precio del producto en pesos. Ej: 7.000."
+    },
+    {
+      "id": "N06",
+      "area": "Negocios",
+      "prueba": "Panel: «Publicado», aviso de Destacado y pantalla del QR con botón para compartir o guardar",
+      "resultado": "OK",
+      "detalle": "{\"publicado\":1,\"destacado\":1,\"qr\":1,\"boton\":1,\"qrSvg\":20}"
+    },
+    {
+      "id": "N07",
+      "area": "Negocios",
+      "prueba": "Guardar o compartir la imagen del QR",
+      "resultado": "NO_PROBADO",
+      "detalle": "Usa el menú de compartir del celular (expo-sharing); en la web no existe. Requiere Android real."
+    },
+    {
+      "id": "N08",
+      "area": "Negocios",
+      "prueba": "Responder una reseña la guarda",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N09",
+      "area": "Negocios",
+      "prueba": "«Disponible hoy» se cambia con un toque desde el panel",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N10",
+      "area": "Negocios",
+      "prueba": "Plato: crear (sección y precio), editar precio y borrar (con su foto)",
+      "resultado": "OK",
+      "detalle": "creado Platos fuertes|28000 · editado 30000 · archivos 1 · tras borrar 0|0"
+    },
+    {
+      "id": "N11",
+      "area": "Negocios",
+      "prueba": "Editar el horario lo guarda sin despublicar",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N12",
+      "area": "Negocios",
+      "prueba": "Clientes ve la respuesta del negocio y el plato ya disponible",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "N13",
+      "area": "Negocios",
+      "prueba": "Cámara del celular (tomar foto y grabar video sin sonido)",
+      "resultado": "NO_PROBADO",
+      "detalle": "Requiere Android real; en la web se probó solo «elegir de la galería» y «usar un video que ya tengo»."
+    },
+    {
+      "id": "A01",
+      "area": "Panel",
+      "prueba": "Sin sesión, /negocios redirige a /entrar",
+      "resultado": "OK",
+      "detalle": "http://localhost:3001/entrar"
+    },
+    {
+      "id": "A02",
+      "area": "Panel",
+      "prueba": "Una cuenta que no es del equipo termina en /sin-acceso",
+      "resultado": "OK",
+      "detalle": "http://localhost:3001/sin-acceso"
+    },
+    {
+      "id": "A03",
+      "area": "Panel",
+      "prueba": "Admin sin segundo factor no entra; código incorrecto rechazado; correcto entra",
+      "resultado": "OK",
+      "detalle": "sin MFA → 307 → /verificar"
+    },
+    {
+      "id": "A04",
+      "area": "Panel",
+      "prueba": "Ficha muestra foto del local, cédula/NIT, video y fotos; aprobar publica y aprueba el video; se borra la foto del local",
+      "resultado": "OK",
+      "detalle": "{\"foto\":1,\"cedula\":1,\"video\":1,\"fotosExtra\":1} · publicado|aprobado|true"
+    },
+    {
+      "id": "A05",
+      "area": "Panel",
+      "prueba": "Rechazar exige motivo (mín. 10 caracteres) y lo guarda para el negocio",
+      "resultado": "OK",
+      "detalle": "con motivo corto: en_revision · final: rechazado|La foto no muestra el local. Envía una foto de la fachada."
+    },
+    {
+      "id": "A06",
+      "area": "Panel",
+      "prueba": "Aprobar un video pendiente desde Videos",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "A07",
+      "area": "Panel",
+      "prueba": "Reseña en espera: «No publicar» la rechaza",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "A08",
+      "area": "Panel",
+      "prueba": "Descartar el reporte hecho desde clientes",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "A09",
+      "area": "Panel",
+      "prueba": "Destacar un negocio y quitarlo",
+      "resultado": "OK",
+      "detalle": "creado 1 · vigente tras quitar 0"
+    },
+    {
+      "id": "A10",
+      "area": "Panel",
+      "prueba": "Crear y borrar una subcategoría sin uso",
+      "resultado": "OK",
+      "detalle": "velas_3258"
+    },
+    {
+      "id": "A11",
+      "area": "Panel",
+      "prueba": "La bitácora muestra las acciones del equipo",
+      "resultado": "OK",
+      "detalle": "filas 30 · acciones de esta admin 10"
+    },
+    {
+      "id": "A12",
+      "area": "Panel",
+      "prueba": "Analítica coincide con la base y separa cuentas registradas de dispositivos activos",
+      "resultado": "OK",
+      "detalle": "panel {\"hoy\":\"13\",\"whatsapp\":\"3\",\"mapas\":\"3\",\"busquedas\":\"27\"} · base {\"hoy\":\"13\",\"whatsapp\":\"3\",\"mapas\":\"3\",\"busquedas\":\"27\"} · registradas 2459"
+    },
+    {
+      "id": "A13",
+      "area": "Panel",
+      "prueba": "Sistema: 4 servicios medidos con latencia; lo no medido dice «No configurado»/«Sin datos»",
+      "resultado": "OK",
+      "detalle": "{\"funciona\":4,\"problemas\":0,\"noConfigurado\":1,\"sinDatos\":1,\"ms\":4}"
+    },
+    {
+      "id": "A14",
+      "area": "Panel",
+      "prueba": "El código que recibe el navegador no contiene claves privilegiadas (solo la pública «anon»)",
+      "resultado": "OK",
+      "detalle": "17 archivos JS revisados · ninguna"
+    }
+  ],
+  "erroresConsola": []
+}
