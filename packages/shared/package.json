@@ -14,6 +14,7 @@
     "@expo-google-fonts/dm-sans": "*",
     "@react-native-async-storage/async-storage": "*",
     "@supabase/supabase-js": "*",
+    "lucide-react-native": "*",
     "react": "*",
     "react-native": "*",
     "react-native-svg": "*"

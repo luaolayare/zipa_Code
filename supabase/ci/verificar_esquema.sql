@@ -14,9 +14,10 @@ begin
                       'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions',
                       'categories', 'business_tags', 'analytics_events', 'product_photos', 'featured_placements',
                       'business_links', 'reservation_settings', 'reservation_windows', 'reservation_blocked_dates',
-                      'reservations', 'reservation_items', 'reservation_events');
-  if n <> 22 then
-    raise exception 'Faltan tablas en public: se esperaban 22 y hay %', n;
+                      'reservations', 'reservation_items', 'reservation_events',
+                      'push_tokens', 'notifications', 'notification_deliveries');
+  if n <> 25 then
+    raise exception 'Faltan tablas en public: se esperaban 25 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.
@@ -40,6 +41,10 @@ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'reviews_filtro_ofensivo' and not tgisinternal) then
     raise exception 'Falta el trigger reviews_filtro_ofensivo';
+  end if;
+
+  if not exists (select 1 from pg_trigger where tgname = 'reservation_events_notificar' and not tgisinternal) then
+    raise exception 'Falta el trigger reservation_events_notificar (encola los avisos de reservas)';
   end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'business_links_cuidar' and not tgisinternal) then

@@ -9,11 +9,11 @@
 | Fase 0: auditoría | ✅ Hecha |
 | A: Emprendimientos | ✅ Hecha y probada en local. Falta la prueba en Android real |
 | B: Reservas y seguridad | ✅ Hecha y probada en local (ver «Entrega B» al final). Falta la prueba en Android real |
-| C: Notificaciones y contacto | ⏸️ Espera autorización |
-| D: Panel y validación integral | ⏸️ Pendiente |
+| C: Notificaciones y contacto | ✅ Hecha y probada en local (ver «Entrega C»). El envío real a un celular requiere Firebase y APK nuevos |
+| D: Panel y validación integral | ⏸️ Espera autorización |
 
 **Lo que NO se hizo:**
-- No se tocó Supabase remoto: las migraciones nuevas (0018 y 0019) se aplicaron solo en la base local de Docker.
+- No se tocó Supabase remoto: las migraciones nuevas (0018, 0019 y 0020) se aplicaron solo en la base local de Docker.
 - No hubo builds de EAS, despliegues ni push.
 - No se cambiaron identificadores Android/iOS.
 
@@ -599,3 +599,229 @@ Es solo aditiva: 6 tablas nuevas, todas con RLS.
 - [ ] El flujo invitado → iniciar sesión → formulario en la app instalada.
 - [ ] Un doble toque real en «Enviar solicitud» con conexión lenta, y con el modo avión justo al enviar: al reintentar no debe duplicarse.
 - [ ] Las horas mostradas: el celular con otra zona horaria (por ejemplo, un turista con el teléfono en hora de España) debe seguir mostrando la hora de Bogotá.
+
+---
+
+# Entrega C: Notificaciones y contacto
+
+Fecha: 19-nov-2026. Todo se probó en local. **El envío real a un celular todavía no se ha probado**: requiere un APK nuevo y las credenciales de Firebase (ver C.7).
+
+## C.1 Cómo funciona
+
+1. **Registro del dispositivo:** cada app registra el token de Expo del celular para la sesión actual (tabla `push_tokens`).
+   - **Permiso en contexto, nunca al abrir la app:**
+     - en negocios, en la bandeja de reservas y en la tarjeta «Reservas» del panel (si las reservas están activas);
+     - en clientes, en la pantalla de una solicitud pendiente o confirmada.
+   - **Se actualiza solo:** si el permiso ya está dado, al abrir la app con sesión se vuelve a registrar el token, y también si el token cambia.
+   - **Celular compartido:** si otra cuenta inicia sesión en el mismo celular, el token pasa a esa cuenta.
+   - **Varios dispositivos:** hasta 10 por persona y app; al pasar de 10 se desactivan los más viejos.
+   - **Cerrar sesión:** antes de salir se desactiva el token de ese celular (`onBeforeSignOut`). Si no hay red, el cierre de sesión no espera más de 3 segundos.
+2. **Encolar:** cada cambio de estado de una reserva deja un aviso en cola (tabla `notifications`), con un trigger sobre el historial de la Entrega B.
+   - **Si encolar falla, la reserva no falla:** queda un aviso en el log y la solicitud sigue en la bandeja. Está probado provocando la falla.
+3. **Enviar:** lo hace la Edge Function `enviar-notificaciones`, nunca las apps. Usa el servicio de Expo.
+   - **Lotes:** de hasta 100 mensajes.
+   - **Fallas reintentables:** red caída, HTTP 429 o 5xx se reintentan a los 2, 4, 8 y 16 minutos. Al quinto intento el aviso queda «fallida».
+   - **Tokens inválidos:** si Expo responde `DeviceNotRegistered`, en el ticket o en el recibo, ese token se desactiva.
+   - **Recibos:** se revisan después de 15 minutos.
+   - **Sin duplicados:** aunque corran varios envíos a la vez (`SKIP LOCKED` y una sola respuesta por aviso).
+4. **Despertar:**
+   - **Inmediato:** al encolar, la base llama a la función con `pg_net`. La llamada sale después de que la reserva se guarda; si la transacción se deshace, no sale.
+   - **Respaldo:** cada minuto con `pg_cron`, para reintentos y recibos.
+5. **Al tocar el aviso:**
+   - Abre el detalle: `/reservas/<id>` en negocios y `/reserva/<id>` en clientes.
+   - Funciona con la app abierta, en segundo plano o cerrada.
+   - Solo se aceptan esas rutas: un dato manipulado no puede llevar a otra pantalla ni fuera de la app.
+
+**No se promete entrega garantizada.** Expo, Google y Apple pueden demorar o perder avisos. Si un aviso no llega, la solicitud siempre está en la bandeja.
+
+## C.2 Avisos
+
+El texto es visible con la pantalla bloqueada. Por eso **no lleva nombres, teléfonos, observaciones ni preferencia de mesa**; solo el restaurante, la fecha y las personas. Está probado.
+
+| Evento | Para | Título | Abre |
+|---|---|---|---|
+| Nueva solicitud | Restaurante | «Tienes una nueva solicitud de reserva» | Detalle en la bandeja |
+| Confirmada | Cliente | «Tu reserva fue confirmada» | Su solicitud |
+| Rechazada | Cliente | «Tu solicitud de reserva no pudo confirmarse» | Su solicitud (motivo y «Solicitar otro horario») |
+| Cancelada por el cliente | Restaurante | «Un cliente retiró su solicitud» / «Un cliente canceló su reserva» | Detalle |
+| Cancelada por el restaurante | Cliente | «El restaurante canceló tu reserva» | Su solicitud |
+| Vencida | Cliente | «Tu solicitud de reserva venció» | Su solicitud |
+
+Finalizada y «no asistió» no generan aviso.
+
+## C.3 Bandeja del restaurante y contacto
+
+**Bandeja «Reservas»**
+- **Pestañas con su cantidad:** Pendientes, Confirmadas, Rechazadas, Canceladas, Finalizadas (incluye «no asistió») y Vencidas.
+- **Cada solicitud muestra:** código, fecha y hora, personas, nombre, preferencia de mesa, observaciones, platos, fecha de recibida, estado y, si está pendiente, el plazo para responder.
+
+**«Contactar al cliente»** (en el detalle)
+- Prepara el mensaje oficial con el restaurante, el código, la fecha, la hora y las personas.
+- El restaurante **lo puede editar** y luego toca «Abrir WhatsApp» (`https://wa.me/<número>?text=…`).
+- No envía nada solo, no guarda la conversación y **no confirma la reserva** (probado: sigue «pendiente»).
+- El número ya viene validado del servidor.
+
+**«Contactar al restaurante»** (en clientes, en la pantalla de la solicitud)
+- Abre el WhatsApp del restaurante con un mensaje que menciona el código.
+- Esto adelanta un punto del Módulo 7 (Entrega D), porque usa la misma pieza.
+
+## C.4 Seguridad
+
+**Tokens**
+- Cada persona solo ve sus dispositivos, y sin el token en sí (permiso por columnas).
+- Nadie escribe directo en la tabla: solo por `registrar_token_push` (exige sesión y valida el formato) y `desactivar_token_push` (solo el propio token).
+- No hay credenciales de push en las apps.
+
+**Cola, intentos y recibos**
+- Las apps no tienen ningún acceso: ni leer, ni escribir, ni ejecutar las funciones del envío.
+- Esas funciones solo las puede ejecutar `service_role`.
+
+**Edge Function**
+- `verify_jwt = false`, porque no hay sesión de usuario. Exige el secreto `CRON_SECRET` en el encabezado `x-zipa-cron` y lo compara en tiempo constante.
+- Sin el secreto responde 401 (probado).
+- **El log solo tiene cuentas:** ni tokens, ni nombres, ni teléfonos (probado).
+
+**Avisos a otros negocios:** cada aviso va solo a los tokens activos del destinatario y de la app correcta.
+
+**Eliminar cuenta:** se borran sus dispositivos y sus avisos (en cascada; probado).
+
+## C.5 Migración `0020_notificaciones_push.sql` y archivos
+
+**Migración** (solo aditiva):
+- **Tablas:** `push_tokens`, `notifications` y `notification_deliveries`, todas con RLS.
+- **Funciones para las apps:** `registrar_token_push` y `desactivar_token_push`.
+- **Funciones del envío** (solo `service_role`): `tomar_notificaciones`, `registrar_envio_notificacion`, `recibos_pendientes` y `registrar_recibos`.
+- **Trigger** que encola cada cambio de estado.
+- **Despertar el envío:** `disparar_envio_notificaciones()`, que lee dos secretos de Vault y, si faltan, no hace nada y no falla.
+- **Respaldo:** la tarea programada `zipa-enviar-notificaciones`, cada minuto.
+- **Extensiones que activa:** `pg_net` y `pg_cron`. Supabase las incluye.
+
+**Archivos nuevos:**
+- `supabase/functions/enviar-notificaciones/index.ts` (más su entrada en `supabase/config.toml`).
+- **Compartido:**
+  - `packages/shared/src/push.ts`: rutas permitidas, formato del token, enlace de WhatsApp, textos y cierre de sesión;
+  - `packages/shared/src/ui/PushPrompt.tsx`;
+  - `packages/shared/src/__tests__/push-test.ts`.
+- **Cada app:** `src/lib/notificaciones.ts`, que es lo único que habla con el módulo nativo.
+  - Los dos archivos son iguales salvo el nombre de la app.
+  - No pueden ir en el paquete compartido porque `expo-notifications` quedó instalado dentro de cada app.
+- **Íconos:** `apps/*/assets/notification-icon.png` (Android: símbolo blanco), generados con `scripts/identidad/generar.cjs`. Los demás íconos no cambiaron.
+- **Pruebas:** `pruebas/auditoria/beta-2-2-notificaciones.js` y `pruebas/auditoria/beta-2-2-entrega-c.js`.
+
+**Archivos modificados:**
+- **Compartido:**
+  - `auth.tsx`: tareas antes de cerrar sesión;
+  - `api.ts`: registrar y desactivar el token, y el WhatsApp del restaurante en la solicitud;
+  - `reservations.ts`, `index.ts` y `package.json` (dependencia de `lucide-react-native`).
+- **Negocios:** `_layout.tsx`, `panel.tsx`, `reservas/index.tsx` (pestañas) y `reservas/[id].tsx` (contactar).
+- **Clientes:** `_layout.tsx` y `reserva/[id].tsx`.
+- **Las dos apps:** `app.json` (plugin `expo-notifications` con ícono, color y canal «reservas») y `package.json`.
+- `scripts/identidad/generar.cjs` y su `README.md`.
+- **CI:** `supabase/ci/verificar_esquema.sql` (25 tablas y el trigger nuevo) y `supabase/ci/probar_permisos.sql`.
+
+**Paquetes nuevos** (en las dos apps, instalados con `npx expo install`):
+- `expo-device ~58.0.5`.
+- `expo-notifications 58.1.8`, fijada exacta.
+  - La versión que propone Expo (58.1.9) salió el 11-nov y no cumple la regla de dos semanas.
+  - Por eso `expo-doctor` la marcará como un parche atrás, igual que `expo-router`.
+- Los dos tienen código nativo: **necesitan APK nuevos**.
+
+## C.6 Resultados de pruebas (19-nov-2026, todo local)
+
+| Comprobación | Resultado |
+|---|---|
+| `typecheck` y `lint`, en todos los paquetes | ✅ Sin errores ni avisos |
+| Jest | ✅ **119/119** (12 suites; 8 nuevas de notificaciones) |
+| `verificar_esquema.sql` | ✅ 25 tablas, todas con RLS |
+| `probar_permisos.sql`, con las comprobaciones nuevas de notificaciones | ✅ Todo pasa (con las tablas vaciadas dentro de una transacción que termina en `ROLLBACK`) |
+| Envío de punta a punta con un servidor falso de Expo (`beta-2-2-notificaciones.js`) | ✅ **11/11** |
+| Bandeja y contacto en el navegador (`beta-2-2-entrega-c.js`) | ✅ **6/6**, 0 errores de consola |
+| Regresión: Entrega B, Entrega A, Beta 2.1 y concurrencia | ✅ 15/15 · 12/12 · 12/12 · 8/8 |
+| Auditoría funcional completa | ✅ **46 OK, 0 fallas** (2 requieren celular) |
+| Panel `next build`, `expo export` Android de clientes y negocios | ✅ |
+| `expo-doctor` | ⚠️ 19/20: `expo` 58.0.26 (17-nov), `expo-router` 58.0.32 y `expo-notifications` 58.1.9 (11-nov) son parches recientes que no se instalaron por la regla de dos semanas |
+
+**Lo que cubren las pruebas SQL**
+- **Tokens:**
+  - sin sesión no se pueden registrar;
+  - formato y app inválidos se rechazan;
+  - cada quien ve solo su dispositivo y no ve el token;
+  - nada se escribe directo;
+  - nadie desactiva un token ajeno;
+  - el celular compartido pasa a la nueva cuenta;
+  - cerrar sesión lo desactiva.
+- **Cola:**
+  - cada transición genera el aviso correcto, al destinatario y la app correctos;
+  - el texto no tiene datos personales;
+  - un solo aviso por evento;
+  - si encolar falla, la reserva se crea igual.
+- **Envío (como `service_role`):**
+  - lo ya tomado no se vuelve a tomar;
+  - el restaurante recibe en sus 2 celulares y el cliente solo en su token de la app clientes;
+  - un token no registrado se desactiva;
+  - registrar dos veces el mismo resultado no duplica;
+  - una falla general se reintenta a los 2 minutos y al quinto intento queda «fallida» con el último error;
+  - los recibos funcionan;
+  - sin dispositivos, el aviso queda «sin_dispositivos».
+- **Despertar:** sin secretos no hace nada; la tarea programada existe.
+- **Eliminar cuenta:** se borran sus dispositivos y avisos.
+- **Las apps no pueden:** leer la cola, ni ejecutar las funciones del envío o del despertar.
+
+**Lo que cubre la prueba con el servidor falso de Expo**
+- Rechaza llamadas sin secreto.
+- Una solicitud nueva llega al restaurante **sola** (`pg_net`), con canal «reservas» y la ruta del detalle.
+- Un `DeviceNotRegistered` desactiva el token.
+- Al confirmar, el aviso llega a los 2 dispositivos del cliente.
+- No viaja nada personal.
+- Con Expo caído (503), la solicitud se crea igual y el aviso queda en reintento; cuando Expo vuelve, se entrega sin duplicar.
+- 3 envíos simultáneos sobre la misma cola: ningún aviso se entrega dos veces.
+- Los recibos desactivan tokens.
+- Después de cerrar sesión, ese celular ya no recibe.
+- El log no tiene datos personales.
+
+## C.7 Estado de las notificaciones y lo que falta para que lleguen de verdad
+
+**Probado:** todo el lado del servidor y la lógica de las apps.
+
+**No probado:** que un aviso llegue a un celular real. Para eso hace falta:
+
+1. **Android (Firebase, gratis), requiere tu acción o autorización:**
+   - crear un proyecto en Firebase;
+   - agregar las dos apps Android con sus identificadores actuales (`co.zipa.vitrinalocal` y `co.zipa.vitrinanegocios`);
+   - poner el `google-services.json` de cada una en su app (`android.googleServicesFile` en `app.json`);
+   - subir la credencial **FCM V1** (cuenta de servicio) a EAS con `eas credentials`.
+2. **iOS:** requiere una cuenta de Apple Developer (pago anual) y la llave APNs en EAS. Hoy solo se generan APK de Android.
+3. **Supabase remoto, requiere tu autorización:**
+   - `db push` de las migraciones 0018, 0019 y 0020;
+   - desplegar `enviar-notificaciones`;
+   - crear el secreto `CRON_SECRET` de la función (`supabase secrets set`);
+   - en el SQL Editor, guardar en Vault `zipa_funciones_url` (`https://<proyecto>.supabase.co/functions/v1`) y `zipa_cron_secreto` (el mismo valor de `CRON_SECRET`). **Estos secretos no van en el repositorio.**
+4. **Opcional:** activar la «seguridad reforzada» de Expo push y guardar el `EXPO_ACCESS_TOKEN` como secreto de la función.
+5. **APK nuevos** de las dos apps.
+
+**Expo Go:** desde el SDK 53, Expo Go en Android **no recibe** notificaciones remotas (lo dice la documentación). En iOS, la documentación del SDK 58 no lo aclara. Por eso la prueba real debe hacerse con los APK (o con un *development build*). Mientras no haya token, las apps funcionan igual: la tarjeta dice que los avisos no están disponibles en esa versión.
+
+## C.8 Riesgos y pendientes (Entrega C)
+
+1. **Política de privacidad (bloqueante, junto con el de la Entrega B):** se guarda un identificador del dispositivo (token de notificaciones). Hay que mencionarlo: finalidad (avisos de reservas), quién lo recibe (Expo, Google o Apple, como encargados del envío) y que se borra al cerrar sesión o eliminar la cuenta. **Requiere revisión humana o legal.**
+2. **Sin Firebase no hay avisos en Android:** en el APK sin `google-services.json`, el celular no entrega token y la app sigue sin avisos.
+3. **Límites de fabricantes:** algunos Android (Xiaomi, Huawei, Oppo y otros) cierran apps en segundo plano o silencian notificaciones por ahorro de batería. Se documentará con la prueba física; en algunos casos la persona debe permitir la app en los ajustes de batería.
+4. **Latencia:** el despertar inmediato depende de `pg_net`. Si falla, el respaldo de cada minuto lo cubre (hasta 1 minuto de demora).
+5. **Texto antiguo:** el permiso de cámara de la app de negocios (`app.json`) todavía dice «…con el que creamos la vista 3D». Es una promesa de 3D que quedó de antes de la Beta 2.1. No se cambió porque no es parte de esta entrega; conviene corregirlo en la revisión de textos.
+
+## C.9 Pruebas pendientes en celular físico (Entrega C)
+
+Con APK nuevos y Firebase configurado, en Android 13 o superior:
+
+- [ ] **Permiso:** la tarjeta «Activar notificaciones» aparece solo en la bandeja, en el panel con reservas activas y en la solicitud del cliente. Al aceptar, la tarjeta desaparece; al negarlo, muestra «Abrir ajustes».
+- [ ] **App abierta:** llega el aviso de nueva solicitud y se ve el banner.
+- [ ] **App en segundo plano:** llega el aviso y al tocarlo se abre el detalle.
+- [ ] **App cerrada** (quitada de recientes): llega el aviso y al tocarlo la app abre directo en el detalle.
+- [ ] **Pantalla bloqueada:** el aviso no muestra nombres ni teléfonos.
+- [ ] **Permiso denegado:** no llega nada y la app funciona igual; la solicitud aparece en la bandeja.
+- [ ] **Sin conexión:** al recuperar la red, el aviso llega (o se ve en la bandeja).
+- [ ] **Cerrar sesión:** después de cerrar sesión no llegan más avisos de esa cuenta a ese celular.
+- [ ] **Dos celulares del mismo restaurante:** les llega a los dos.
+- [ ] **Cliente:** confirmar, rechazar, cancelar y vencer generan su aviso, y cada uno abre la solicitud.
+- [ ] **«Contactar al cliente»:** abre la app de WhatsApp con el mensaje editado.
+- [ ] **Ahorro de batería:** repetir en un Xiaomi o un Samsung con el ahorro de batería activo y anotar las limitaciones.

@@ -87,6 +87,7 @@ export interface Reservation {
   code: string;
   businessId: string;
   businessName?: string;
+  businessWhatsapp?: string | null; // tal como lo escribió el negocio
   customerId: string;
   startsAt: string;
   partySize: number;

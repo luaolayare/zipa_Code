@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { KeyValueStore } from './analytics';
 import { createApi, type Api } from './api';
 import type { ConsentInput } from './legal';
+import { runBeforeSignOut } from './push';
 import { MissingConfigView } from './ui/MissingConfigView';
 
 export interface AppUser {
@@ -105,6 +106,8 @@ function AuthProviderInner({ client, children, storage, app }: { client: Supabas
       return { needsEmailConfirmation: !data.session };
     },
     async signOut() {
+      // Con la sesión aún abierta: por ejemplo, este dispositivo deja de recibir notificaciones.
+      await runBeforeSignOut();
       if (!client) return setUser(null);
       await client.auth.signOut();
     },

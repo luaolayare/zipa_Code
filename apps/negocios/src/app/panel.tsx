@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, PushPrompt, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Notice, SectionTitle, StatusPill, type } from '@/components/kit';
 import { ProductRow, ReviewItem, Stat } from '@/components/PanelPieces';
 import { QrMini } from '@/components/QrPoster';
+import { usePushPrompt } from '@/lib/notificaciones';
 import { draftFromBusiness, useRegistro } from '@/components/RegistroContext';
 
 export default function Panel() {
@@ -22,6 +23,7 @@ export default function Panel() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [links, setLinks] = useState<BusinessLinks | null>(null);
+  const push = usePushPrompt(api);
   const [reservas, setReservas] = useState<{ settings: ReservationSettings | null; pending: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -207,6 +209,7 @@ export default function Panel() {
                 </View>
               </Pressable>
               <Button title={reservas.settings?.enabled ? 'Configurar reservas' : 'Activar reservas'} variant="outline" onPress={() => router.push('/reservas/configuracion')} />
+              {reservas.settings?.enabled && <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} />}
             </>
           )}
 

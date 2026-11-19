@@ -15,6 +15,7 @@ La identidad de las apps sale de esta carpeta: íconos, pantalla de inicio e íc
   - `android-icon-foreground.png`, `android-icon-background.png` y `android-icon-monochrome.png`
   - `splash-icon.png`
   - `favicon.png`
+  - `notification-icon.png` (Android: el símbolo en blanco para la barra de notificaciones)
 - `apps/admin/src/app/icon.svg` y `apps/admin/src/app/favicon.ico`
 
 Los `app.json` ya apuntan a estos archivos. También definen el color de fondo del ícono adaptativo y de la pantalla de inicio, que debe coincidir con `fondo` en `config.json`.

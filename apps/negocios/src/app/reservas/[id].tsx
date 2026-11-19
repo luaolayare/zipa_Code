@@ -9,19 +9,22 @@ import {
   RESERVATION_STATUS,
   ReservationPill,
   TextField,
+  WhatsAppIcon,
   colors,
   confirmAsync,
   fonts,
   formatCop,
   rejectReasonLabel,
   reservationWhen,
+  restaurantWhatsappMessage,
   useAuth,
+  whatsappLink,
   type RejectReason,
   type Reservation,
 } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, StyleSheet, Text, View } from 'react-native';
 
 import { Notice, type } from '@/components/kit';
 import { Page } from '@/components/Page';
@@ -31,7 +34,7 @@ const ACTOR = { cliente: 'el cliente', restaurante: 'tu restaurante', sistema: '
 
 export default function SolicitudDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { api } = useAuth();
+  const { api, user } = useAuth();
   const [r, setR] = useState<Reservation | null | undefined>(undefined);
   const [mode, setMode] = useState<'ver' | 'rechazar' | 'cancelar'>('ver');
   const [reason, setReason] = useState<RejectReason | null>(null);
@@ -39,9 +42,14 @@ export default function SolicitudDetalle() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [now] = useState(() => Date.now());
+  const [businessName, setBusinessName] = useState('');
+  const [contacting, setContacting] = useState(false);
+  const [message, setMessage] = useState('');
 
   const load = useCallback(() => api.getReservation(id).then(setR).catch(() => setR(null)), [api, id]);
   useEffect(() => { load(); }, [load]);
+  // Nombre del restaurante para el mensaje de WhatsApp (aunque esté en revisión y no sea público).
+  useEffect(() => { if (user) api.myBusiness(user.id).then((b) => setBusinessName(b?.name ?? '')).catch(() => {}); }, [api, user]);
 
   if (r === undefined) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator size="large" /></View>;
   if (!r) {
@@ -71,6 +79,8 @@ export default function SolicitudDetalle() {
   };
 
   const started = new Date(r.startsAt).getTime() <= now;
+  // Número validado (el servidor ya lo guardó en dígitos con indicativo); si no sirve, no hay botón.
+  const wa = whatsappLink(r.contactWhatsapp) ? r.contactWhatsapp : null;
   const confirm = async () => {
     const ok = await confirmAsync(
       'Confirmar reserva',
@@ -124,6 +134,19 @@ export default function SolicitudDetalle() {
         <Notice tone="warn"><Text style={type.strong}>Cancelada por {r.cancelledBy === 'cliente' ? 'el cliente' : 'tu restaurante'}{r.cancelReason ? `: ${r.cancelReason}` : ''}</Text></Notice>
       )}
       {r.status === 'expirada' && <Notice tone="warn"><Text style={type.strong}>Venció sin respuesta. El cliente puede enviar otra solicitud.</Text></Notice>}
+
+      {/* Contactar al cliente por WhatsApp: mensaje editable; no envía nada solo ni cambia el estado. */}
+      {!!wa && !contacting && (
+        <Button title="Contactar al cliente" variant="outline" icon={<WhatsAppIcon size={20} />} onPress={() => { setMessage(restaurantWhatsappMessage(r, businessName || 'el restaurante')); setContacting(true); }} />
+      )}
+      {!!wa && contacting && (
+        <View style={styles.card}>
+          <TextField label="Mensaje para el cliente (puedes cambiarlo)" value={message} onChangeText={setMessage} multiline maxLength={600} style={{ minHeight: 170, textAlignVertical: 'top' }} />
+          <Text style={type.small}>Se abre WhatsApp con este mensaje; tú decides si lo envías. Abrirlo no confirma la reserva.</Text>
+          <Button title="Abrir WhatsApp" icon={<WhatsAppIcon size={20} />} onPress={() => { const url = whatsappLink(wa, message); if (url) Linking.openURL(url); setContacting(false); }} />
+          <Button title="Cancelar" variant="link" onPress={() => setContacting(false)} />
+        </View>
+      )}
 
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
 

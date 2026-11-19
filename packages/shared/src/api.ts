@@ -558,8 +558,9 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       r.events = ((data as any).reservation_events ?? [])
         .map((e: any) => ({ fromStatus: e.from_status, toStatus: e.to_status, actorRole: e.actor_role, reason: e.reason ?? null, createdAt: e.created_at }))
         .sort((a: { createdAt: string }, b: { createdAt: string }) => a.createdAt.localeCompare(b.createdAt));
-      const { data: b } = await db.from('businesses_public').select('name').eq('id', r.businessId).maybeSingle();
+      const { data: b } = await db.from('businesses_public').select('name, whatsapp').eq('id', r.businessId).maybeSingle();
       r.businessName = b?.name ?? 'Restaurante';
+      r.businessWhatsapp = b?.whatsapp ?? null;
       return r;
     },
 
@@ -586,6 +587,21 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       if (!db) throw new Error('Las reservas necesitan conexión.');
       const { error } = await db.rpc('marcar_asistencia', { p_id: id, p_asistio: attended });
       if (error) throw reservationError(error, 'No pudimos guardar la asistencia. Intenta de nuevo.');
+    },
+
+    // ------------------------------------------------- Notificaciones push (Beta 2.2) ----
+
+    /** Registra (o actualiza) el token de este dispositivo para la sesión actual. */
+    async registerPushToken(token: string, app: 'clientes' | 'negocios', platform: 'android' | 'ios') {
+      if (!db) return;
+      const { error } = await db.rpc('registrar_token_push', { p_token: token, p_app: app, p_platform: platform });
+      if (error) throw new Error('No pudimos activar las notificaciones. Intenta de nuevo.');
+    },
+
+    /** Este dispositivo deja de recibir avisos de esta cuenta (al cerrar sesión). */
+    async unregisterPushToken(token: string) {
+      if (!db) return;
+      await db.rpc('desactivar_token_push', { p_token: token });
     },
 
     async listProducts(businessId: string): Promise<Product[]> {

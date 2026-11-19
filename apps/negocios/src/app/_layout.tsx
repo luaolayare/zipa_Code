@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { RegistroProvider } from '@/components/RegistroContext';
+import { usePushSetup } from '@/lib/notificaciones';
 import { supabase } from '@/lib/supabase';
 
 // El splash se queda hasta que carguen las fuentes, para no ver el texto cambiar.
@@ -34,7 +35,8 @@ export default function RootLayout() {
 // Las pantallas esperan a que se recupere la sesión guardada: así el panel no cree que no hay
 // sesión mientras se está cargando (y no manda a la persona a la bienvenida).
 function Navegacion() {
-  const { loading } = useAuth();
+  const { loading, api, user } = useAuth();
+  usePushSetup(api, user?.id ?? null); // notificaciones: token del dispositivo y abrir el detalle al tocar un aviso
   if (loading) return <View style={{ flex: 1, backgroundColor: colors.background }} />;
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>

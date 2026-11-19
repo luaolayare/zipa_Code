@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-19T05:27:56.430Z",
+  "fecha": "2026-11-19T18:55:50.328Z",
   "resultados": [
     {
       "id": "B-1",
@@ -11,13 +11,13 @@
       "id": "B-2",
       "prueba": "El restaurante activa las reservas: 7 horarios, 1 hora de anticipación e instrucciones; el panel muestra «Recibiendo solicitudes»",
       "resultado": "OK",
-      "detalle": "{\"cfg\":{\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"enabled\":true,\"max_party\":8,\"min_notice_minutes\":60,\"max_advance_days\":30,\"response_hours\":24,\"slot_minutes\":30,\"instructions\":\"Te escribimos por WhatsApp para confirmar.\",\"updated_at\":\"2026-11-19T05:26:20.687438+00:00\"},\"ventanas\":7,\"tar"
+      "detalle": "{\"cfg\":{\"business_id\":\"bd49a9b8-b178-4ddf-831a-3f11932e8ab6\",\"enabled\":true,\"max_party\":8,\"min_notice_minutes\":60,\"max_advance_days\":30,\"response_hours\":24,\"slot_minutes\":30,\"instructions\":\"Te escribimos por WhatsApp para confirmar.\",\"updated_at\":\"2026-11-19T18:54:15.396172+00:00\"},\"ventanas\":7,\"tar"
     },
     {
       "id": "B-3",
       "prueba": "Ficha del restaurante: «Solicitar reserva»; sin sesión lleva a iniciar sesión y vuelve al formulario",
       "resultado": "OK",
-      "detalle": "{\"boton\":1,\"enLogin\":true,\"enFormulario\":true,\"url\":\"http://localhost:8083/reservar/f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\"}"
+      "detalle": "{\"boton\":1,\"enLogin\":true,\"enFormulario\":true,\"url\":\"http://localhost:8083/reservar/bd49a9b8-b178-4ddf-831a-3f11932e8ab6\"}"
     },
     {
       "id": "B-4",
@@ -29,13 +29,13 @@
       "id": "B-5",
       "prueba": "Se crea PENDIENTE con 3 personas, WhatsApp con indicativo, mesa, observaciones y 2 ajiacos con su precio; se muestra el código",
       "resultado": "OK",
-      "detalle": "{\"r1\":{\"id\":\"70a49465-5315-4bd9-be0e-15e5e2c30741\",\"code\":\"R-GZBE2H\",\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"customer_id\":\"1a44720e-fab6-4cad-8c44-463d9b8e0009\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"573001234567\",\"table_"
+      "detalle": "{\"r1\":{\"id\":\"d8eecd26-75ec-4ddc-83e4-38cbc0cf0c87\",\"code\":\"R-QS325C\",\"business_id\":\"bd49a9b8-b178-4ddf-831a-3f11932e8ab6\",\"customer_id\":\"8631cada-08fc-4684-aa0b-b504c15e7943\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"573001234567\",\"table_"
     },
     {
       "id": "B-6",
       "prueba": "Doble toque en «Enviar solicitud»: se crea una sola solicitud",
       "resultado": "OK",
-      "detalle": "solicitudes: 2 · http://localhost:8083/reserva/103a821e-34a1-403b-8b62-57faafd31083?nueva=1 · ¡Solicitud enviada!\nGuarda tu código. Puedes ver el estado aquí y en Perfil → Mis reservas."
+      "detalle": "solicitudes: 2 · http://localhost:8083/reserva/5cb9ee1a-cac7-41f8-8c0f-fd3f2e9dc14e?nueva=1 · ¡Solicitud enviada!\nGuarda tu código. Puedes ver el estado aquí y en Perfil → Mis reservas."
     },
     {
       "id": "B-7",
@@ -47,7 +47,7 @@
       "id": "B-8",
       "prueba": "Rechazo: con «Otro motivo» exige explicación; con motivo de la lista queda RECHAZADA con motivo y nota",
       "resultado": "OK",
-      "detalle": "{\"pideMotivo\":1,\"rr1\":{\"id\":\"70a49465-5315-4bd9-be0e-15e5e2c30741\",\"code\":\"R-GZBE2H\",\"business_id\":\"f2a99f2d-f069-4ed8-b8b3-1b8e65c0c011\",\"customer_id\":\"1a44720e-fab6-4cad-8c44-463d9b8e0009\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"57300"
+      "detalle": "{\"pideMotivo\":1,\"rr1\":{\"id\":\"d8eecd26-75ec-4ddc-83e4-38cbc0cf0c87\",\"code\":\"R-QS325C\",\"business_id\":\"bd49a9b8-b178-4ddf-831a-3f11932e8ab6\",\"customer_id\":\"8631cada-08fc-4684-aa0b-b504c15e7943\",\"starts_at\":\"2026-11-20T18:00:00+00:00\",\"party_size\":3,\"contact_name\":\"Ana Turista\",\"contact_whatsapp\":\"57300"
     },
     {
       "id": "B-9",

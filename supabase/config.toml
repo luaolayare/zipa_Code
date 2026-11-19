@@ -435,3 +435,8 @@ verify_jwt = true
 # la función exige además is_admin(), es decir, rol en admin_users y MFA).
 [functions.revisar-negocio]
 verify_jwt = true
+
+# enviar-notificaciones: la despierta la base de datos (pg_net y pg_cron), no una persona. No hay
+# JWT de usuario: la función exige el secreto CRON_SECRET en el encabezado x-zipa-cron.
+[functions.enviar-notificaciones]
+verify_jwt = false

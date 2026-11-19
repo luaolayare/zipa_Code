@@ -1,0 +1,71 @@
+{
+  "fecha": "2026-11-19T18:53:50.873Z",
+  "resultados": [
+    {
+      "id": "N-1",
+      "prueba": "La función rechaza llamadas sin el secreto o con uno equivocado (401)",
+      "resultado": "OK",
+      "detalle": "401 / 401"
+    },
+    {
+      "id": "N-2",
+      "prueba": "Nueva solicitud: el restaurante recibe «Tienes una nueva solicitud de reserva» sin intervención (pg_net), con canal «reservas» y enlace al detalle",
+      "resultado": "OK",
+      "detalle": "{\"llego\":true,\"m1\":{\"to\":\"ExponentPushToken[resto-ok-25459]\",\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder.\",\"data\":{\"url\":\"/reservas/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"7a13fa5"
+    },
+    {
+      "id": "N-3",
+      "prueba": "El token que Expo dice que no existe (DeviceNotRegistered) queda desactivado",
+      "resultado": "OK",
+      "detalle": "false|no_registrado"
+    },
+    {
+      "id": "N-4",
+      "prueba": "Confirmar: el cliente recibe «Tu reserva fue confirmada» en sus dispositivos, con enlace a su solicitud",
+      "resultado": "OK",
+      "detalle": "{\"to\":\"ExponentPushToken[cliente-ok-25459]\",\"title\":\"Tu reserva fue confirmada\",\"body\":\"Asadero Avisos 5459 · sáb 21 nov., 12:00 p. m. · 2 personas.\",\"data\":{\"url\":\"/reserva/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"confirmada\",\"reservationId\":\"7a13fa51-d33d-4cfc-a950-c5772d80775c\"},\"sound\":\"def"
+    },
+    {
+      "id": "N-5",
+      "prueba": "Ningún aviso lleva el nombre, el teléfono, las observaciones ni la mesa del cliente",
+      "resultado": "OK",
+      "detalle": "Tienes una nueva solicitud de reserva Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder. {\"url\":\"/reservas/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"7a13fa51-d33d-4cfc-a950-c5772d80775c\"} | Tu "
+    },
+    {
+      "id": "N-6",
+      "prueba": "Con el servicio de push caído, la solicitud se crea igual y el aviso queda pendiente para reintento (HTTP 503)",
+      "resultado": "OK",
+      "detalle": "{\"creada\":true,\"status\":\"pendiente\",\"error\":\"HTTP 503\",\"intentos\":1}"
+    },
+    {
+      "id": "N-7",
+      "prueba": "Cuando el servicio vuelve, el reintento lo entrega (sin duplicar)",
+      "resultado": "OK",
+      "detalle": "{\"status\":\"enviada\",\"intentos\":2}"
+    },
+    {
+      "id": "N-8",
+      "prueba": "Tres envíos simultáneos sobre la misma cola: ningún aviso se entrega dos veces al mismo dispositivo",
+      "resultado": "OK",
+      "detalle": "{\"entregados\":5,\"duplicados\":0}"
+    },
+    {
+      "id": "N-9",
+      "prueba": "Recibos: se revisan y un DeviceNotRegistered en el recibo desactiva ese token",
+      "resultado": "OK",
+      "detalle": "{\"recibo\":\"false|no_registrado\",\"revisados\":9}"
+    },
+    {
+      "id": "N-10",
+      "prueba": "Después de cerrar sesión, ese dispositivo ya no recibe avisos (el aviso queda «sin_dispositivos» y la solicitud sigue en la app)",
+      "resultado": "OK",
+      "detalle": "{\"status\":\"sin_dispositivos\"}"
+    },
+    {
+      "id": "N-11",
+      "prueba": "El log de la función no tiene tokens, nombres ni teléfonos (solo cuentas)",
+      "resultado": "OK",
+      "detalle": "[Info] {\"envio\":{\"avisos\":1,\"enviadas\":0,\"pendientes\":0,\"sin_dispositivos\":1,\"fallidas\":0,\"recibos\":0}}"
+    }
+  ]
+}

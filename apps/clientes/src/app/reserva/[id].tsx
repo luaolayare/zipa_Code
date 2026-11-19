@@ -1,24 +1,30 @@
 // Estado de una solicitud de reserva para quien la hizo: código, estado explicado, datos, platos,
 // motivo si no se confirmó, cancelar y «Solicitar otro horario».
 import {
+  BRAND,
   Button,
   DISHES_NOTICE,
+  PushPrompt,
   ReservationPill,
+  WhatsAppIcon,
   colors,
   confirmAsync,
   fonts,
   formatCop,
+  normalizeWhatsapp,
   rejectReasonLabel,
   reservationWhen,
   useAuth,
+  whatsappLink,
   type Reservation,
 } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
+import { usePushPrompt } from '@/lib/notificaciones';
 
 const EXPLAIN: Record<Reservation['status'], string> = {
   pendiente: 'Tu solicitud fue enviada. La reserva solo quedará confirmada cuando el restaurante la acepte. Puede escribirte por WhatsApp para coordinar.',
@@ -37,6 +43,7 @@ export default function MiReserva() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [now] = useState(() => Date.now());
+  const push = usePushPrompt(api);
 
   const load = useCallback(() => api.getReservation(id).then(setR).catch(() => setR(null)), [api, id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -52,6 +59,8 @@ export default function MiReserva() {
   }
 
   const future = new Date(r.startsAt).getTime() > now;
+  // WhatsApp del restaurante con un mensaje que menciona el código (la persona lo puede cambiar).
+  const restaurantWa = r.businessWhatsapp ? whatsappLink(normalizeWhatsapp(r.businessWhatsapp) ?? '', `Hola, les escribo por mi solicitud de reserva ${r.code} en ${BRAND.name} (${reservationWhen(r.startsAt)}).`) : null;
   const canCancel = future && (r.status === 'pendiente' || r.status === 'confirmada');
   const cancel = async () => {
     const pending = r.status === 'pendiente';
@@ -122,7 +131,12 @@ export default function MiReserva() {
           </View>
         )}
 
+        {(r.status === 'pendiente' || r.status === 'confirmada') && future && (
+          <PushPrompt app="clientes" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} />
+        )}
+
         {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
+        {!!restaurantWa && <Button title="Contactar al restaurante" variant="outline" icon={<WhatsAppIcon size={20} />} onPress={() => Linking.openURL(restaurantWa)} />}
         {(r.status === 'rechazada' || r.status === 'expirada' || r.status === 'cancelada') && (
           <Button title="Solicitar otro horario" onPress={() => router.push({ pathname: '/reservar/[id]', params: { id: r.businessId, otra: r.id } })} />
         )}

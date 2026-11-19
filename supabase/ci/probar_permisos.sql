@@ -1193,6 +1193,231 @@ do $$ begin
   if exists (select 1 from public.reservations where customer_id = '00000000-0000-0000-0000-0000000000c1') then raise exception 'quedaron solicitudes de una cuenta eliminada'; end if;
 end $$;
 
+-- Notificaciones push (migración 0020) ---------------------------------------------------------------
+-- Cliente nuevo cA (la c1 se eliminó arriba). La dueña d2 tiene la pizzería e1 con reservas activas.
+insert into auth.users (id, email, raw_user_meta_data, created_at) values
+  ('00000000-0000-0000-0000-0000000000ca', 'clientea@prueba.test', '{"full_name":"Cliente Ana"}', now() - interval '3 days');
+
+grant usage on schema ci_pruebas to service_role;
+grant execute on all functions in schema ci_pruebas to service_role;
+
+-- Tokens --------------------------------------------------------------------------------------------
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.registrar_token_push('ExponentPushToken[aaaaaaaaaaaa]', 'clientes', 'android')$q$, 'permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000ca","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[clienteA-111111]', 'clientes', 'android')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[clienteA-111111]', 'clientes', 'android')$q$); -- repetir = actualizar
+  perform ci_pruebas.debe_fallar($q$select public.registrar_token_push('token-inventado', 'clientes', 'android')$q$, 'El token de notificaciones no es válido%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_token_push('ExponentPushToken[clienteA-222222]', 'admin', 'android')$q$, 'Datos del dispositivo no válidos%');
+  if ci_pruebas.cuenta('select id, app, platform, active from public.push_tokens') <> 1 then raise exception 'la persona debe ver solo su dispositivo'; end if;
+  -- El token en sí no se puede leer desde la app, ni escribir directo.
+  perform ci_pruebas.debe_fallar('select token from public.push_tokens', 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$insert into public.push_tokens (user_id, token, app, platform) values (auth.uid(), 'ExponentPushToken[directo-0000]', 'clientes', 'ios')$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$update public.push_tokens set active = true$q$, 'permission denied%');
+  -- Nada de la cola de avisos.
+  perform ci_pruebas.debe_fallar('select * from public.notifications', 'permission denied%');
+  perform ci_pruebas.debe_fallar('select * from public.notification_deliveries', 'permission denied%');
+  perform ci_pruebas.debe_fallar('select public.tomar_notificaciones(10)', 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_envio_notificacion(1, '[]', null)$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar('select public.disparar_envio_notificaciones()', 'permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  -- Dos celulares del restaurante (varios dispositivos por negocio).
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[duena2-celular1]', 'negocios', 'android')$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[duena2-celular2]', 'negocios', 'ios')$q$);
+  -- Desactivar un token ajeno no hace nada.
+  perform public.desactivar_token_push('ExponentPushToken[clienteA-111111]');
+end $$;
+reset role;
+do $$ begin
+  if not (select active from public.push_tokens where token = 'ExponentPushToken[clienteA-111111]') then raise exception 'otra persona desactivó un token ajeno'; end if;
+end $$;
+
+-- El mismo celular inicia sesión con otra cuenta: el token pasa a la nueva cuenta.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c9","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[celular-compartido]', 'clientes', 'android')$q$);
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000ca","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_token_push('ExponentPushToken[celular-compartido]', 'clientes', 'android')$q$);
+  -- Cerrar sesión en ese celular: se desactiva.
+  perform ci_pruebas.debe_funcionar($q$select public.desactivar_token_push('ExponentPushToken[celular-compartido]')$q$);
+end $$;
+reset role;
+do $$ begin
+  if (select user_id::text || '|' || active || '|' || disabled_reason from public.push_tokens where token = 'ExponentPushToken[celular-compartido]')
+     <> '00000000-0000-0000-0000-0000000000ca|false|cierre_sesion' then
+    raise exception 'el token compartido no pasó a la nueva cuenta o no se desactivó al cerrar sesión';
+  end if;
+end $$;
+
+-- La cola se llena sola con cada cambio de estado ----------------------------------------------------
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000ca","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.pedir(101, ci_pruebas.hora(4, '13:00'), 3, wa => '3157778899', notas => 'Vamos con un bebé');
+  perform ci_pruebas.pedir(102, ci_pruebas.hora(4, '14:00'));
+  perform ci_pruebas.pedir(103, ci_pruebas.hora(4, '15:00'));
+end $$;
+reset role;
+do $$
+declare n public.notifications;
+begin
+  select * into n from public.notifications where reservation_id = ci_pruebas.reserva(101);
+  if n.recipient_id <> '00000000-0000-0000-0000-0000000000d2' or n.app <> 'negocios' or n.kind <> 'nueva_solicitud'
+     or n.title <> 'Tienes una nueva solicitud de reserva' or n.data ->> 'url' <> '/reservas/' || ci_pruebas.reserva(101) then
+    raise exception 'el aviso de nueva solicitud no es el esperado: %', row_to_json(n);
+  end if;
+  -- Nada personal en el texto visible con la pantalla bloqueada.
+  if n.body ~ '(Ana|Turista|3157778899|bebé|Terraza)' or n.body !~ '3 personas' then raise exception 'el texto del aviso tiene datos personales o le falta el número de personas: %', n.body; end if;
+end $$;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  perform public.confirmar_reserva(ci_pruebas.reserva(101));
+  perform public.rechazar_reserva(ci_pruebas.reserva(102), 'sin_horario');
+  perform public.confirmar_reserva(ci_pruebas.reserva(103));
+  perform public.cancelar_reserva(ci_pruebas.reserva(103), 'Cerramos por mantenimiento');
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000ca","role":"authenticated"}';
+do $$ begin
+  perform public.cancelar_reserva(ci_pruebas.reserva(101));
+  perform ci_pruebas.pedir(104, ci_pruebas.hora(7, '13:00'));
+end $$;
+reset role;
+update public.reservations set respond_by = now() - interval '1 minute' where id = ci_pruebas.reserva(104);
+select public.expirar_reservas();
+
+do $$
+declare v text;
+begin
+  select string_agg(n.kind || '>' || n.app || '>' || case when n.recipient_id = '00000000-0000-0000-0000-0000000000ca' then 'cliente' else 'restaurante' end, ',' order by n.id)
+    into v from public.notifications n where n.reservation_id in (ci_pruebas.reserva(101), ci_pruebas.reserva(102), ci_pruebas.reserva(103), ci_pruebas.reserva(104));
+  if v <> 'nueva_solicitud>negocios>restaurante,nueva_solicitud>negocios>restaurante,nueva_solicitud>negocios>restaurante,confirmada>clientes>cliente,rechazada>clientes>cliente,confirmada>clientes>cliente,cancelada_por_restaurante>clientes>cliente,cancelada_por_cliente>negocios>restaurante,nueva_solicitud>negocios>restaurante,expirada>clientes>cliente' then
+    raise exception 'los avisos encolados no son los esperados: %', v;
+  end if;
+  if (select title from public.notifications where reservation_id = ci_pruebas.reserva(102) and kind = 'rechazada') <> 'Tu solicitud de reserva no pudo confirmarse' then raise exception 'título del rechazo'; end if;
+  if (select title from public.notifications where reservation_id = ci_pruebas.reserva(101) and kind = 'confirmada') <> 'Tu reserva fue confirmada' then raise exception 'título de la confirmación'; end if;
+  -- Un aviso por evento y destinatario.
+  if exists (select 1 from public.notifications group by event_id, recipient_id having count(*) > 1) then raise exception 'hay avisos duplicados'; end if;
+end $$;
+
+-- Si encolar falla, la reserva NO falla (se simula una falla con una restricción temporal).
+alter table public.notifications add constraint ci_falla_a_proposito check (kind <> 'nueva_solicitud') not valid;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000ca","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select ci_pruebas.pedir(105, ci_pruebas.hora(8, '13:00'))$q$);
+end $$;
+reset role;
+alter table public.notifications drop constraint ci_falla_a_proposito;
+do $$ begin
+  if ci_pruebas.reserva(105) is null then raise exception 'la reserva falló porque falló el aviso'; end if;
+  if exists (select 1 from public.notifications where reservation_id = ci_pruebas.reserva(105)) then raise exception 'no debía quedar aviso de la 105'; end if;
+end $$;
+
+-- Envío (como la Edge Function, con service_role) ------------------------------------------------------
+-- Para no depender del resto, se dejan en cola solo los avisos de esta prueba.
+update public.notifications set status = 'enviada' where reservation_id not in (ci_pruebas.reserva(101), ci_pruebas.reserva(102), ci_pruebas.reserva(103), ci_pruebas.reserva(104));
+set local role service_role;
+do $$
+declare
+  lote jsonb; a jsonb; nueva bigint; conf bigint; e text; r int;
+begin
+  lote := public.tomar_notificaciones(50);
+  if jsonb_array_length(lote) <> 10 then raise exception 'tomar_notificaciones debía traer 10 avisos y trajo %', jsonb_array_length(lote); end if;
+  -- Ya tomados: otra llamada no los vuelve a traer (no hay doble envío).
+  if jsonb_array_length(public.tomar_notificaciones(50)) <> 0 then raise exception 'los avisos tomados se volvieron a entregar'; end if;
+  select (x ->> 'id')::bigint into nueva from jsonb_array_elements(lote) x where x -> 'data' ->> 'reservationId' = ci_pruebas.reserva(101)::text and x -> 'data' ->> 'kind' = 'nueva_solicitud';
+  select (x ->> 'id')::bigint into conf from jsonb_array_elements(lote) x where x -> 'data' ->> 'reservationId' = ci_pruebas.reserva(101)::text and x -> 'data' ->> 'kind' = 'confirmada';
+  -- El aviso al restaurante va a sus 2 celulares; el del cliente, solo a su token activo de la app clientes.
+  select x into a from jsonb_array_elements(lote) x where (x ->> 'id')::bigint = nueva;
+  if jsonb_array_length(a -> 'tokens') <> 2 then raise exception 'el aviso al restaurante debía ir a 2 dispositivos: %', a -> 'tokens'; end if;
+  select x into a from jsonb_array_elements(lote) x where (x ->> 'id')::bigint = conf;
+  if jsonb_array_length(a -> 'tokens') <> 1 or a -> 'tokens' -> 0 ->> 'token' <> 'ExponentPushToken[clienteA-111111]' then raise exception 'el aviso al cliente no va a su dispositivo: %', a -> 'tokens'; end if;
+
+  -- Un celular aceptado y el otro ya no existe: queda enviada y ese token se desactiva.
+  e := public.registrar_envio_notificacion(nueva, jsonb_build_array(
+    jsonb_build_object('token_id', (select id from public.push_tokens where token = 'ExponentPushToken[duena2-celular1]'), 'status', 'ok', 'ticket_id', 'ticket-1'),
+    jsonb_build_object('token_id', (select id from public.push_tokens where token = 'ExponentPushToken[duena2-celular2]'), 'status', 'error', 'error', 'DeviceNotRegistered')));
+  if e <> 'enviada' then raise exception 'debía quedar enviada y quedó %', e; end if;
+  if (select active from public.push_tokens where token = 'ExponentPushToken[duena2-celular2]') then raise exception 'el token no registrado debía desactivarse'; end if;
+  -- Registrar dos veces el mismo resultado no duplica.
+  if public.registrar_envio_notificacion(nueva, '[{"status":"ok"}]') <> 'enviada' or (select count(*) from public.notification_deliveries where notification_id = nueva) <> 2 then
+    raise exception 'registrar el resultado dos veces duplicó entregas';
+  end if;
+
+  -- Falla general (Expo caído): se reintenta en 2 minutos; al quinto intento queda fallida.
+  e := public.registrar_envio_notificacion(conf, '[]', 'HTTP 503');
+  if e <> 'pendiente' or (select abs(extract(epoch from next_attempt_at - (now() + interval '2 minutes'))) from public.notifications where id = conf) > 2 then
+    raise exception 'la falla general debía reintentarse en 2 minutos (%)', e;
+  end if;
+  update public.notifications set attempts = 4, next_attempt_at = now() where id = conf; -- ya van 4 intentos
+  perform 1 from jsonb_array_elements(public.tomar_notificaciones(50)) x where (x ->> 'id')::bigint = conf;
+  if not found then raise exception 'el reintento no volvió a tomar el aviso'; end if;
+  if public.registrar_envio_notificacion(conf, '[]', 'HTTP 503') <> 'fallida' then raise exception 'al quinto intento debía quedar fallida'; end if;
+  if (select last_error from public.notifications where id = conf) <> 'HTTP 503' then raise exception 'falta el último error'; end if;
+
+  -- Recibos: el ticket aceptado hace más de 15 minutos aparece; un recibo DeviceNotRegistered desactiva el token.
+  update public.notification_deliveries set created_at = now() - interval '20 minutes' where ticket_id = 'ticket-1';
+  if (select count(*) from jsonb_array_elements(public.recibos_pendientes(100)) x where x ->> 'ticket_id' = 'ticket-1') <> 1 then raise exception 'falta el recibo pendiente'; end if;
+  r := public.registrar_recibos((select jsonb_agg(jsonb_build_object('id', id, 'status', 'error', 'error', 'DeviceNotRegistered')) from public.notification_deliveries where ticket_id = 'ticket-1'));
+  if r <> 1 or (select active from public.push_tokens where token = 'ExponentPushToken[duena2-celular1]') then raise exception 'el recibo no desactivó el token'; end if;
+  if jsonb_array_length(public.recibos_pendientes(100)) <> 0 then raise exception 'el recibo ya revisado sigue pendiente'; end if;
+end $$;
+reset role;
+
+-- Sin dispositivos activos: el aviso queda "sin_dispositivos" (la solicitud sigue en la bandeja).
+set local role service_role;
+do $$
+declare x jsonb; e text;
+begin
+  update public.notifications set status = 'pendiente', next_attempt_at = now(), attempts = 0
+  where reservation_id = ci_pruebas.reserva(102) and kind = 'nueva_solicitud';
+  select y into x from jsonb_array_elements(public.tomar_notificaciones(50)) y where y -> 'data' ->> 'reservationId' = ci_pruebas.reserva(102)::text limit 1;
+  if jsonb_array_length(x -> 'tokens') <> 0 then raise exception 'la dueña ya no debía tener dispositivos activos'; end if;
+  e := public.registrar_envio_notificacion((x ->> 'id')::bigint, '[]', null);
+  if e <> 'sin_dispositivos' then raise exception 'debía quedar sin_dispositivos y quedó %', e; end if;
+end $$;
+reset role;
+
+-- Despertar el envío sin los secretos de Vault no hace nada (ni falla). Y la tarea programada existe.
+do $$
+declare antes int;
+begin
+  select count(*) into antes from net.http_request_queue;
+  perform public.disparar_envio_notificaciones();
+  if (select count(*) from net.http_request_queue) <> antes then raise exception 'sin secretos no debía llamar a la función'; end if;
+  if not exists (select 1 from cron.job where jobname = 'zipa-enviar-notificaciones' and schedule = '* * * * *') then raise exception 'falta la tarea programada de envío'; end if;
+end $$;
+
+-- Al eliminar la cuenta se borran sus dispositivos y sus avisos.
+delete from auth.users where id = '00000000-0000-0000-0000-0000000000ca';
+do $$ begin
+  if exists (select 1 from public.push_tokens where user_id = '00000000-0000-0000-0000-0000000000ca')
+     or exists (select 1 from public.notifications where recipient_id = '00000000-0000-0000-0000-0000000000ca') then
+    raise exception 'quedaron dispositivos o avisos de una cuenta eliminada';
+  end if;
+end $$;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

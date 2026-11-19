@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-11-19T18:53:43.293Z",
+  "resultados": [
+    {
+      "id": "C-1",
+      "prueba": "Bandeja con 6 pestañas y sus cantidades; abre en Pendientes con su nota (en la web no se ofrece activar notificaciones)",
+      "resultado": "OK",
+      "detalle": "{\"pestañas\":{\"Pendientes\":1,\"Confirmadas\":1,\"Rechazadas\":1,\"Canceladas\":1,\"Finalizadas\":1,\"Vencidas\":1},\"inicial\":{\"pendiente\":1,\"otra\":0,\"nota\":1,\"avisoPush\":0}}"
+    },
+    {
+      "id": "C-2",
+      "prueba": "Cada pestaña muestra solo las solicitudes de su estado",
+      "resultado": "OK",
+      "detalle": "{\"Confirmadas\":true,\"Rechazadas\":true,\"Canceladas\":true,\"Finalizadas\":true,\"Vencidas\":true}"
+    },
+    {
+      "id": "C-3",
+      "prueba": "Mensaje prellenado con el restaurante, el código, la fecha y las personas",
+      "resultado": "OK",
+      "detalle": "Hola, te contactamos de Asadero Bandeja 7879 por tu solicitud de reserva R-KQ6VMF en Zipa lo tiene (Sáb 21 nov. · 7:00 p. m., 4 personas). Queremos confirmar algunos detalles."
+    },
+    {
+      "id": "C-4",
+      "prueba": "Abre WhatsApp oficial (wa.me) con el número del cliente y el mensaje EDITADO, sin enviar nada ni confirmar la reserva",
+      "resultado": "OK",
+      "detalle": "{\"url\":\"https://wa.me/573205556677?text=Hola%2C%20te%20contactamos%2\",\"sigue\":\"pendiente\"}"
+    },
+    {
+      "id": "C-5",
+      "prueba": "El cliente contacta al restaurante por WhatsApp con su código (y en la web no se ofrece activar notificaciones)",
+      "resultado": "OK",
+      "detalle": "https://wa.me/573001112233?text=Hola%2C%20les%20escribo%20por%20mi%20solicitud%20de%20rese"
+    },
+    {
+      "id": "C-6",
+      "prueba": "La ruta que trae una notificación del restaurante abre el detalle correcto",
+      "resultado": "OK",
+      "detalle": ""
+    }
+  ],
+  "erroresConsola": []
+}

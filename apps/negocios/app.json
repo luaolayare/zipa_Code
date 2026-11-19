@@ -53,6 +53,14 @@
       "expo-status-bar",
       "expo-font",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#0F3D3E",
+          "defaultChannel": "reservas"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",

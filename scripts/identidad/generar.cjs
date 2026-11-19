@@ -37,6 +37,8 @@ function recursosApp(c) {
     'android-icon-monochrome.png': svg(512, simbolo('#FFFFFF', 512 * 0.31, 512 * 0.31, 512 * 0.38)),
     'splash-icon.png': svg(1024, cuadro(c, 1024 * 0.1, 1024 * 0.1, 1024 * 0.8)),
     'favicon.png': svg(48, cuadro(c, 2, 2, 44)),
+    // Ícono de las notificaciones en Android: solo el símbolo, blanco sobre transparente.
+    'notification-icon.png': svg(96, simbolo('#FFFFFF', 96 * 0.14, 96 * 0.14, 96 * 0.72)),
   };
 }
 
