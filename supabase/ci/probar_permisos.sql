@@ -1400,6 +1400,8 @@ end $$;
 reset role;
 
 -- Despertar el envío sin los secretos de Vault no hace nada (ni falla). Y la tarea programada existe.
+-- (Si la base local tiene los secretos de prueba, se quitan solo dentro de esta transacción.)
+delete from vault.secrets where name in ('zipa_funciones_url', 'zipa_cron_secreto');
 do $$
 declare antes int;
 begin
@@ -1407,6 +1409,80 @@ begin
   perform public.disparar_envio_notificaciones();
   if (select count(*) from net.http_request_queue) <> antes then raise exception 'sin secretos no debía llamar a la función'; end if;
   if not exists (select 1 from cron.job where jobname = 'zipa-enviar-notificaciones' and schedule = '* * * * *') then raise exception 'falta la tarea programada de envío'; end if;
+end $$;
+
+-- Operación de reservas (migración 0021) ---------------------------------------------------------------
+-- Tareas programadas: vencimiento cada 5 minutos, envío de avisos cada minuto y limpieza diaria.
+do $$ begin
+  if (select string_agg(jobname || '=' || schedule, ',' order by jobname) from cron.job where jobname like 'zipa-%')
+     <> 'zipa-enviar-notificaciones=* * * * *,zipa-expirar-reservas=*/5 * * * *,zipa-limpiar-avisos=30 8 * * *' then
+    raise exception 'faltan tareas programadas: %', (select string_agg(jobname || '=' || schedule, ',') from cron.job);
+  end if;
+end $$;
+
+-- Estadísticas: solo el equipo con MFA, y sin datos personales.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c9","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar('select public.admin_reservas(30)', 'No autorizado%');
+  perform ci_pruebas.debe_fallar('select public.limpiar_avisos_antiguos()', 'permission denied%');
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar('select public.admin_reservas(30)', 'No autorizado%');
+end $$;
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar('select public.admin_reservas(30)', 'permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$
+declare a jsonb;
+begin
+  a := public.admin_reservas(30);
+  if (a ->> 'recibidas')::int < 5 or (a -> 'por_estado' ->> 'rechazada')::int < 1 or (a -> 'por_estado' ->> 'confirmada') is null and (a -> 'por_estado' ->> 'cancelada') is null then
+    raise exception 'las cifras de reservas no son las esperadas: %', a -> 'por_estado';
+  end if;
+  if (a ->> 'restaurantes_con_reservas')::int < 1 or a ->> 'respuesta_promedio_min' is null then raise exception 'faltan restaurantes activos o tiempo de respuesta: %', a; end if;
+  if (a -> 'motivos_rechazo' ->> 'sin_mesas')::int < 1 then raise exception 'faltan los motivos de rechazo: %', a -> 'motivos_rechazo'; end if;
+  if jsonb_array_length(a -> 'tareas') <> 3 then raise exception 'el panel debe ver las 3 tareas programadas'; end if;
+  if (a -> 'avisos' ->> 'fallida') is null then raise exception 'faltan los avisos fallidos: %', a -> 'avisos'; end if;
+  if jsonb_array_length(a -> 'avisos_fallidos') < 1 or a -> 'avisos_fallidos' -> 0 ->> 'code' !~ '^R-' then raise exception 'falta la incidencia del aviso fallido'; end if;
+  -- Nada personal: ni teléfonos, ni nombres de contacto, ni observaciones, ni ids de clientes.
+  if a::text ~ '(57300|3157778899|3001234567|Ana Turista|Cliente Ana|Cumpleaños|bebé|Terraza|0000000000c9|0000000000ca)' then
+    raise exception 'las estadísticas exponen datos personales';
+  end if;
+end $$;
+reset role;
+
+-- El equipo sigue sin poder confirmar ni ver solicitudes una por una.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if ci_pruebas.cuenta('select * from public.reservations') <> 0 then raise exception 'el equipo ve solicitudes'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.confirmar_reserva(ci_pruebas.reserva(2))$q$, 'No encontramos esa solicitud%');
+end $$;
+reset role;
+
+-- Retención: se borran solo los avisos resueltos de más de 90 días y los dispositivos desactivados hace más de 90 días.
+do $$
+declare viejo bigint; nuevo bigint; r jsonb;
+begin
+  select id into viejo from public.notifications where status in ('enviada', 'sin_dispositivos', 'fallida') order by id limit 1;
+  select id into nuevo from public.notifications where status in ('enviada', 'sin_dispositivos', 'fallida') and id <> viejo order by id limit 1;
+  update public.notifications set created_at = now() - interval '91 days' where id = viejo;
+  update public.push_tokens set disabled_at = now() - interval '91 days' where token = 'ExponentPushToken[duena2-celular2]';
+  r := public.limpiar_avisos_antiguos();
+  if exists (select 1 from public.notifications where id = viejo) or not exists (select 1 from public.notifications where id = nuevo) then raise exception 'la limpieza borró de más o de menos: %', r; end if;
+  if exists (select 1 from public.push_tokens where token = 'ExponentPushToken[duena2-celular2]') then raise exception 'no se borró el dispositivo desactivado hace más de 90 días'; end if;
+  if (select count(*) from public.reservations) = 0 then raise exception 'la limpieza no debe tocar las solicitudes'; end if;
 end $$;
 
 -- Al eliminar la cuenta se borran sus dispositivos y sus avisos.

@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-19T05:28:59.774Z",
+  "fecha": "2026-11-19T19:23:45.752Z",
   "resultados": [
     {
       "id": "A-1",
@@ -17,7 +17,7 @@
       "id": "A-3",
       "prueba": "Se guardan normalizados: https, sin «www.», modalidades en orden y condiciones sin espacios de más",
       "resultado": "OK",
-      "detalle": "{\"business_id\":\"1aec6bf4-3b5d-48ca-9533-46e952027a4f\",\"instagram\":\"https://www.instagram.com/helados.sal\",\"facebook\":null,\"tiktok\":null,\"website\":\"https://heladossal.com\",\"delivery_modes\":[\"presencial\",\"domicilio_local\",\"envios_nacionales\"],\"delivery_note\":\"Do"
+      "detalle": "{\"business_id\":\"a5270e1d-f87a-482b-902c-f9d7810fc869\",\"instagram\":\"https://www.instagram.com/helados.sal\",\"facebook\":null,\"tiktok\":null,\"website\":\"https://heladossal.com\",\"delivery_modes\":[\"presencial\",\"domicilio_local\",\"envios_nacionales\"],\"delivery_note\":\"Do"
     },
     {
       "id": "A-4",

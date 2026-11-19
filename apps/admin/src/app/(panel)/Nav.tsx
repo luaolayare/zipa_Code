@@ -18,6 +18,7 @@ export function Nav({ negocios, videos, resenas, reportes }: { negocios: number;
     <nav className="nav" aria-label="Secciones">
       {item('/', 'Resumen')}
       {item('/analitica', 'Analítica')}
+      {item('/reservas', 'Reservas')}
       <p className="nav-group">Negocios</p>
       {item('/negocios', 'Negocios', negocios)}
       {item('/destacados', 'Destacados')}

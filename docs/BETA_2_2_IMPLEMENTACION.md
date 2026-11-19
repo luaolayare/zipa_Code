@@ -10,12 +10,62 @@
 | A: Emprendimientos | ✅ Hecha y probada en local. Falta la prueba en Android real |
 | B: Reservas y seguridad | ✅ Hecha y probada en local (ver «Entrega B» al final). Falta la prueba en Android real |
 | C: Notificaciones y contacto | ✅ Hecha y probada en local (ver «Entrega C»). El envío real a un celular requiere Firebase y APK nuevos |
-| D: Panel y validación integral | ⏸️ Espera autorización |
+| D: Panel y validación integral | ✅ Hecha y probada en local (ver «Entrega D») |
 
 **Lo que NO se hizo:**
-- No se tocó Supabase remoto: las migraciones nuevas (0018, 0019 y 0020) se aplicaron solo en la base local de Docker.
+- No se tocó Supabase remoto: las migraciones nuevas (0018 a 0021) se aplicaron solo en la base local de Docker.
 - No hubo builds de EAS, despliegues ni push.
 - No se cambiaron identificadores Android/iOS.
+
+## Resumen final (los 10 puntos del informe)
+
+1. **Estado inicial del repositorio:** sección 1. La base era `main` en `49d1cf4`, con 17 migraciones y el CI con una falla de infraestructura en el paso de migraciones.
+2. **Funcionalidades implementadas:**
+   - **A:** fotos con recorte y compresión, ayuda de categorías, redes sociales y entregas.
+   - **B:** solicitudes de reserva con confirmación manual.
+   - **C:** notificaciones push, bandeja por estados y contacto por WhatsApp.
+   - **D:** «Mis reservas», panel «Reservas», vencimiento automático, retención y documentos.
+   - Todo se probó en local.
+3. **Archivos modificados:** secciones 3, B.8, C.5 y D.5.
+4. **Migraciones creadas:** cuatro, todas solo aditivas y aplicadas solo en la base local.
+
+   | Migración | Contenido |
+   |---|---|
+   | `0018_contacto_y_entregas` | Redes y entregas del negocio |
+   | `0019_reservas` | Reservas |
+   | `0020_notificaciones_push` | Notificaciones |
+   | `0021_reservas_operacion` | Vencimiento, retención y estadísticas |
+
+5. **Resultados reales de pruebas** (última corrida, 19-nov-2026):
+
+   | Comprobación | Resultado |
+   |---|---|
+   | `typecheck` y `lint` | ✅ sin errores ni avisos |
+   | Jest | ✅ 119/119 |
+   | `verificar_esquema.sql` | ✅ 25 tablas, todas con RLS |
+   | `probar_permisos.sql` | ✅ todo pasa |
+   | Integral | ✅ 8/8 |
+   | Entrega C | ✅ 6/6 |
+   | Notificaciones | ✅ 11/11 |
+   | Concurrencia | ✅ 8/8 |
+   | Entrega B | ✅ 15/15 |
+   | Entrega A | ✅ 12/12 |
+   | Beta 2.1 | ✅ 12/12 |
+   | Auditoría funcional | ✅ 46 OK, 0 fallas (2 requieren celular) |
+   | Panel `next build` y `expo export` Android de las dos apps | ✅ |
+   | `expo-doctor` | ⚠️ 19/20 (tres parches recientes no instalados por la regla de dos semanas) |
+
+6. **Estado de las notificaciones:** C.7.
+   - El servidor y la lógica de las apps están probados.
+   - La entrega real a un celular **no se ha probado**: requiere Firebase (Android), las migraciones y la función en Supabase remoto, y APK nuevos.
+7. **Estado de seguridad y RLS:** B.6, C.4 y D.2.
+   - 25 de 25 tablas con RLS.
+   - Escrituras solo por funciones validadas en el servidor.
+   - El equipo sin acceso a datos personales de reservas.
+8. **Riesgos y limitaciones:** secciones 8, B.10 y C.8. El más importante:
+   - **Revisión legal (bloqueante):** la política de privacidad y los términos deben incluir reservas, notificaciones y retención antes de publicar a usuarios reales (`docs/PROPUESTA_TEXTOS_LEGALES_BETA_2_2.md`).
+9. **Pruebas pendientes en Android físico:** secciones 9, B.11 y C.9.
+10. **Instrucciones para probar cada app:** sección 10, y además la sección «Cómo publicar y probar Beta 2.2» al final de este documento.
 
 ---
 
@@ -825,3 +875,162 @@ Con APK nuevos y Firebase configurado, en Android 13 o superior:
 - [ ] **Cliente:** confirmar, rechazar, cancelar y vencer generan su aviso, y cada uno abre la solicitud.
 - [ ] **«Contactar al cliente»:** abre la app de WhatsApp con el mensaje editado.
 - [ ] **Ahorro de batería:** repetir en un Xiaomi o un Samsung con el ahorro de batería activo y anotar las limitaciones.
+
+---
+
+# Entrega D: Panel y validación integral
+
+Fecha: 19-nov-2026. Todo se probó en local.
+
+## D.1 «Mis reservas» (clientes)
+
+- **Dónde está:** pantalla propia `/mis-reservas`. El perfil muestra las 3 más recientes y el botón «Ver todas mis reservas (N)».
+- **Pestañas con su cantidad:** Pendientes, Confirmadas, No confirmadas, Canceladas, Vencidas e Historial (finalizadas y «no asistió»).
+  - Abre en la primera pestaña que tenga algo.
+  - Las solicitudes próximas van por fecha de visita; las pasadas, de la más reciente a la más vieja.
+- **Desde cada solicitud** (pantalla de las Entregas B y C):
+  - ver el detalle y el motivo;
+  - cancelar o retirar;
+  - «Solicitar otro horario»;
+  - «Contactar al restaurante» por WhatsApp;
+  - activar los avisos.
+- **Sin chat interno** ni tablas de mensajes.
+  - Si en el futuro se agrega otro canal de comunicación, se puede hacer sin rehacer las reservas.
+  - Ese canal se colgaría de `reservations.id` y del historial `reservation_events`, igual que hoy lo hacen las notificaciones.
+
+## D.2 Panel del equipo: «Reservas»
+
+**Dónde está:** página nueva en el menú, con periodos de 7, 30 o 90 días. Usa la función `admin_reservas`, que exige ser del equipo con MFA.
+
+**Cifras**
+- Solicitudes recibidas, pendientes (y cuántas vencen en menos de 1 hora), confirmadas (con el % sobre las respondidas), no confirmadas, canceladas (por cliente o por restaurante), vencidas, finalizadas y «no asistió».
+- Tiempo de respuesta, promedio y mediana.
+- Personas por solicitud y cuántas solicitudes traen platos.
+- Restaurantes con reservas activas.
+- Solicitudes por día.
+- Motivos de rechazo.
+- Restaurantes con más solicitudes: recibidas, confirmadas y vencidas.
+
+**Notificaciones**
+- Enviadas, fallidas y sin dispositivos.
+- Dispositivos activos por app.
+
+**Incidencias operativas**
+- Notificaciones fallidas: código, restaurante, tipo, intentos y último error.
+- Notificaciones atascadas hace más de 10 minutos.
+- Solicitudes que ya debían vencer, que indican que la tarea de vencimiento no está corriendo.
+- Estado de las tres tareas programadas: última ejecución correcta y último estado.
+
+**Privacidad**
+- No muestra teléfonos, nombres de clientes, observaciones ni identificadores de personas; solo códigos de solicitud y nombres de restaurantes (probado en SQL y en el navegador).
+- El equipo **no puede confirmar ni cambiar reservas** (sin botones, y el servidor lo impide).
+
+**Sin cambios:** MFA, roles, bitácora y permisos siguen igual.
+
+## D.3 Vencimiento automático y retención (migración `0021_reservas_operacion.sql`)
+
+- **`zipa-expirar-reservas`** (`pg_cron`, cada 5 minutos): vence las pendientes cuyo plazo pasó.
+  - No depende de que una app esté abierta.
+  - Es idempotente y segura frente a confirmaciones simultáneas (Entrega B).
+  - Cada vencimiento encola el aviso al cliente.
+  - **Probado de verdad:** en la prueba integral, una solicitud sin respuesta venció sola y llegó el aviso, sin ninguna llamada manual.
+- **Política de vencimiento (B.5):** lo que ocurra primero entre el tiempo para responder que eligió el restaurante (2 a 24 h; por defecto 24) y 30 minutos antes de la visita. Se calcula al crear la solicitud y se guarda en `respond_by`.
+- **`zipa-limpiar-avisos`** (diaria, 3:30 a. m. de Colombia) borra:
+  - los avisos ya resueltos de más de 90 días, con sus intentos;
+  - los dispositivos desactivados hace más de 90 días.
+- **Las solicitudes de reserva no se borran automáticamente.** Su plazo de conservación es una decisión legal; la propuesta es 12 meses (ver `docs/PROPUESTA_TEXTOS_LEGALES_BETA_2_2.md`).
+- **Auditoría:**
+  - cada cambio de estado queda en `reservation_events`, con estado anterior y nuevo, rol, persona y motivo;
+  - cada intento de envío queda en `notification_deliveries`, con ticket, error y recibo;
+  - las acciones del equipo siguen en la bitácora (`admin_actions`).
+
+## D.4 Documentos
+
+- **`docs/MODELO_COMERCIAL_FUTURO.md`:**
+  - el plan gratis (descubrimiento, catálogo, reseñas, WhatsApp, redes, entregas y reservas gratis en el piloto);
+  - Destacados (ya existe, se cobra por fuera de la app);
+  - Pro futuro;
+  - reservas premium solo después de validar uso, costos y aceptación;
+  - lo que no se implementa.
+- **`docs/PROPUESTA_TEXTOS_LEGALES_BETA_2_2.md`:** cambios propuestos a la política de privacidad y a los dos términos (reservas, notificaciones, redes y retención), para revisión humana o legal. **No se modificó ningún texto vigente.**
+
+## D.5 Archivos (Entrega D)
+
+**Nuevos:**
+- `supabase/migrations/0021_reservas_operacion.sql`
+- `apps/admin/src/app/(panel)/reservas/page.tsx`
+- `apps/clientes/src/app/mis-reservas.tsx`
+- `pruebas/auditoria/beta-2-2-integral.js`
+- `docs/MODELO_COMERCIAL_FUTURO.md`
+- `docs/PROPUESTA_TEXTOS_LEGALES_BETA_2_2.md`
+
+**Modificados:**
+- `apps/admin/src/app/(panel)/Nav.tsx`
+- `apps/clientes/src/app/(tabs)/perfil.tsx`
+- `supabase/ci/probar_permisos.sql`
+- `docs/BETA_2_2_IMPLEMENTACION.md`
+
+## D.6 Prueba integral (`beta-2-2-integral.js`): 8/8
+
+Las tres apps y el servidor completo, con el Expo de prueba:
+
+1. El cliente solicita desde la ficha y ve su código.
+2. El restaurante recibe el aviso solo, sin datos personales.
+3. Desde la ruta del aviso se abre el detalle y el restaurante confirma.
+4. El cliente recibe «Tu reserva fue confirmada» y la ve en «Mis reservas → Confirmadas».
+5. El cliente cancela y el restaurante recibe el aviso.
+6. El equipo ve las cifras con MFA, sin datos de clientes y sin poder confirmar.
+7. Una solicitud sin respuesta vence sola con `pg_cron` y el cliente recibe el aviso.
+8. Sin errores de consola en las tres apps.
+
+---
+
+# Cómo publicar y probar Beta 2.2
+
+**Cada paso remoto requiere autorización.** Nada de esto se ha hecho.
+
+## Antes de publicar
+
+1. **Revisión legal** de `docs/PROPUESTA_TEXTOS_LEGALES_BETA_2_2.md`. Si se aprueba, se actualizan los textos y se sube la versión.
+2. **Firebase** (para avisos en Android):
+   - crear un proyecto;
+   - agregar las apps `co.zipa.vitrinalocal` y `co.zipa.vitrinanegocios`;
+   - poner el `google-services.json` de cada una en su app (`android.googleServicesFile`);
+   - subir la credencial FCM V1 a EAS con `eas credentials`.
+
+## Supabase remoto
+
+1. Revisar con `npx supabase db push --dry-run` y luego aplicar `npx supabase db push`. Aplica las migraciones 0018 a 0021 y activa `pg_net` y `pg_cron`.
+2. Desplegar la función: `npx supabase functions deploy enviar-notificaciones`.
+3. Crear el secreto de la función:
+
+   ```
+   npx supabase secrets set CRON_SECRET=<valor aleatorio largo>
+   ```
+
+   Opcional: `EXPO_ACCESS_TOKEN`.
+4. En el SQL Editor, guardar los secretos en Vault. **No van en el repositorio.**
+
+   ```sql
+   select vault.create_secret('https://<proyecto>.supabase.co/functions/v1', 'zipa_funciones_url');
+   select vault.create_secret('<el mismo valor de CRON_SECRET>', 'zipa_cron_secreto');
+   ```
+
+5. Comprobar en el panel → «Reservas» → «Tareas programadas» que las tres tareas corren.
+
+## Builds y prueba en el celular
+
+1. APK nuevos de las dos apps (2 builds de EAS). Llevan los paquetes nativos nuevos: `expo-image-manipulator`, `expo-notifications` y `expo-device`.
+2. Pruebas en el celular: las listas de las secciones 9, B.11 y C.9.
+
+## Revisión en la web local (sin tocar nada real)
+
+- Supabase local con las 21 migraciones aplicadas.
+- Clientes en el 8083, negocios en el 8084 y el panel en el 3001.
+- Las pruebas automáticas de `pruebas/auditoria/beta-2-2-*.js` documentan sus requisitos en el encabezado de cada archivo.
+
+## En Expo Go (iPhone)
+
+- Levantar con túnel (`npx expo start --tunnel`), como se hacía antes.
+- Para ver las funciones nuevas, apuntar a una base que tenga las migraciones nuevas.
+- Las notificaciones push no se pueden probar en Expo Go.

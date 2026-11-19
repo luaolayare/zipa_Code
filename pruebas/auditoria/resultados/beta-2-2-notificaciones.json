@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-19T18:53:50.873Z",
+  "fecha": "2026-11-19T19:20:51.505Z",
   "resultados": [
     {
       "id": "N-1",
@@ -11,7 +11,7 @@
       "id": "N-2",
       "prueba": "Nueva solicitud: el restaurante recibe «Tienes una nueva solicitud de reserva» sin intervención (pg_net), con canal «reservas» y enlace al detalle",
       "resultado": "OK",
-      "detalle": "{\"llego\":true,\"m1\":{\"to\":\"ExponentPushToken[resto-ok-25459]\",\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder.\",\"data\":{\"url\":\"/reservas/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"7a13fa5"
+      "detalle": "{\"llego\":true,\"m1\":{\"to\":\"ExponentPushToken[resto-ok-46038]\",\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder.\",\"data\":{\"url\":\"/reservas/d3cd1a2a-262a-49ee-8828-d54c41ec5b15\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"d3cd1a2"
     },
     {
       "id": "N-3",
@@ -23,13 +23,13 @@
       "id": "N-4",
       "prueba": "Confirmar: el cliente recibe «Tu reserva fue confirmada» en sus dispositivos, con enlace a su solicitud",
       "resultado": "OK",
-      "detalle": "{\"to\":\"ExponentPushToken[cliente-ok-25459]\",\"title\":\"Tu reserva fue confirmada\",\"body\":\"Asadero Avisos 5459 · sáb 21 nov., 12:00 p. m. · 2 personas.\",\"data\":{\"url\":\"/reserva/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"confirmada\",\"reservationId\":\"7a13fa51-d33d-4cfc-a950-c5772d80775c\"},\"sound\":\"def"
+      "detalle": "{\"to\":\"ExponentPushToken[cliente-ok-46038]\",\"title\":\"Tu reserva fue confirmada\",\"body\":\"Asadero Avisos 6038 · sáb 21 nov., 12:00 p. m. · 2 personas.\",\"data\":{\"url\":\"/reserva/d3cd1a2a-262a-49ee-8828-d54c41ec5b15\",\"kind\":\"confirmada\",\"reservationId\":\"d3cd1a2a-262a-49ee-8828-d54c41ec5b15\"},\"sound\":\"def"
     },
     {
       "id": "N-5",
       "prueba": "Ningún aviso lleva el nombre, el teléfono, las observaciones ni la mesa del cliente",
       "resultado": "OK",
-      "detalle": "Tienes una nueva solicitud de reserva Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder. {\"url\":\"/reservas/7a13fa51-d33d-4cfc-a950-c5772d80775c\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"7a13fa51-d33d-4cfc-a950-c5772d80775c\"} | Tu "
+      "detalle": "Tienes una nueva solicitud de reserva Para el sáb 21 nov., 12:00 p. m. · 2 personas. Ábrela para responder. {\"url\":\"/reservas/d3cd1a2a-262a-49ee-8828-d54c41ec5b15\",\"kind\":\"nueva_solicitud\",\"reservationId\":\"d3cd1a2a-262a-49ee-8828-d54c41ec5b15\"} | Tu "
     },
     {
       "id": "N-6",

@@ -66,7 +66,7 @@ export default function Perfil() {
       {!!reservations?.length && (
         <>
           <Text style={styles.h2} accessibilityRole="header">Mis reservas</Text>
-          {reservations.slice(0, 10).map((r) => (
+          {reservations.slice(0, 3).map((r) => (
             <Pressable key={r.id} accessibilityRole="button" accessibilityLabel={`Reserva ${r.code} en ${r.businessName}, ${reservationWhen(r.startsAt)}`} onPress={() => router.push({ pathname: '/reserva/[id]', params: { id: r.id } })} style={({ pressed }) => [styles.review, pressed && { opacity: 0.88 }]}>
               <View style={styles.reviewTop}>
                 <Text style={styles.reviewBusiness} numberOfLines={1}>{r.businessName}</Text>
@@ -75,6 +75,7 @@ export default function Perfil() {
               <Text style={styles.meta}>{reservationWhen(r.startsAt, new Date())} · {r.partySize} {r.partySize === 1 ? 'persona' : 'personas'} · {r.code}</Text>
             </Pressable>
           ))}
+          <Button title={`Ver todas mis reservas (${reservations.length})`} variant="outline" onPress={() => router.push('/mis-reservas')} />
         </>
       )}
 

@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-11-19T18:53:43.293Z",
+  "fecha": "2026-11-19T19:20:43.828Z",
   "resultados": [
     {
       "id": "C-1",
@@ -17,7 +17,7 @@
       "id": "C-3",
       "prueba": "Mensaje prellenado con el restaurante, el código, la fecha y las personas",
       "resultado": "OK",
-      "detalle": "Hola, te contactamos de Asadero Bandeja 7879 por tu solicitud de reserva R-KQ6VMF en Zipa lo tiene (Sáb 21 nov. · 7:00 p. m., 4 personas). Queremos confirmar algunos detalles."
+      "detalle": "Hola, te contactamos de Asadero Bandeja 3137 por tu solicitud de reserva R-9ZGUR3 en Zipa lo tiene (Sáb 21 nov. · 7:00 p. m., 4 personas). Queremos confirmar algunos detalles."
     },
     {
       "id": "C-4",

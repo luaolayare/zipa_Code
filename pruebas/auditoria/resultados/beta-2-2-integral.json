@@ -1,0 +1,54 @@
+{
+  "fecha": "2026-11-19T19:35:00.911Z",
+  "resultados": [
+    {
+      "id": "I-1",
+      "prueba": "El cliente envía la solicitud desde la ficha y ve su código",
+      "resultado": "OK",
+      "detalle": "{\"id\":\"f8212751-069a-4524-85ad-51b895dd862f\",\"code\":\"R-3WHG9X\",\"status\":\"pendiente\"}"
+    },
+    {
+      "id": "I-2",
+      "prueba": "El restaurante recibe el aviso de la nueva solicitud (sin datos personales en el texto)",
+      "resultado": "OK",
+      "detalle": "{\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el vie 20 nov., 8:00 p. m. · 2 personas. Ábrela para responder.\"}"
+    },
+    {
+      "id": "I-3",
+      "prueba": "Desde la ruta del aviso se abre el detalle correcto y el restaurante confirma",
+      "resultado": "OK",
+      "detalle": "{\"codigo\":1,\"nota\":1}"
+    },
+    {
+      "id": "I-4",
+      "prueba": "El cliente recibe «Tu reserva fue confirmada» y la ve en «Mis reservas → Confirmadas»",
+      "resultado": "OK",
+      "detalle": "{\"llego2\":true,\"enLista\":1}"
+    },
+    {
+      "id": "I-5",
+      "prueba": "El cliente cancela y el restaurante recibe «Un cliente canceló su reserva»",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "I-6",
+      "prueba": "Panel del equipo (con MFA): cifras, restaurantes, tiempo de respuesta y tareas; sin datos de clientes y sin poder confirmar",
+      "resultado": "OK",
+      "detalle": "{\"titulo\":true,\"recibidas\":true,\"restaurantes\":true,\"respuesta\":true,\"tareas\":true,\"sinPersonales\":true,\"sinConfirmar\":true}"
+    },
+    {
+      "id": "I-7",
+      "prueba": "Sin ninguna app abierta ni llamada manual, la solicitud vence sola (pg_cron) y el cliente recibe el aviso",
+      "resultado": "OK",
+      "detalle": "{\"vencio\":true,\"llego4\":true,\"segundos\":214,\"ultimaCorrida\":\"2026-11-19 19:35:00.016129+00\"}"
+    },
+    {
+      "id": "I-8",
+      "prueba": "Sin errores de consola en las tres apps",
+      "resultado": "OK",
+      "detalle": "[]"
+    }
+  ],
+  "erroresConsola": []
+}
