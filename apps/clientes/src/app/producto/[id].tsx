@@ -7,6 +7,7 @@ import { ActivityIndicator, Image, Linking, Platform, Pressable, ScrollView, Sty
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
+import { PhotoViewer } from '@/components/PhotoViewer';
 import { ProductVideo } from '@/components/ProductVideo';
 
 /**
@@ -31,6 +32,7 @@ export default function ProductoScreen() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [slide, setSlide] = useState(0);
   const [slideWidth, setSlideWidth] = useState(0);
+  const [viewer, setViewer] = useState<number | null>(null); // foto abierta a pantalla completa
 
   // Analítica: producto o plato consultado.
   useEffect(() => { api.track('product_view', { productId: id }); }, [api, id]);
@@ -71,6 +73,8 @@ export default function ProductoScreen() {
     ...(product.photoUrl ? [{ key: 'main', kind: 'photo' as const, url: product.photoUrl, label: product.photoLabel }] : []),
     ...product.photos.map((p) => ({ key: p.id, kind: 'photo' as const, url: p.url, label: p.label })),
   ];
+  const photos = slides.filter((s) => s.kind === 'photo');
+  const openPhoto = (url: string) => setViewer(Math.max(photos.findIndex((p) => p.url === url), 0));
   const rate = () => {
     if (!user) return router.push({ pathname: '/login', params: { desde: 'calificar', negocio: product.businessId } });
     router.push({ pathname: '/calificar/[id]', params: { id: product.businessId } });
@@ -101,7 +105,11 @@ export default function ProductoScreen() {
                 <View key={s.key} style={{ width: slideWidth || 1, height: '100%' }}>
                   {s.kind === 'video'
                     ? <ProductVideo url={s.url} label={`Video de ${product.name}`} />
-                    : <Image source={{ uri: s.url }} style={styles.photo} accessibilityLabel={s.label ?? `Foto ${i + 1} de ${product.name}`} />}
+                    : (
+                      <Pressable accessibilityRole="button" accessibilityLabel={`${s.label ?? `Foto ${i + 1} de ${product.name}`}. Toca para ampliar.`} onPress={() => openPhoto(s.url)} style={{ flex: 1 }}>
+                        <Image source={{ uri: s.url }} style={styles.photo} />
+                      </Pressable>
+                    )}
                 </View>
               ))}
             </ScrollView>
@@ -115,7 +123,9 @@ export default function ProductoScreen() {
             {videoUrl ? (
               <ProductVideo url={videoUrl} label={`Video de ${product.name}`} />
             ) : product.photoUrl ? (
-              <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={product.photoLabel ?? `Foto de ${product.name}`} />
+              <Pressable accessibilityRole="button" accessibilityLabel={`${product.photoLabel ?? `Foto de ${product.name}`}. Toca para ampliar.`} onPress={() => openPhoto(product.photoUrl!)} style={{ flex: 1, alignSelf: 'stretch' }}>
+                <Image source={{ uri: product.photoUrl }} style={styles.photo} />
+              </Pressable>
             ) : (
               <PlateArt of={business} size={300} />
             )}
@@ -145,6 +155,7 @@ export default function ProductoScreen() {
         </Pressable>
         {ar && <Text style={styles.note}>Tamaño aproximado. El producto real puede variar.</Text>}
       </View>
+      {viewer !== null && photos.length > 0 && <PhotoViewer photos={photos} start={viewer} title={product.name} onClose={() => setViewer(null)} />}
     </ScrollView>
   );
 }

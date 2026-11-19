@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -21,6 +21,7 @@ export default function Panel() {
   const [featuredUntil, setFeaturedUntil] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [qrToken, setQrToken] = useState<string | null>(null);
+  const [links, setLinks] = useState<BusinessLinks | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -35,6 +36,7 @@ export default function Panel() {
       setBusiness(b);
       setProducts(p);
       api.myFeaturedUntil(b.id).then(setFeaturedUntil).catch(() => {});
+      api.getBusinessLinks(b.id).then(setLinks).catch(() => {});
       setReviews(r);
       setError('');
     } catch {
@@ -195,6 +197,17 @@ export default function Panel() {
             <View style={styles.edit}>
               <Pencil size={16} color={colors.primary} />
               <Text style={styles.editText}>Editar datos</Text>
+              <ChevronRight size={18} color={colors.primary} />
+            </View>
+          </Pressable>
+
+          <SectionTitle title="Contacto y entregas" style={{ marginTop: 10 }} />
+          <Pressable accessibilityRole="button" accessibilityLabel="Editar contacto y entregas" onPress={() => router.push('/negocio/contacto')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
+            <DataRow label="Redes" value={configuredSocial(links).map((n) => n.label).join(', ') || 'Sin redes'} />
+            <DataRow label="Entregas" value={deliverySummary(links?.deliveryModes ?? []) || 'Sin indicar'} />
+            <View style={styles.edit}>
+              <Pencil size={16} color={colors.primary} />
+              <Text style={styles.editText}>Editar contacto y entregas</Text>
               <ChevronRight size={18} color={colors.primary} />
             </View>
           </Pressable>

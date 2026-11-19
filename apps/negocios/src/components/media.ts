@@ -1,13 +1,42 @@
 // Fotos y videos: elegir de la galería, tomar con la cámara y grabar el video del producto.
-import type { LocalFile } from '@zipa/shared';
+//
+// Fotos: el editor del celular deja recortar el encuadre (en Android también ampliar, mover y
+// girar; en iOS el recorte es cuadrado). Después se reduce y comprime aquí (PHOTO_PRESETS) para
+// que suban rápido y pesen poco. Lo que se ve en el formulario antes de guardar es la vista previa.
+import { PHOTO_PRESETS, resizeFor, type LocalFile, type PhotoKind } from '@zipa/shared';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 
 export const VIDEO_SECONDS = 20;
 
-const PHOTO_OPTIONS: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.7, allowsEditing: false };
-
 export type MediaResult = { file: LocalFile } | { error: string } | null; // null = canceló
+
+function photoOptions(kind: PhotoKind): ImagePicker.ImagePickerOptions {
+  const p = PHOTO_PRESETS[kind];
+  // Calidad 1 en el selector: la compresión se hace una sola vez, después de reducir.
+  return { mediaTypes: ['images'], quality: 1, allowsEditing: p.edit, ...(p.edit && p.aspect ? { aspect: p.aspect } : {}) };
+}
+
+/** Reduce y comprime la foto elegida. Si algo falla, usa la foto tal como vino (no bloquea). */
+async function optimize(asset: ImagePicker.ImagePickerAsset, kind: PhotoKind): Promise<LocalFile> {
+  const p = PHOTO_PRESETS[kind];
+  try {
+    const ctx = ImageManipulator.manipulate(asset.uri);
+    const size = resizeFor(asset.width, asset.height, p.maxSide);
+    if (size) ctx.resize(size); // un solo lado: el otro se calcula sin deformar
+    const image = await ctx.renderAsync();
+    const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: p.compress });
+    return { uri: saved.uri, mimeType: 'image/jpeg' };
+  } catch {
+    return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg' };
+  }
+}
+
+async function fromPhotoPicker(r: ImagePicker.ImagePickerResult, kind: PhotoKind): Promise<MediaResult> {
+  if (r.canceled || !r.assets?.[0]) return null;
+  return { file: await optimize(r.assets[0], kind) };
+}
 
 function fromPicker(r: ImagePicker.ImagePickerResult, fallbackMime: string): MediaResult {
   if (r.canceled || !r.assets?.[0]) return null;
@@ -15,16 +44,16 @@ function fromPicker(r: ImagePicker.ImagePickerResult, fallbackMime: string): Med
   return { file: { uri: a.uri, mimeType: a.mimeType ?? fallbackMime } };
 }
 
-export async function takePhoto(): Promise<MediaResult> {
+export async function takePhoto(kind: PhotoKind = 'producto'): Promise<MediaResult> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) return { error: 'Para tomar la foto, permite el uso de la cámara en los ajustes del celular, o elige una foto que ya tengas.' };
-  return fromPicker(await ImagePicker.launchCameraAsync(PHOTO_OPTIONS), 'image/jpeg');
+  return fromPhotoPicker(await ImagePicker.launchCameraAsync(photoOptions(kind)), kind);
 }
 
-export async function pickPhoto(): Promise<MediaResult> {
+export async function pickPhoto(kind: PhotoKind = 'producto'): Promise<MediaResult> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { error: 'Para elegir la foto, permite el acceso a tus fotos en los ajustes del celular, o tómala con la cámara.' };
-  return fromPicker(await ImagePicker.launchImageLibraryAsync(PHOTO_OPTIONS), 'image/jpeg');
+  return fromPhotoPicker(await ImagePicker.launchImageLibraryAsync(photoOptions(kind)), kind);
 }
 
 /** Un video que el negocio ya tiene guardado (máximo 30 s). */

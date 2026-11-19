@@ -868,6 +868,89 @@ do $$ begin
 end $$;
 reset role;
 
+-- Contacto y entregas (migración 0018) --------------------------------------------------------------
+-- Filas que no deben verse en público: la del negocio de la dueña 1 (en revisión desde que cambió
+-- de nombre, más arriba) y la de un borrador de la dueña 2.
+insert into public.business_links (business_id, instagram) values
+  ('00000000-0000-0000-0000-0000000000b1', 'https://www.instagram.com/en.revision'),
+  ('00000000-0000-0000-0000-0000000000e3', 'https://www.instagram.com/borrador');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000d2","role":"authenticated"}';
+do $$ begin
+  -- La dueña guarda los enlaces ya normalizados y las modalidades (sin repetidos, en orden).
+  perform ci_pruebas.debe_funcionar($q$insert into public.business_links (business_id, instagram, facebook, tiktok, website, delivery_modes, delivery_note)
+    values ('00000000-0000-0000-0000-0000000000e1', 'https://www.instagram.com/negocio.prueba', 'https://www.facebook.com/profile.php?id=100012345678',
+            'https://www.tiktok.com/@negocio', 'https://negocio.com.co/menu', array['envios_nacionales', 'presencial', 'presencial'], '  Domicilio   en el centro ')$q$);
+  if (select delivery_modes from public.business_links where business_id = '00000000-0000-0000-0000-0000000000e1') <> array['presencial', 'envios_nacionales'] then
+    raise exception 'las modalidades no quedaron ordenadas y sin repetidos';
+  end if;
+  if (select delivery_note from public.business_links where business_id = '00000000-0000-0000-0000-0000000000e1') <> 'Domicilio en el centro' then
+    raise exception 'las condiciones no quedaron con los espacios normalizados';
+  end if;
+  -- Enlaces que la app nunca guardaría: la base los rechaza igual.
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'javascript:alert(1)' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'http://negocio.com' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'https://usuario@evil.com' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'https://192.168.0.1/admin' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'https://bit.ly/abc' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set website = 'https://negocio.com/"><script>' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_website_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set instagram = 'https://evil.com/negocio' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_instagram_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set facebook = 'https://www.facebook.com.evil.com/x' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_facebook_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set tiktok = 'https://www.tiktok.com/negocio' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_tiktok_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set delivery_modes = array['repartidores'] where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_delivery_modes_check%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set delivery_note = 'Envíos rápidos, malparido' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, 'Las condiciones tienen palabras%');
+  perform ci_pruebas.debe_fallar($q$update public.business_links set delivery_note = repeat('a', 161) where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%business_links_delivery_note_check%');
+  perform ci_pruebas.debe_funcionar($q$update public.business_links set website = null, tiktok = null where business_id = '00000000-0000-0000-0000-0000000000e1'$q$);
+  -- No puede crear ni tocar el contacto de un negocio ajeno, ni ver el de uno ajeno sin publicar.
+  perform ci_pruebas.debe_fallar($q$insert into public.business_links (business_id) values ('00000000-0000-0000-0000-0000000000b2')$q$, '%row-level security%');
+  if ci_pruebas.filas($q$update public.business_links set instagram = null where business_id = '00000000-0000-0000-0000-0000000000b1'$q$) <> 0 then
+    raise exception 'la dueña editó el contacto de un negocio ajeno';
+  end if;
+  if ci_pruebas.cuenta($q$select 1 from public.business_links where business_id = '00000000-0000-0000-0000-0000000000b1'$q$) <> 0 then
+    raise exception 'la dueña ve el contacto de un negocio ajeno que no está publicado';
+  end if;
+  -- Una fila no se puede pasar a otro negocio (por eso la app actualiza y, si no hay fila, inserta).
+  perform ci_pruebas.debe_fallar($q$update public.business_links set business_id = '00000000-0000-0000-0000-0000000000e2' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%permission denied%');
+  -- updated_at no se puede escribir desde la API.
+  perform ci_pruebas.debe_fallar($q$update public.business_links set updated_at = now() - interval '1 year' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$, '%permission denied%');
+end $$;
+reset role;
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000c1","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select instagram from public.business_links where business_id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 1 then
+    raise exception 'el turista no ve el contacto de un negocio publicado';
+  end if;
+  perform ci_pruebas.debe_fallar($q$insert into public.business_links (business_id) values ('00000000-0000-0000-0000-0000000000e2')$q$, '%row-level security%');
+  if ci_pruebas.filas($q$update public.business_links set instagram = 'https://www.instagram.com/hack' where business_id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 0 then
+    raise exception 'el turista editó un contacto ajeno';
+  end if;
+  if ci_pruebas.filas($q$delete from public.business_links where business_id = '00000000-0000-0000-0000-0000000000e1'$q$) <> 0 then
+    raise exception 'el turista borró un contacto ajeno';
+  end if;
+end $$;
+reset role;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.business_links$q$) <> 1 then
+    raise exception 'anon debe ver solo el contacto del negocio publicado';
+  end if;
+  perform ci_pruebas.debe_fallar($q$insert into public.business_links (business_id) values ('00000000-0000-0000-0000-0000000000e1')$q$, '%permission denied%');
+end $$;
+reset role;
+
+-- Al borrar el negocio (eliminar cuenta) se borra su contacto.
+delete from public.businesses where id = '00000000-0000-0000-0000-0000000000e3';
+do $$ begin
+  if exists (select 1 from public.business_links where business_id = '00000000-0000-0000-0000-0000000000e3') then
+    raise exception 'el contacto quedó huérfano al borrar el negocio';
+  end if;
+end $$;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

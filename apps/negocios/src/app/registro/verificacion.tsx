@@ -40,7 +40,7 @@ export default function Verificacion() {
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={done ? 'Foto del local cargada. Tocar para tomar otra' : 'Tomar foto de tu local o puesto'}
-        onPress={async () => apply(await takePhoto())}
+        onPress={async () => apply(await takePhoto('verificacion'))}
         style={({ pressed }) => [styles.drop, done && styles.dropDone, pressed && { opacity: 0.85 }]}>
         <View style={[styles.dropIcon, done && { backgroundColor: colors.success }]}>
           {done ? <Check size={30} color="#FFFFFF" strokeWidth={3} /> : <Camera size={28} color={colors.text} />}
@@ -51,7 +51,7 @@ export default function Verificacion() {
         </View>
       </Pressable>
       {done && <Image source={{ uri: draft.photoUri! }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />}
-      <Pressable accessibilityRole="button" onPress={async () => apply(await pickPhoto())} style={styles.alt} hitSlop={6}>
+      <Pressable accessibilityRole="button" onPress={async () => apply(await pickPhoto('verificacion'))} style={styles.alt} hitSlop={6}>
         <ImageIcon size={20} color={colors.primary} />
         <Text style={styles.altText}>Elegir una foto que ya tengo</Text>
       </Pressable>

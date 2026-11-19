@@ -8,6 +8,17 @@ import { VideoReview } from '../../VideoReview';
 
 import { Decision } from './Decision';
 
+// «Contacto y entregas» (migración 0018). Los nombres repiten los de packages/shared/src/contact.ts.
+const REDES = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'], ['website', 'Sitio web']] as const;
+const ENTREGA: Record<string, string> = {
+  presencial: 'Atención presencial',
+  recogida: 'Recogida en el establecimiento',
+  a_convenir: 'Entrega a convenir',
+  domicilio_local: 'Domicilio local',
+  envios_nacionales: 'Envíos nacionales',
+  envios_internacionales: 'Envíos internacionales',
+};
+
 export default async function NegocioDetalle({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { supabase } = await requireAdmin();
@@ -15,11 +26,13 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
   const { data: b } = await supabase.from('businesses').select('*, owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
   if (!b) notFound();
 
-  const [{ data: v }, { data: products }, { data: acciones }] = await Promise.all([
+  const [{ data: v }, { data: products }, { data: acciones }, { data: links }] = await Promise.all([
     supabase.from('business_verifications').select('*').eq('business_id', id).maybeSingle(),
     supabase.from('products').select('*, product_photos(id, url, label, position)').eq('business_id', id).order('created_at'),
     supabase.from('admin_actions').select('action, details, created_at').eq('target_id', id).order('created_at', { ascending: false }).limit(10),
+    supabase.from('business_links').select('instagram, facebook, tiktok, website, delivery_modes, delivery_note').eq('business_id', id).maybeSingle(),
   ]);
+  const redes = links ? REDES.filter(([k]) => links[k]).map(([k, nombre]) => [nombre, links[k] as string] as const) : [];
 
   // Enlaces firmados de 10 minutos: la foto del local y los videos son privados.
   const foto = v?.photo_path ? (await supabase.storage.from('verificaciones').createSignedUrl(v.photo_path, 600)).data?.signedUrl : null;
@@ -55,6 +68,12 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
               <dt>Horario</dt><dd>{b.hours ?? '—'}</dd>
               <dt>WhatsApp</dt><dd>{b.whatsapp ?? '—'}</dd>
               <dt>Cédula o NIT</dt><dd>{v?.id_number ?? 'No la envió'}</dd>
+              {/* Enlaces como texto (no clicables): el equipo revisa el dominio sin abrirlo. */}
+              {redes.map(([nombre, url]) => (
+                <div key={nombre} style={{ display: 'contents' }}><dt>{nombre}</dt><dd style={{ wordBreak: 'break-all' }}><code>{url}</code></dd></div>
+              ))}
+              {!!links?.delivery_modes?.length && <><dt>Entregas</dt><dd>{(links.delivery_modes as string[]).map((m) => ENTREGA[m] ?? m).join(' · ')}</dd></>}
+              {links?.delivery_note && <><dt>Condiciones</dt><dd>{links.delivery_note}</dd></>}
             </dl>
             {b.review_note && <div className="quote"><p className="overline">Motivo enviado</p><p>{b.review_note}</p></div>}
           </div>

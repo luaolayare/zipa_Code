@@ -12,9 +12,10 @@ begin
   where schemaname = 'public'
     and tablename in ('profiles', 'businesses', 'business_verifications', 'products',
                       'reviews', 'consents', 'reports', 'blocks', 'admin_users', 'admin_actions',
-                      'categories', 'business_tags', 'analytics_events', 'product_photos', 'featured_placements');
-  if n <> 15 then
-    raise exception 'Faltan tablas en public: se esperaban 15 y hay %', n;
+                      'categories', 'business_tags', 'analytics_events', 'product_photos', 'featured_placements',
+                      'business_links');
+  if n <> 16 then
+    raise exception 'Faltan tablas en public: se esperaban 16 y hay %', n;
   end if;
 
   -- 2. Toda tabla de public tiene RLS activado.
@@ -38,6 +39,10 @@ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'reviews_filtro_ofensivo' and not tgisinternal) then
     raise exception 'Falta el trigger reviews_filtro_ofensivo';
+  end if;
+
+  if not exists (select 1 from pg_trigger where tgname = 'business_links_cuidar' and not tgisinternal) then
+    raise exception 'Falta el trigger business_links_cuidar (contacto y entregas: filtro y orden)';
   end if;
 
   if not exists (select 1 from pg_trigger where tgname = 'businesses_clasificar' and not tgisinternal) then

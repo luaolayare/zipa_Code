@@ -140,3 +140,16 @@ describe('createApi en modo demo', () => {
     expect(await api.hasAccepted('yo', [{ ...consents[0], version: '2.0' }])).toBe(false);
   });
 });
+
+describe('contacto y entregas en modo demo', () => {
+  it('sin datos devuelve null; después de guardar devuelve lo guardado', async () => {
+    const api = createApi(null);
+    expect(await api.getBusinessLinks('b1')).toBeNull();
+    await api.saveBusinessLinks('b1', {
+      instagram: 'https://www.instagram.com/mamaines', facebook: null, tiktok: null, website: null,
+      deliveryModes: ['presencial', 'domicilio_local'], deliveryNote: 'Domicilio en el centro',
+    });
+    expect(await api.getBusinessLinks('b1')).toMatchObject({ instagram: 'https://www.instagram.com/mamaines', deliveryModes: ['presencial', 'domicilio_local'] });
+    expect(await api.getBusinessLinks('b2')).toBeNull();
+  });
+});

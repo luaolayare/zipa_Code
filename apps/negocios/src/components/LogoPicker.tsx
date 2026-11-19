@@ -23,7 +23,7 @@ export function LogoPicker({
 }) {
   const [error, setError] = useState('');
   const choose = async () => {
-    const r = await pickPhoto();
+    const r = await pickPhoto('logo');
     if (!r) return;
     if ('error' in r) return setError(r.error);
     setError('');

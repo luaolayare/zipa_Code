@@ -1,8 +1,8 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord } from '@zipa/shared';
+import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { Ban, BadgeCheck, Camera, Flag, MapPin } from 'lucide-react-native';
+import { AtSign, Ban, BadgeCheck, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,7 @@ export default function NegocioDetalle() {
   const insets = useSafeAreaInsets();
   const [business, setBusiness] = useState<Business | null | undefined>(undefined); // undefined = cargando
   const [products, setProducts] = useState<Product[]>([]);
+  const [links, setLinks] = useState<BusinessLinks | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [myReview, setMyReview] = useState<Review | null>(null);
   const [moreReviews, setMoreReviews] = useState(false);
@@ -70,6 +71,8 @@ export default function NegocioDetalle() {
       Promise.all([api.getBusiness(id), api.listProducts(id), loadReviews()])
         .then(([b, p]) => { setBusiness(b); setProducts(p); setError(false); })
         .catch(() => setError(true));
+      // Aparte y sin bloquear la ficha: si falla, simplemente no se muestran redes ni entregas.
+      api.getBusinessLinks(id).then(setLinks).catch(() => setLinks(null));
       return () => setStatusBarStyle('dark');
     }, [api, id, v, user, loadReviews]),
   );
@@ -103,6 +106,8 @@ export default function NegocioDetalle() {
   // "Pizzerías · Pizza al horno de leña · $$" (subcategoría, lo que vende en sus palabras y precio).
   const meta = [business.subcategoryName ?? categoryLabel(business.category), business.specialty, formatPriceLevel(business.priceLevel)].filter(Boolean).join(' · ');
   const wa = whatsappUrl(business.whatsapp);
+  const social = configuredSocial(links);
+  const delivery = deliverySummary(links?.deliveryModes ?? []);
 
   const rate = () => {
     if (!user) return router.push({ pathname: '/login', params: { desde: 'calificar', negocio: id } });
@@ -177,6 +182,30 @@ export default function NegocioDetalle() {
         <View style={styles.contact}>
           <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => { api.track('maps_click', { businessId: business.id }); Linking.openURL(mapsUrl(business.address)); }} />
           {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => { api.track('whatsapp_click', { businessId: business.id }); Linking.openURL(wa); }} />}
+          {social.length > 0 && (
+            <View style={styles.socialRow} accessibilityLabel="Redes sociales del negocio">
+              {social.map((n) => (
+                <Pressable
+                  key={n.id}
+                  accessibilityRole="link"
+                  accessibilityLabel={`${n.label}: ${socialLabel(n.id, n.url)}`}
+                  onPress={() => Linking.openURL(n.url)}
+                  style={({ pressed }) => [styles.socialChip, pressed && { opacity: 0.8 }]}>
+                  {n.id === 'website' ? <Globe size={16} color={colors.primary} /> : <AtSign size={16} color={colors.primary} />}
+                  <Text style={styles.socialText} numberOfLines={1}>{n.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          {!!delivery && (
+            <View style={styles.delivery}>
+              <Package size={18} color={colors.primary} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.deliveryText}>{delivery}</Text>
+                {!!links?.deliveryNote && <Text style={styles.contactSub}>{links.deliveryNote}</Text>}
+              </View>
+            </View>
+          )}
         </View>
 
         <Text style={styles.h2} accessibilityRole="header">{catalogTitle(business)}</Text>
@@ -300,6 +329,11 @@ const styles = StyleSheet.create({
   primaryButton: { minHeight: 52, paddingHorizontal: 22, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   primaryText: { fontFamily: fonts.bold, fontSize: 16, color: '#FFFFFF' },
   contact: { gap: 10 },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  socialChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  socialText: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.text },
+  delivery: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 4 },
+  deliveryText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
   contactButton: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   contactIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   contactLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },

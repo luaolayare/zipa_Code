@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createTracker, type KeyValueStore } from './analytics';
+import { emptyLinks, type BusinessLinks, type DeliveryMode } from './contact';
 import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categories';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
@@ -221,6 +222,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
   const demoConsents: (ConsentInput & { userId: string; acceptedAt: string })[] = [];
   const demoReports: (ReportInput & { reporterId: string })[] = [];
   const demoBlocks = new Set<string>(); // `${bloqueador}:${bloqueado}`
+  const demoLinks = new Map<string, BusinessLinks>();
 
   // Analítica anónima de uso (migración 0015). En modo demo no envía nada.
   const track = createTracker(db, options.storage ?? null, options.app ?? 'clientes');
@@ -380,6 +382,55 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       const { data, error } = await db.from('businesses_public').select('*').eq('id', id).maybeSingle();
       if (error) throw error;
       return data ? toBusiness(data) : null;
+    },
+
+    /** «Contacto y entregas» del negocio (migración 0018). null si el negocio no lo ha llenado. */
+    async getBusinessLinks(businessId: string): Promise<BusinessLinks | null> {
+      if (!db) return demoLinks.get(businessId) ?? null;
+      const { data, error } = await db
+        .from('business_links')
+        .select('instagram, facebook, tiktok, website, delivery_modes, delivery_note')
+        .eq('business_id', businessId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return {
+        instagram: data.instagram ?? null,
+        facebook: data.facebook ?? null,
+        tiktok: data.tiktok ?? null,
+        website: data.website ?? null,
+        deliveryModes: (data.delivery_modes ?? []) as DeliveryMode[],
+        deliveryNote: data.delivery_note ?? null,
+      };
+    },
+
+    /**
+     * Guarda «Contacto y entregas» del negocio propio. Recibe los datos ya validados con
+     * validateLinks (la base repite las reglas). No devuelve el negocio a revisión.
+     */
+    async saveBusinessLinks(businessId: string, links: BusinessLinks) {
+      if (!db) {
+        demoLinks.set(businessId, { ...emptyLinks, ...links });
+        return;
+      }
+      const row = {
+        instagram: links.instagram,
+        facebook: links.facebook,
+        tiktok: links.tiktok,
+        website: links.website,
+        delivery_modes: links.deliveryModes,
+        delivery_note: links.deliveryNote,
+      };
+      // Primero actualiza; si aún no hay fila, la crea. (Un upsert también reescribiría
+      // business_id, que la base no deja cambiar: así una fila no se puede pasar a otro negocio.)
+      const upd = await db.from('business_links').update(row).eq('business_id', businessId).select('business_id');
+      let error = upd.error;
+      if (!error && !upd.data?.length) ({ error } = await db.from('business_links').insert({ business_id: businessId, ...row }));
+      if (error) {
+        if (error.message.includes('palabras')) throw new Error('Revisa el texto de las condiciones: tiene palabras que no se permiten.');
+        if (error.code === '23514') throw new Error('Uno de los enlaces no es válido. Revísalo e intenta de nuevo.');
+        throw new Error('No pudimos guardar los datos de contacto. Intenta de nuevo.');
+      }
     },
 
     async listProducts(businessId: string): Promise<Product[]> {

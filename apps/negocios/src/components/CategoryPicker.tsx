@@ -1,7 +1,7 @@
 // Clasificación del negocio: categoría principal, subcategoría y etiquetas secundarias.
 // Las subcategorías vienen de Supabase (el equipo las administra), no están fijas en la app.
-import { MAIN_CATEGORIES, colors, fonts, legacyCategoryFor, subcategoriesOf, useAuth, type Category, type CategoryNode, type MainCategory } from '@zipa/shared';
-import { Check } from 'lucide-react-native';
+import { CLASSIFICATION_EXAMPLES, MAIN_CATEGORIES, colors, fonts, legacyCategoryFor, subcategoriesOf, useAuth, type Category, type CategoryNode, type MainCategory } from '@zipa/shared';
+import { Check, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -51,6 +51,7 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
   return (
     <View style={{ gap: 18 }}>
       <OptionCards<MainCategory> label="¿Qué es tu negocio?" options={MAIN_OPTIONS} value={value.mainCategory} onChange={pickMain} />
+      <ClassificationHelp />
 
       {error ? (
         <Text style={styles.error} accessibilityRole="alert">No pudimos cargar las categorías. Revisa tu conexión y vuelve a abrir esta pantalla.</Text>
@@ -59,7 +60,7 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
       ) : (
         <>
           <View style={{ gap: 10 }}>
-            <Text style={styles.label}>¿Qué ofreces principalmente?</Text>
+            <Text style={styles.label}>¿Qué vendes principalmente?</Text>
             <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel="Subcategoría">
               {subs.map((c) => {
                 const on = c.id === value.subcategoryId;
@@ -102,7 +103,38 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
   );
 }
 
+/**
+ * Ayuda para elegir bien: se clasifica por lo que se vende principalmente. Plegada para no alargar
+ * el formulario. No cambia la clasificación de negocios que ya existen.
+ */
+function ClassificationHelp() {
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.helpBox}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen(!open)} style={styles.helpHead} hitSlop={6}>
+        <HelpCircle size={18} color={colors.primary} />
+        <Text style={styles.helpTitle}>¿No sabes cuál elegir? Mira ejemplos</Text>
+        {open ? <ChevronUp size={18} color={colors.primary} /> : <ChevronDown size={18} color={colors.primary} />}
+      </Pressable>
+      {open && (
+        <View style={{ gap: 8 }}>
+          <Text style={styles.help}>Elige según lo que vendes principalmente:</Text>
+          {CLASSIFICATION_EXAMPLES.map((e) => (
+            <Text key={e.sells} style={styles.help}>
+              <Text style={styles.helpStrong}>{e.sells}</Text> → {e.main === 'restaurantes' ? 'Restaurante' : 'Emprendimiento'} / {e.subcategory}
+            </Text>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  helpBox: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: colors.primarySoft },
+  helpHead: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 28 },
+  helpTitle: { flex: 1, fontFamily: fonts.bold, fontSize: 14.5, color: colors.primary },
+  helpStrong: { fontFamily: fonts.bold, color: colors.text },
   label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text },
   optional: { fontFamily: fonts.regular, color: colors.textMuted },
   help: { fontSize: 14, lineHeight: 20, fontFamily: fonts.regular, color: colors.textMuted },

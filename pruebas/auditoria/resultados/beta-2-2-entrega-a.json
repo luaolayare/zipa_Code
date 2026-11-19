@@ -1,0 +1,78 @@
+{
+  "fecha": "2026-11-19T03:06:10.765Z",
+  "resultados": [
+    {
+      "id": "A-1",
+      "prueba": "Panel: aparece «Contacto y entregas», vacío al inicio",
+      "resultado": "OK",
+      "detalle": "{\"seccion\":1,\"sinRedes\":1,\"sinEntregas\":1}"
+    },
+    {
+      "id": "A-2",
+      "prueba": "Un enlace peligroso (javascript:) se rechaza con un mensaje y no se guarda",
+      "resultado": "OK",
+      "detalle": "{\"errorWeb\":1,\"filas\":0}"
+    },
+    {
+      "id": "A-3",
+      "prueba": "Se guardan normalizados: https, sin «www.», modalidades en orden y condiciones sin espacios de más",
+      "resultado": "OK",
+      "detalle": "{\"business_id\":\"2172d04d-288f-4a25-a215-aeb480baae56\",\"instagram\":\"https://www.instagram.com/helados.sal\",\"facebook\":null,\"tiktok\":null,\"website\":\"https://heladossal.com\",\"delivery_modes\":[\"presencial\",\"domicilio_local\",\"envios_nacionales\"],\"delivery_note\":\"Do"
+    },
+    {
+      "id": "A-4",
+      "prueba": "El panel resume las redes y las entregas guardadas",
+      "resultado": "OK",
+      "detalle": "{\"redes\":1,\"entregas\":1}"
+    },
+    {
+      "id": "A-5",
+      "prueba": "Guardar contacto y entregas no devuelve el negocio a revisión",
+      "resultado": "OK",
+      "detalle": "publicado"
+    },
+    {
+      "id": "A-6",
+      "prueba": "Ayuda «¿Qué vendes principalmente?»: plegada y con los ejemplos de café empacado, café preparado y artesanías",
+      "resultado": "OK",
+      "detalle": "{\"cerrada\":true,\"pregunta\":1,\"empacado\":1,\"preparado\":1,\"artesanias\":1}"
+    },
+    {
+      "id": "A-7",
+      "prueba": "Abrir la ayuda no cambia la clasificación del negocio",
+      "resultado": "OK",
+      "detalle": "heladerias"
+    },
+    {
+      "id": "A-8",
+      "prueba": "Clientes: solo las redes configuradas, las entregas en una línea, las condiciones y WhatsApp sigue",
+      "resultado": "OK",
+      "detalle": "{\"instagram\":1,\"web\":1,\"sinFacebook\":true,\"sinTiktok\":true,\"entregas\":1,\"nota\":1,\"whatsapp\":1}"
+    },
+    {
+      "id": "A-9",
+      "prueba": "Tocar Instagram abre el enlace https normalizado",
+      "resultado": "OK",
+      "detalle": "https://www.instagram.com/helados.sal"
+    },
+    {
+      "id": "A-10",
+      "prueba": "Un negocio sin «Contacto y entregas» no muestra ese bloque",
+      "resultado": "OK",
+      "detalle": "{\"redes\":0,\"entregas\":0}"
+    },
+    {
+      "id": "A-11",
+      "prueba": "Clientes: tocar la foto la abre a pantalla completa, acerca a 2x y se cierra",
+      "resultado": "OK",
+      "detalle": "{\"visor\":{\"cerrar\":1,\"contador\":2,\"pista\":1},\"zoom2\":1,\"imgAncho\":780,\"cerrado\":true}"
+    },
+    {
+      "id": "A-12",
+      "prueba": "Panel del equipo: ve las redes como texto (para revisar el dominio sin abrirlo) y las entregas",
+      "resultado": "OK",
+      "detalle": "{\"instagram\":1,\"web\":1,\"sinEnlaceClicable\":true,\"entregas\":1}"
+    }
+  ],
+  "erroresConsola": []
+}
