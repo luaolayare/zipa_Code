@@ -1,3 +1,4 @@
+import { restaurantOf, visualOf, type Classified } from './presentation';
 import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product } from './types';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -71,30 +72,15 @@ export const legacyCategoryFor = (subcategoryId: string, main: MainCategory | nu
 /** "Restaurantes" o "Emprendimientos". */
 export const mainCategoryName = (main: MainCategory | null) => MAIN_CATEGORIES.find((m) => m.id === main)?.name ?? null;
 
-/** Para los textos de la app de negocios: un restaurante tiene platos; un emprendimiento, productos. */
-export const isRestaurant = (b: Pick<Business, 'mainCategory' | 'category'>) =>
-  b.mainCategory ? b.mainCategory === 'restaurantes' : b.category === 'comer';
+/** Un restaurante tiene platos y menú; un emprendimiento, productos y catálogo (ver presentation.ts). */
+export const isRestaurant = (b: Pick<Business, 'mainCategory' | 'category'>) => restaurantOf(b);
 
-// Portadas de color mientras no haya fotos (docs/diseno/ESPECIFICACION.md).
-const DEMO_COVERS: Record<string, [string, string]> = {
-  b1: ['#C2381B', '#F2B134'], // Arepas Mamá Inés
-  b2: ['#0F6E6E', '#C2381B'], // Tejidos Kaashi
-  b3: ['#5A3A22', '#F2E6D0'], // Café Sierra Viva
-  b4: ['#9A3412', '#F5F1E6'], // La Fogata de Doña Rosa
-  b5: ['#7A4B00', '#EDE0C2'], // Galería Manos de Bolívar
-  b6: ['#0F3D3E', '#D9772B'], // Mar y Coco
-  b7: ['#B45309', '#F3E3C3'], // Dulces de Palenque
-};
-
-const CATEGORY_COVERS: Record<Category, [string, string]> = {
-  comer: ['#C2381B', '#F2B134'],
-  artesanias: ['#0F6E6E', '#C2381B'],
-  cafe_dulces: ['#5A3A22', '#F2E6D0'],
-};
-
-/** Color de fondo y del círculo interior de la portada de un negocio. */
-export const businessCover = (b: Business) => {
-  const [cover, inner] = DEMO_COVERS[b.id] ?? CATEGORY_COVERS[b.category];
+/**
+ * Color de fondo y del círculo interior de la portada de un negocio: uno por categoría
+ * principal (Beta 2.1). Antes dependía de la categoría vieja y había colores sueltos por negocio.
+ */
+export const businessCover = (b: Classified) => {
+  const { cover, inner } = visualOf(b);
   return { cover, inner };
 };
 

@@ -14,7 +14,7 @@
     "android": {
       "package": "co.zipa.vitrinanegocios",
       "adaptiveIcon": {
-        "backgroundColor": "#0F3D3E",
+        "backgroundColor": "#F2B134",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -52,7 +52,15 @@
       ],
       "expo-status-bar",
       "expo-font",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F2B134"
+        }
+      ],
       "expo-sharing"
     ],
     "experiments": {

@@ -24,7 +24,7 @@ export default function Inicio() {
           <SafeAreaView edges={['top']} style={styles.heroInner}>
             {/* Decoración: anillo y plato ilustrado asomando por la derecha. */}
             <View style={styles.ring} pointerEvents="none" />
-            <View style={styles.plate} pointerEvents="none"><PlateArt category="comer" size={176} /></View>
+            <View style={styles.plate} pointerEvents="none"><PlateArt art="plato" main="restaurantes" size={176} /></View>
             <Logo light />
             <Text style={styles.title}>Que los turistas encuentren tu negocio.</Text>
             <Text style={styles.lead}>Registra tu restaurante o emprendimiento, muestra tus productos con fotos y video, y recibe reseñas de tus clientes.</Text>

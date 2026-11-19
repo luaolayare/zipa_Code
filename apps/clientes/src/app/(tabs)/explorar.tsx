@@ -192,7 +192,7 @@ export default function Inicio() {
 }
 
 function SearchResults({ query, search }: { query: string; search: ReturnType<typeof useSearch> }) {
-  const { results, status, retry } = search;
+  const { results, status, retry, hasMore, loadMore, loadingMore, moreError } = search;
   if (status === 'escribiendo') return <Text style={styles.hint}>Escribe al menos 2 letras.</Text>;
   if (status === 'cargando' && results.length === 0) return <ActivityIndicator color={colors.primary} style={styles.loading} accessibilityLabel="Buscando" />;
   if (status === 'error') {
@@ -209,9 +209,15 @@ function SearchResults({ query, search }: { query: string; search: ReturnType<ty
   return (
     <View style={styles.section} accessibilityLiveRegion="polite">
       <Text style={styles.resultsLabel}>
-        {results.length} {results.length === 1 ? 'resultado' : 'resultados'} para «{query.trim()}»
+        {results.length}{hasMore ? '+' : ''} {results.length === 1 ? 'resultado' : 'resultados'} para «{query.trim()}»
       </Text>
       {results.map((b) => <BusinessRow key={b.id} business={b} variant="result" />)}
+      {moreError && <Text style={styles.moreError} accessibilityRole="alert">No pudimos cargar más resultados. Revisa tu conexión e intenta de nuevo.</Text>}
+      {(hasMore || moreError) && (
+        <Pressable accessibilityRole="button" onPress={loadMore} disabled={loadingMore} style={({ pressed }) => [styles.more, pressed && styles.pressed]}>
+          {loadingMore ? <ActivityIndicator color={colors.primary} accessibilityLabel="Cargando más resultados" /> : <Text style={styles.moreText}>{moreError ? 'Intentar de nuevo' : 'Ver más'}</Text>}
+        </Pressable>
+      )}
       {results.length === 0 && (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>No encontramos nada con ese nombre</Text>
@@ -266,6 +272,9 @@ const styles = StyleSheet.create({
   carouselContent: { paddingHorizontal: 20, paddingBottom: 4, gap: 12 },
 
   hint: { fontSize: 14, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
+  more: { minHeight: 48, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  moreText: { fontSize: 15, fontFamily: fonts.bold, color: colors.primary },
+  moreError: { fontSize: 13.5, fontFamily: fonts.semibold, color: colors.danger, textAlign: 'center' },
   resultsLabel: { fontSize: 14, fontFamily: fonts.semibold, color: colors.textBody },
   empty: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.inputBorder, borderRadius: 16, padding: 20, gap: 6, alignItems: 'center' },
   emptyTitle: { fontSize: 15, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },

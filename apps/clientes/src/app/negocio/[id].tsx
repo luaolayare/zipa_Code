@@ -1,5 +1,5 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, groupMenu, isRestaurant, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Ban, BadgeCheck, Camera, Flag, MapPin } from 'lucide-react-native';
@@ -179,7 +179,7 @@ export default function NegocioDetalle() {
           {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => { api.track('whatsapp_click', { businessId: business.id }); Linking.openURL(wa); }} />}
         </View>
 
-        <Text style={styles.h2} accessibilityRole="header">{isRestaurant(business) ? 'Menú' : 'Productos'}</Text>
+        <Text style={styles.h2} accessibilityRole="header">{catalogTitle(business)}</Text>
         {products.length === 0 ? (
           <Text style={styles.muted}>Este negocio aún no ha subido productos.</Text>
         ) : (
@@ -188,12 +188,12 @@ export default function NegocioDetalle() {
             <View key={section ?? 'sin-seccion'} style={{ gap: 12 }}>
               {(section || all.length > 1) && <Text style={styles.menuSection} accessibilityRole="header">{section ?? 'Más del menú'}</Text>}
               <View style={styles.grid}>
-                {items.map((p, i) => <ProductCard key={p.id} product={p} category={business.category} seed={g * 10 + i} />)}
+                {items.map((p, i) => <ProductCard key={p.id} product={p} business={business} seed={g * 10 + i} />)}
               </View>
             </View>
           ))
         )}
-        {products.length > 0 && <Text style={styles.muted}>Para pedir o preguntar por un {isRestaurant(business) ? 'plato' : 'producto'}, escríbele al negocio por WhatsApp.</Text>}
+        {products.length > 0 && <Text style={styles.muted}>Para pedir o preguntar por un {productWord(business)}, escríbele al negocio por WhatsApp.</Text>}
 
         <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
         {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}

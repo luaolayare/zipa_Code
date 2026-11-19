@@ -1,17 +1,18 @@
-import { PlateArt, colors, fonts, formatCop, type Category, type Product } from '@zipa/shared';
+import { PlateArt, colors, fonts, formatCop, type Product, availabilityLabels, type Classified } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Play } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 /** Tarjeta de producto en la grilla del negocio: foto (o ilustración), nombre, precio y botón. */
-export function ProductCard({ product: p, category, seed }: { product: Product; category: Category; seed: number }) {
+export function ProductCard({ product: p, business, seed }: { product: Product; business: Classified; seed: number }) {
+  const labels = availabilityLabels(business);
   const hasVideo = p.videoStatus === 'aprobado' && !!p.videoPath;
   const open = () => router.push({ pathname: '/producto/[id]', params: { id: p.id } });
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${p.name}, ${formatCop(p.priceCop)}${p.available ? '' : ', no disponible hoy'}${hasVideo ? ', con video' : ''}`} onPress={open} style={({ pressed }) => [styles.card, !p.available && styles.off, pressed && { opacity: 0.88 }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${p.name}, ${formatCop(p.priceCop)}${p.available ? '' : `, ${labels.off.toLowerCase()}`}${hasVideo ? ', con video' : ''}`} onPress={open} style={({ pressed }) => [styles.card, !p.available && styles.off, pressed && { opacity: 0.88 }]}>
       <View style={[styles.thumb, { backgroundColor: seed % 2 ? colors.stage3d : '#F1ECE3' }]}>
-        {p.photoUrl ? <Image source={{ uri: p.photoUrl }} style={styles.photo} /> : <PlateArt category={category} size={120} seed={seed} />}
-        {!p.available && <Text style={styles.badgeOff}>No disponible hoy</Text>}
+        {p.photoUrl ? <Image source={{ uri: p.photoUrl }} style={styles.photo} /> : <PlateArt of={business} size={120} seed={seed} />}
+        {!p.available && <Text style={styles.badgeOff}>{labels.off}</Text>}
         {p.available && p.photos.length > 0 && <Text style={styles.badgeOff}>{p.photos.length + 1} fotos</Text>}
         {hasVideo && (
           <View style={styles.badgeVideo}>

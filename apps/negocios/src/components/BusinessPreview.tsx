@@ -1,22 +1,20 @@
 // La tarjeta del negocio tal como sale en la app de clientes.
-import { businessTypeLabel, categoryLabel, colors, fonts, type BusinessType, type Category } from '@zipa/shared';
+import { businessCover, businessTypeLabel, colors, fonts, mainCategoryName, mainOf, type BusinessType, type Classified } from '@zipa/shared';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { initials } from './kit';
 
-export const COVER: Record<Category, string> = { comer: '#C2381B', artesanias: '#0F6E6E', cafe_dulces: '#5A3A22' };
-
 export function BusinessPreview({
   logoUri = null,
   name,
-  category,
+  of,
   type: businessType,
   address,
   productCount,
 }: {
   logoUri?: string | null;
   name: string;
-  category: Category;
+  of: Classified;
   type: BusinessType;
   address: string;
   productCount: number;
@@ -24,7 +22,7 @@ export function BusinessPreview({
   return (
     <View style={styles.frame}>
       <View style={styles.card}>
-        <View style={[styles.cover, { backgroundColor: COVER[category] }]}>
+        <View style={[styles.cover, { backgroundColor: businessCover(of).cover }]}>
           <View style={styles.logo}>
             {logoUri ? <Image source={{ uri: logoUri }} style={styles.logoImage} accessibilityLabel={`Logo de ${name || 'tu negocio'}`} /> : <Text style={styles.logoText}>{initials(name)}</Text>}
           </View>
@@ -34,7 +32,7 @@ export function BusinessPreview({
         </View>
         <View style={styles.body}>
           <Text style={styles.name} numberOfLines={2}>{name || 'Tu negocio'}</Text>
-          <Text style={styles.meta} numberOfLines={1}>{categoryLabel(category)} · {address || 'Sin dirección'}</Text>
+          <Text style={styles.meta} numberOfLines={1}>{mainCategoryName(mainOf(of))} · {address || 'Sin dirección'}</Text>
           <View style={styles.tags}>
             <Text style={styles.tag}>{businessTypeLabel(businessType)}</Text>
             <Text style={styles.meta}>Nuevo · aún sin reseñas</Text>

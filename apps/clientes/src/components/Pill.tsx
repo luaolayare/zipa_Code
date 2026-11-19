@@ -1,7 +1,7 @@
 import { fonts } from '@zipa/shared';
 import { StyleSheet, Text } from 'react-native';
 
-/** Etiqueta en píldora: "Emprendimiento local", "2 en 3D". */
+/** Etiqueta en píldora: "Emprendimiento local", "Clásico de la zona". */
 export function Pill({ label, bg, fg }: { label: string; bg: string; fg: string }) {
   return <Text style={[styles.pill, { backgroundColor: bg, color: fg }]}>{label}</Text>;
 }

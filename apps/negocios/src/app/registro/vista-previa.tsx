@@ -1,4 +1,4 @@
-import { BRAND, Button, colors, fonts, useAuth } from '@zipa/shared';
+import { BRAND, Button, colors, fonts, useAuth, catalogTitle } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -16,7 +16,6 @@ export default function VistaPrevia() {
   const { api, user } = useAuth();
   const [error, setError] = useState('');
   const [progress, setProgress] = useState('');
-  const comer = draft.category === 'comer';
 
   const publish = async () => {
     if (!user) return router.replace('/registro/cuenta');
@@ -98,12 +97,12 @@ export default function VistaPrevia() {
     <Page>
       <StepHeader step={5} title="Vista previa" />
       <Text style={type.body}>Así verán tu negocio los clientes en la app.</Text>
-      <BusinessPreview logoUri={draft.logo?.uri ?? draft.logoUrl} name={draft.name} category={draft.category} type={draft.type} address={draft.address} productCount={draft.products.length} />
+      <BusinessPreview logoUri={draft.logo?.uri ?? draft.logoUrl} name={draft.name} of={draft} type={draft.type} address={draft.address} productCount={draft.products.length} />
 
       <View style={styles.summary}>
         <Row label="Horario" value={draft.hours.trim() || 'Sin horario'} />
         <Row label="WhatsApp" value={draft.whatsapp.trim() || 'Sin número'} />
-        <Row label={comer ? 'Menú' : 'Productos'} value={draft.products.map((p) => p.form.name).join(', ') || '—'} />
+        <Row label={catalogTitle(draft)} value={draft.products.map((p) => p.form.name).join(', ') || '—'} />
         <Row label="Videos" value={`${draft.products.filter((p) => p.form.video).length} de ${draft.products.length}`} last />
       </View>
 

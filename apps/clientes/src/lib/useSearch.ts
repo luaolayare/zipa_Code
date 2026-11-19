@@ -1,56 +1,66 @@
-import { useAuth, type Business } from '@zipa/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { createPager, useAuth, type Business } from '@zipa/shared';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 export type SearchStatus = 'vacio' | 'escribiendo' | 'cargando' | 'listo' | 'error';
 
-type Answer = { key: string; results: Business[]; error: boolean };
+/** Resultados por página (la base entrega como máximo 50). */
+export const SEARCH_PAGE = 20;
 
 /**
- * Búsqueda en el servidor mientras la persona escribe: espera 300 ms sin teclear, pide máximo
- * 30 resultados y descarta respuestas viejas (si llega tarde la de "piz", no tapa la de "pizza").
- * El estado se calcula comparando la última respuesta con lo que hay escrito ahora.
+ * Búsqueda en el servidor mientras la persona escribe, con «Ver más»:
+ * - espera 300 ms sin teclear y pide la primera página (20);
+ * - «Ver más» pide la siguiente con offset, sin duplicar resultados ni pedir dos veces a la vez;
+ * - cambiar el texto reinicia la paginación y descarta respuestas viejas (createPager).
  */
 export function useSearch(query: string) {
   const { api } = useAuth();
-  const [answer, setAnswer] = useState<Answer | null>(null);
+  const pager = useMemo(
+    () => createPager<Business>((text, offset, limit) => api.searchBusinesses({ text, offset, limit }), SEARCH_PAGE),
+    [api],
+  );
+  const state = useSyncExternalStore(pager.subscribe, pager.getState, pager.getState);
   const [attempt, setAttempt] = useState(0);
-
   const text = query.trim();
-  const key = `${attempt}|${text}`;
 
   useEffect(() => {
-    if (text.length < 2) return;
-    let stale = false;
-    const timer = setTimeout(() => {
-      api.searchBusinesses({ text, limit: 30 })
-        .then((results) => { if (!stale) setAnswer({ key, results, error: false }); })
-        .catch(() => { if (!stale) setAnswer({ key, results: [], error: true }); });
-    }, 300);
-    return () => {
-      stale = true;
-      clearTimeout(timer);
-    };
-  }, [api, text, key]);
+    if (text.length < 2) {
+      pager.clear();
+      return;
+    }
+    const timer = setTimeout(() => { pager.search(text); }, 300);
+    return () => clearTimeout(timer);
+  }, [pager, text, attempt]);
 
-  // Analítica: una búsqueda cuenta cuando su resultado se queda en pantalla 1,5 s.
-  useEffect(() => {
-    if (answer?.key !== key || answer.error) return;
-    const t = setTimeout(() => { api.track('search', { search: text, results: answer.results.length }); }, 1500);
-    return () => clearTimeout(t);
-  }, [api, answer, key, text]);
-
+  const current = state.query === text;
   const status: SearchStatus = !text
     ? 'vacio'
     : text.length < 2
       ? 'escribiendo'
-      : answer?.key !== key
+      : !current || state.loading || !state.loaded
         ? 'cargando'
-        : answer.error
+        : state.error
           ? 'error'
           : 'listo';
 
-  // Mientras llega la respuesta nueva se siguen mostrando los resultados anteriores.
-  const results = text.length >= 2 && answer && !answer.error ? answer.results : [];
+  // Analítica: una búsqueda cuenta cuando su resultado se queda en pantalla 1,5 s.
+  const shown = status === 'listo' ? state.items.length : -1;
+  useEffect(() => {
+    if (shown < 0) return;
+    const t = setTimeout(() => { api.track('search', { search: text, results: shown }); }, 1500);
+    return () => clearTimeout(t);
+  }, [api, text, shown]);
+
+  // Mientras llega la primera página de una búsqueda nueva se siguen viendo los anteriores.
+  const results = text.length >= 2 ? state.items : [];
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
-  return { results, status, retry };
+  const loadMore = useCallback(() => { pager.more(); }, [pager]);
+  return {
+    results,
+    status,
+    retry,
+    loadMore,
+    hasMore: status === 'listo' && state.hasMore,
+    loadingMore: state.loadingMore,
+    moreError: state.moreError,
+  };
 }

@@ -10,7 +10,7 @@ export const openBusiness = (id: string) => router.push({ pathname: '/negocio/[i
 
 /**
  * Fila de lista.
- * - `classic` (Clásicos de la zona): miniatura 76, "especialidad · distancia · $$" y sello "N en 3D".
+ * - `classic` (Clásicos de la zona): miniatura 76, "especialidad · distancia · $$".
  * - `result` (búsqueda y categorías): miniatura 64, "subcategoría · distancia" y etiqueta de tipo.
  */
 export function BusinessRow({ business: b, variant }: { business: Business; variant: 'classic' | 'result' }) {
@@ -28,9 +28,7 @@ export function BusinessRow({ business: b, variant }: { business: Business; vari
         <Text style={styles.name}>{b.name}</Text>
         <Text style={styles.meta}>{meta}</Text>
         <Rating value={formatRating(b.rating)} gap={8}>
-          {classic ? (
-            b.productCount > 0 && <Pill label={`${b.productCount} en 3D`} bg={colors.primarySoft} fg={colors.primary} />
-          ) : (
+          {classic ? null : (
             <Pill label={businessTypeLabel(b.type)} bg={emp ? colors.accentSoft : colors.primarySoft} fg={emp ? colors.accentText : colors.primary} />
           )}
         </Rating>

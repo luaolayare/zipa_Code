@@ -14,7 +14,7 @@ import QRCode from 'react-native-qrcode-svg';
 export const qrLink = (businessId: string, token: string | null) =>
   `vitrinalocal://negocio/${businessId}${token ? `?v=${token}` : ''}`;
 
-export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: string; token: string | null; name: string; comer: boolean }>(function QrPoster({ businessId, token, name, comer }, ref) {
+export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: string; token: string | null; name: string; restaurant: boolean }>(function QrPoster({ businessId, token, name, restaurant }, ref) {
   return (
     <View ref={ref} collapsable={false} style={styles.poster}>
       <View style={styles.brand}>
@@ -22,7 +22,7 @@ export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: stri
         <Text style={styles.brandText}>{BRAND.name}</Text>
       </View>
       <Text style={styles.name} numberOfLines={2}>{name}</Text>
-      <Text style={styles.call}>{comer ? 'Escanea y mira nuestro menú' : 'Escanea y mira nuestros productos'}</Text>
+      <Text style={styles.call}>{restaurant ? 'Escanea y mira nuestro menú' : 'Escanea y mira nuestro catálogo'}</Text>
       <View style={styles.qrBox}>
         <QRCode value={qrLink(businessId, token)} size={210} color={colors.dark} backgroundColor="#FFFFFF" ecl="M" />
       </View>

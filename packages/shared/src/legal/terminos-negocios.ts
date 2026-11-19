@@ -20,7 +20,7 @@ export const TERMINOS_NEGOCIOS: LegalDocument = {
     {
       heading: `2. Qué ofrece ${BRAND.name}`,
       paragraphs: [
-        'Una vitrina digital donde tu negocio aparece para clientes y turistas, con tus productos en 3D y las reseñas de tus clientes.',
+        'Una vitrina digital donde tu negocio aparece para clientes y turistas, con las fotos y videos de tus productos y las reseñas de tus clientes.',
         `${BRAND.name} no vende tus productos, no recibe pagos de tus clientes ni interviene en tus ventas. Tú eres el único responsable de tus productos, precios, horarios, calidad, atención, permisos y obligaciones legales y tributarias, incluido el Estatuto del Consumidor (Ley 1480 de 2011).`,
         'Condiciones comerciales del servicio: [CONDICIONES COMERCIALES O GRATUIDAD].',
       ],

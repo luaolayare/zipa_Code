@@ -71,7 +71,8 @@ describe('datos de presentación del negocio', () => {
 
   it('portada: colores propios de los negocios de ejemplo y por categoría para los nuevos', () => {
     expect(businessCover(base)).toEqual({ cover: '#C2381B', inner: '#F2B134' });
-    expect(businessCover({ ...base, id: 'nuevo', category: 'artesanias' })).toEqual({ cover: '#0F6E6E', inner: '#C2381B' });
+    // Beta 2.1: una paleta por categoría principal (antes, por categoría vieja y por negocio).
+    expect(businessCover({ mainCategory: 'emprendimientos', subcategoryId: 'artesanias', category: 'artesanias' })).toEqual({ cover: '#0F6E6E', inner: '#F2B134' });
   });
 
   it('el ranking exige un mínimo de reseñas', () => {

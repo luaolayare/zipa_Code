@@ -1,5 +1,5 @@
-// Producto: foto grande (o vista 3D cuando exista), datos y calificar.
-import { PlateArt, colors, fonts, formatCop, slideIndex, useAuth, type Business, type Product } from '@zipa/shared';
+// Producto: galería (video aprobado y fotos), datos, «Ver en 3D» solo si hay modelo, y calificar.
+import { PlateArt, colors, fonts, formatCop, slideIndex, useAuth, type Business, type Product, restaurantOf } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScanLine } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -63,7 +63,7 @@ export default function ProductoScreen() {
     );
   }
 
-  const comer = business?.category === 'comer';
+  const comer = business ? restaurantOf(business) : false; // restaurante: «Ya lo probé»
   const ar = product.modelUrl ? arUrl(product.modelUrl) : null;
   // Galería: primero el video (si el equipo lo aprobó), luego la foto principal y las demás.
   const slides: { key: string; kind: 'video' | 'photo'; url: string; label: string | null }[] = [
@@ -117,7 +117,7 @@ export default function ProductoScreen() {
             ) : product.photoUrl ? (
               <Image source={{ uri: product.photoUrl }} style={styles.photo} accessibilityLabel={product.photoLabel ?? `Foto de ${product.name}`} />
             ) : (
-              <PlateArt category={business?.category ?? 'comer'} size={300} />
+              <PlateArt of={business} size={300} />
             )}
           </View>
         )}
@@ -137,7 +137,7 @@ export default function ProductoScreen() {
         {ar && (
           <Pressable accessibilityRole="button" onPress={() => Linking.openURL(ar)} style={({ pressed }) => [styles.primary, pressed && { opacity: 0.88 }]}>
             <ScanLine size={22} color="#FFFFFF" />
-            <Text style={styles.primaryText}>{comer ? 'Ver en mi mesa' : 'Ver en mi espacio'}</Text>
+            <Text style={styles.primaryText}>Ver en 3D</Text>
           </Pressable>
         )}
         <Pressable accessibilityRole="button" onPress={rate} style={({ pressed }) => [styles.outline, pressed && { opacity: 0.85 }]}>

@@ -1,4 +1,4 @@
-// Fotos y videos: elegir de la galería, tomar con la cámara y pedir una grabación de 3D.
+// Fotos y videos: elegir de la galería, tomar con la cámara y grabar el video del producto.
 import type { LocalFile } from '@zipa/shared';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';

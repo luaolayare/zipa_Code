@@ -33,7 +33,7 @@ export const POLITICA_PRIVACIDAD: LegalDocument = {
       heading: '3. Para qué usamos tus datos',
       paragraphs: [
         'Crear y administrar tu cuenta e iniciar sesión.',
-        'Mostrar a los clientes los negocios publicados, sus productos en 3D y sus reseñas.',
+        'Mostrar a los clientes los negocios publicados, las fotos y videos de sus productos y sus reseñas.',
         'Publicar tus reseñas con tu nombre y permitir que el negocio las responda.',
         'Verificar que los negocios registrados existen. La cédula o NIT y la foto del local solo las ve el equipo de revisión; la foto se borra después de la revisión.',
         'Generar los modelos 3D a partir de los videos que sube el negocio.',

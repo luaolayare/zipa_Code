@@ -28,7 +28,7 @@ export default function TienesNegocio() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={[styles.header, { paddingTop: insets.top + 22 }]}>
-        <View style={styles.plate} pointerEvents="none"><PlateArt category="artesanias" size={150} /></View>
+        <View style={styles.plate} pointerEvents="none"><PlateArt art="artesania" main="emprendimientos" size={150} /></View>
         <Text style={styles.kicker}>Para restaurantes y emprendedores</Text>
         <Text style={styles.title} accessibilityRole="header">Muestra tu vitrina en video con tu celular</Text>
       </View>

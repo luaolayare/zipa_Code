@@ -22,7 +22,7 @@ export const TERMINOS_CLIENTES: LegalDocument = {
       paragraphs: [
         'La app muestra información de negocios independientes. No vendemos, no cobramos ni entregamos sus productos, y no somos parte de la compra que hagas.',
         'Cada negocio es el único responsable de sus productos, precios, disponibilidad, horarios, calidad y atención, y de cumplir con el Estatuto del Consumidor (Ley 1480 de 2011). Los precios que ves los publica el negocio y pueden cambiar.',
-        'Los modelos 3D y la vista en realidad aumentada son representaciones aproximadas creadas a partir de videos del negocio. El producto real puede variar en tamaño, color o presentación.',
+        'Las fotos, los videos y, cuando un producto los tenga, los modelos 3D son representaciones aproximadas del negocio. El producto real puede variar en tamaño, color o presentación.',
       ],
     },
     {

@@ -1,5 +1,5 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
-import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Category, type Product, type Review, PlateArt } from '@zipa/shared';
+import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Product, type Review, PlateArt, availabilityLabels, type Classified } from '@zipa/shared';
 import { BadgeCheck, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,12 +22,13 @@ const STATE = {
   sin_video: { label: 'Solo foto', color: colors.textMuted },
 };
 
-export function ProductRow({ product, category, onPress, onToggleAvailable }: { product: Product; category: Category; onPress: () => void; onToggleAvailable?: () => void }) {
+export function ProductRow({ product, business, onPress, onToggleAvailable }: { product: Product; business: Classified; onPress: () => void; onToggleAvailable?: () => void }) {
+  const labels = availabilityLabels(business);
   const s = STATE[productVideoState(product)];
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}>
       <View style={styles.thumb}>
-        {product.photoUrl ? <Image source={{ uri: product.photoUrl }} style={styles.thumbImg} /> : <PlateArt category={category} size={64} />}
+        {product.photoUrl ? <Image source={{ uri: product.photoUrl }} style={styles.thumbImg} /> : <PlateArt of={business} size={64} />}
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text style={type.h3} numberOfLines={2}>{product.name}</Text>
@@ -36,12 +37,12 @@ export function ProductRow({ product, category, onPress, onToggleAvailable }: { 
           <Pressable
             accessibilityRole="switch"
             accessibilityState={{ checked: product.available }}
-            accessibilityLabel={`${product.name}: disponible hoy`}
+            accessibilityLabel={`${product.name}: ${labels.on.toLowerCase()}`}
             onPress={onToggleAvailable}
             hitSlop={6}
             style={[styles.avail, product.available ? styles.availOn : styles.availOff]}>
             <Text style={[styles.availText, { color: product.available ? colors.success : colors.danger }]}>
-              {product.available ? 'Disponible hoy' : 'No disponible hoy'}
+              {product.available ? labels.on : labels.off}
             </Text>
           </Pressable>
         )}

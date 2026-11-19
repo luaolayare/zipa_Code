@@ -1,5 +1,5 @@
 // QR del negocio para imprimir o compartir.
-import { Button, useAuth, type Business } from '@zipa/shared';
+import { Button, useAuth, type Business, restaurantOf } from '@zipa/shared';
 import * as Sharing from 'expo-sharing';
 import { router } from 'expo-router';
 import { Share2 } from 'lucide-react-native';
@@ -50,7 +50,7 @@ export default function Qr() {
       </View>
       <Text style={type.body}>Imprímelo para tus mesas o mostrador. El cliente lo escanea con la cámara de su celular y llega directo a tu vitrina. Si después te califica, su reseña sale con el sello «Visitó el negocio».</Text>
       {business ? (
-        <QrPoster ref={poster} businessId={business.id} token={token} name={business.name} comer={business.category === 'comer'} />
+        <QrPoster ref={poster} businessId={business.id} token={token} name={business.name} restaurant={restaurantOf(business)} />
       ) : (
         !error && <ActivityIndicator style={{ marginVertical: 40 }} />
       )}

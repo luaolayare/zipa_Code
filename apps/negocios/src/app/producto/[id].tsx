@@ -1,5 +1,5 @@
 // Agregar o editar un producto desde el panel. id = "nuevo" para uno nuevo.
-import { Button, confirmAsync, useAuth, type Business, type Product } from '@zipa/shared';
+import { Button, confirmAsync, useAuth, type Business, type Product, productWord } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -45,7 +45,7 @@ export default function ProductoScreen() {
     return <View style={{ flex: 1, justifyContent: 'center' }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
   }
 
-  const word = business.category === 'comer' ? 'plato' : 'producto';
+  const word = productWord(business);
 
   const save = async () => {
     const e = productFormError(form, word);
@@ -97,7 +97,7 @@ export default function ProductoScreen() {
           </View>
         </Notice>
       )}
-      <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} category={business.category} />
+      <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} business={business} />
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title={saving || (isNew ? `Agregar ${word}` : 'Guardar cambios')} onPress={save} loading={!!saving} />
       {!isNew && <Button title={`Borrar ${word}`} variant="danger" onPress={remove} disabled={!!saving} />}

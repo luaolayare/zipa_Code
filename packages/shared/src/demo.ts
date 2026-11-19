@@ -48,11 +48,11 @@ export const DEMO_BUSINESSES: Business[] = [
 ];
 
 export const DEMO_REVIEWS: Review[] = [
-  { id: 'r1', businessId: 'b1', userId: 'u1', authorName: 'Tom, turista de Canadá', stars: 5, text: 'No sabía qué era una arepa de huevo. Con la vista 3D entendí y ahora vuelvo cada día.', reply: null, createdAt: '2026-11-01T15:00:00Z' },
+  { id: 'r1', businessId: 'b1', userId: 'u1', authorName: 'Tom, turista de Canadá', stars: 5, text: 'No sabía qué era una arepa de huevo. Con el video entendí y ahora vuelvo cada día.', reply: null, createdAt: '2026-11-01T15:00:00Z' },
   { id: 'r2', businessId: 'b2', userId: 'u2', authorName: 'Julia, turista de Alemania', stars: 5, text: 'Pude ver la mochila por todos lados antes de ir a la tienda. Llegué directo a comprarla.', reply: '¡Gracias por visitarnos!', createdAt: '2026-11-03T18:00:00Z' },
   { id: 'r3', businessId: 'b3', userId: 'u3', authorName: 'Mariana', stars: 4, text: 'Muy buen café y te explican de dónde viene. El lugar es pequeño.', reply: null, createdAt: '2026-11-02T10:00:00Z' },
-  { id: 'r4', businessId: 'b4', userId: 'u4', authorName: 'Laura, turista de México', stars: 5, text: 'Vi la bandeja en 3D antes de pedir y llegó tal cual. Enorme, alcanza para dos.', reply: null, createdAt: '2026-11-04T20:00:00Z' },
-  { id: 'r5', businessId: 'b6', userId: 'u5', authorName: 'Sofía', stars: 4, text: 'La cazuela es muy buena. En 3D se ve más pequeña de lo que llega.', reply: null, createdAt: '2026-11-05T21:00:00Z' },
+  { id: 'r4', businessId: 'b4', userId: 'u4', authorName: 'Laura, turista de México', stars: 5, text: 'Vi la bandeja en video antes de pedir y llegó tal cual. Enorme, alcanza para dos.', reply: null, createdAt: '2026-11-04T20:00:00Z' },
+  { id: 'r5', businessId: 'b6', userId: 'u5', authorName: 'Sofía', stars: 4, text: 'La cazuela es muy buena. En la foto se ve más pequeña de lo que llega.', reply: null, createdAt: '2026-11-05T21:00:00Z' },
   { id: 'r6', businessId: 'b5', userId: 'u6', authorName: 'Pedro', stars: 4, text: 'Productos de muy buena calidad, precios altos pero lo vale.', reply: null, createdAt: '2026-11-05T16:00:00Z' },
   { id: 'r7', businessId: 'b7', userId: 'u7', authorName: 'Emma, turista de Francia', stars: 5, text: 'Las mejores cocadas que probé en Cartagena, y la señora es encantadora.', reply: null, createdAt: '2026-11-06T17:00:00Z' },
 ];

@@ -1,0 +1,77 @@
+{
+  "resultados": [
+    {
+      "id": "B1-1",
+      "prueba": "Cafetería (Restaurantes, categoría vieja cafe_dulces): «Tu menú», «Agregar plato», secciones del menú y «Disponible hoy»",
+      "resultado": "OK",
+      "detalle": "{\"categoriaVieja\":\"cafe_dulces\",\"panelCafe\":{\"titulo\":1,\"agregar\":1,\"dispo\":1},\"editorCafe\":{\"seccionMenu\":1,\"chips\":1,\"dispo\":1,\"boton\":1}}"
+    },
+    {
+      "id": "B1-2",
+      "prueba": "Heladería (Emprendimientos): «Tu catálogo», «Agregar producto», sección opcional sin sugerencias de menú y «Disponible»/«Agotado»",
+      "resultado": "OK",
+      "detalle": "{\"panelHel\":{\"titulo\":1,\"agregar\":1,\"agotado\":1},\"editorHel\":{\"seccionOpcional\":1,\"sinChips\":true,\"dispo\":1}}"
+    },
+    {
+      "id": "B1-3",
+      "prueba": "Clientes: la heladería muestra «Catálogo» y «Agotado»",
+      "resultado": "OK",
+      "detalle": "{\"catalogo\":1,\"agotado\":1,\"sin3D\":true}"
+    },
+    {
+      "id": "B1-4",
+      "prueba": "Clientes: la cafetería muestra «Menú» con sus secciones",
+      "resultado": "OK",
+      "detalle": "{\"menu\":1,\"seccion\":1}"
+    },
+    {
+      "id": "B2-1",
+      "prueba": "La heladería muestra la ilustración de helado, no la de taza",
+      "resultado": "OK",
+      "detalle": "{\"circulos\":4,\"conoFill\":true,\"taza\":false}"
+    },
+    {
+      "id": "B2-2",
+      "prueba": "La cafetería muestra la taza",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "B2-3",
+      "prueba": "Portada por categoría principal: cafetería terracota (Restaurantes) y heladería verde petróleo (Emprendimientos)",
+      "resultado": "OK",
+      "detalle": "{\"cafeteria\":{\"terracota\":true,\"petroleo\":false},\"heladeria\":{\"terracota\":false,\"petroleo\":true}}"
+    },
+    {
+      "id": "B4-1",
+      "prueba": "El producto sin modelo no ofrece «Ver en 3D»",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "B4-2",
+      "prueba": "El inicio no muestra indicadores «en 3D»",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "B3-1",
+      "prueba": "Búsqueda: 20 resultados y «Ver más»; luego 27 sin duplicados y sin más botón",
+      "resultado": "OK",
+      "detalle": "{\"n1\":20,\"etiqueta1\":\"20+ resultados para «zipaq158»\",\"verMas\":1,\"n2\":27,\"unicos\":27,\"verMasFinal\":0}"
+    },
+    {
+      "id": "B3-2",
+      "prueba": "Cambiar la búsqueda reinicia la paginación",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "B5-1",
+      "prueba": "El panel sirve favicon.ico e icon.svg (antes 404)",
+      "resultado": "OK",
+      "detalle": "favicon 200 · icon.svg 200"
+    }
+  ],
+  "errores": []
+}

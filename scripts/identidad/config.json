@@ -1,0 +1,20 @@
+{
+  "_comentario": "Identidad PROVISIONAL de las apps (el logo definitivo está pendiente de diseño). Para cambiarla: reemplaza marca.svg (o los colores) y ejecuta generar.cjs. Ver scripts/identidad/README.md.",
+  "marca": "marca.svg",
+  "apps": {
+    "clientes": {
+      "fondo": "#0F3D3E",
+      "cuadro": "#F2B134",
+      "simbolo": "#14211F"
+    },
+    "negocios": {
+      "fondo": "#F2B134",
+      "cuadro": "#0F3D3E",
+      "simbolo": "#F2B134"
+    }
+  },
+  "panel": {
+    "cuadro": "#F2B134",
+    "simbolo": "#14211F"
+  }
+}

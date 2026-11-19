@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -61,8 +61,8 @@ export default function Panel() {
     );
   }
 
-  const comer = business.category === 'comer';
-  const word = comer ? 'plato' : 'producto';
+  const comer = restaurantOf(business);
+  const word = productWord(business);
   const rating = reviews.length ? reviews.reduce((s, r) => s + r.stars, 0) / reviews.length : null;
   const conVideo = products.filter((p) => p.videoStatus === 'aprobado').length;
   const videosRechazados = products.filter((p) => p.videoStatus === 'rechazado').length;
@@ -137,7 +137,7 @@ export default function Panel() {
           </View>
 
           <SectionTitle
-            title={comer ? 'Tu menú' : 'Tu vitrina'}
+            title={comer ? 'Tu menú' : 'Tu catálogo'}
             action={
               <Pressable accessibilityRole="button" accessibilityLabel={`Agregar ${word}`} onPress={() => router.push('/producto/nuevo')} style={({ pressed }) => [styles.add, pressed && { opacity: 0.8 }]}>
                 <Plus size={18} color={colors.text} strokeWidth={2.6} />
@@ -152,7 +152,7 @@ export default function Panel() {
               <ProductRow
                 key={p.id}
                 product={p}
-                category={business.category}
+                business={business}
                 onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id } })}
                 onToggleAvailable={async () => {
                   // Cambio inmediato en pantalla; si falla, se revierte.

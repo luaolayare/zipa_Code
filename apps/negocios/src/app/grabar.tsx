@@ -1,4 +1,4 @@
-// Cámara para grabar el video del producto con el que se crea la vista 3D.
+// Cámara para grabar el video del producto (sin sonido; el equipo lo aprueba antes de mostrarlo).
 // Sin sonido: la app nunca pide permiso de micrófono.
 import { Button, colors, fonts } from '@zipa/shared';
 import { CameraView, useCameraPermissions } from 'expo-camera';

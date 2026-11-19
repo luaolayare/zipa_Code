@@ -1,6 +1,6 @@
-// Formulario de un producto: nombre, precio, descripción, foto y video para el 3D.
+// Formulario de un producto: nombre, precio, descripción, fotos y video.
 // Lo usan el Paso 4 del registro y el panel (agregar o editar).
-import { MAX_PRICE_COP, MENU_SECTIONS, TextField, colors, fonts, formatCop, type Category, type LocalFile, PlateArt } from '@zipa/shared';
+import { MAX_PRICE_COP, MENU_SECTIONS, TextField, colors, fonts, formatCop, type LocalFile, PlateArt, availabilityLabels, productWord, type Classified } from '@zipa/shared';
 import { Camera, Check, ImageIcon, Video } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -55,9 +55,10 @@ export function productFormError(f: ProductForm, word: string): string | null {
   return null;
 }
 
-export function ProductEditor({ value, onChange, category }: { value: ProductForm; onChange: (f: ProductForm) => void; category: Category }) {
+export function ProductEditor({ value, onChange, business }: { value: ProductForm; onChange: (f: ProductForm) => void; business: Classified }) {
   const [mediaError, setMediaError] = useState('');
-  const word = category === 'comer' ? 'plato' : 'producto';
+  const word = productWord(business); // por la categoría principal (Beta 2.1), no la vieja
+  const labels = availabilityLabels(business);
   const photoUri = value.photo?.uri ?? value.photoUrl;
   const hasVideo = !!value.video || value.hasSavedVideo;
 
@@ -115,12 +116,12 @@ export function ProductEditor({ value, onChange, category }: { value: ProductFor
       <Pressable
         accessibilityRole="switch"
         accessibilityState={{ checked: value.available }}
-        accessibilityLabel="Disponible hoy"
+        accessibilityLabel={labels.on}
         onPress={() => onChange({ ...value, available: !value.available })}
         style={({ pressed }) => [styles.toggleRow, pressed && { opacity: 0.85 }]}>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={type.h3}>Disponible hoy</Text>
-          <Text style={type.small}>{value.available ? 'Los clientes lo ven normal.' : 'Sigue en tu menú, marcado como «No disponible hoy».'}</Text>
+          <Text style={type.h3}>{labels.on}</Text>
+          <Text style={type.small}>{value.available ? 'Los clientes lo ven normal.' : labels.offHint}</Text>
         </View>
         <View style={[styles.track, value.available && styles.trackOn]}>
           <View style={[styles.knob, value.available && styles.knobOn]} />
@@ -130,7 +131,7 @@ export function ProductEditor({ value, onChange, category }: { value: ProductFor
       <Text style={styles.label}>Foto</Text>
       <View style={styles.photoRow}>
         <View style={styles.photoFrame}>
-          {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} accessibilityLabel={`Foto de ${value.name || 'tu producto'}`} /> : <PlateArt category={category} size={120} />}
+          {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} accessibilityLabel={`Foto de ${value.name || 'tu producto'}`} /> : <PlateArt of={business} size={120} />}
         </View>
         <View style={{ flex: 1, gap: 10 }}>
           <MediaButton icon={<Camera size={20} color={colors.text} />} label={photoUri ? 'Tomar otra' : 'Tomar foto'} onPress={async () => apply(await takePhoto(), 'photo')} />

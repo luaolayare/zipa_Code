@@ -7,6 +7,8 @@ export * from './supabase';
 export * from './api';
 export * from './analytics';
 export * from './gallery';
+export * from './presentation';
+export * from './pagination';
 export * from './auth';
 export * from './demo';
 export * from './legal';

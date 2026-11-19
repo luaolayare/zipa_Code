@@ -1,4 +1,4 @@
-import { Button, Card, colors, fonts, formatCop, useAuth, PlateArt } from '@zipa/shared';
+import { Button, Card, colors, fonts, formatCop, useAuth, PlateArt, productWord, restaurantOf } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -11,14 +11,14 @@ import { ProductEditor, emptyProductForm, priceFrom, productFormError, type Prod
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';
 
-// Paso 4: productos. Cada uno lleva foto y, si se puede, un video de ~20 s para la vista 3D.
+// Paso 4: productos. Cada uno lleva foto y, si se puede, un video de ~20 s.
 export default function Productos() {
   const { draft, update } = useRegistro();
   const { api } = useAuth();
   const [form, setForm] = useState<ProductForm>(emptyProductForm);
   const [error, setError] = useState('');
-  const comer = draft.category === 'comer';
-  const word = comer ? 'plato' : 'producto';
+  const comer = restaurantOf(draft);
+  const word = productWord(draft);
   const count = draft.products.length;
 
   const add = () => {
@@ -42,7 +42,7 @@ export default function Productos() {
 
   return (
     <Page>
-      <StepHeader step={4} title={comer ? 'Tu menú' : 'Tus productos'} />
+      <StepHeader step={4} title={comer ? 'Tu menú' : 'Tu catálogo'} />
       <Text style={type.body}>
         Sube al menos un {word} con su foto. Si grabas un video de unos 20 segundos mostrándolo, el equipo lo revisa y, al aprobarlo, los clientes lo ven en tu vitrina.
       </Text>
@@ -50,7 +50,7 @@ export default function Productos() {
       {draft.products.map((p, i) => (
         <View key={i} style={styles.row}>
           <View style={styles.thumb}>
-            {p.form.photo ? <Image source={{ uri: p.form.photo.uri }} style={styles.thumbImg} /> : <PlateArt category={draft.category} size={64} />}
+            {p.form.photo ? <Image source={{ uri: p.form.photo.uri }} style={styles.thumbImg} /> : <PlateArt of={draft} size={64} />}
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={type.h3} numberOfLines={1}>{p.form.name}</Text>
@@ -64,7 +64,7 @@ export default function Productos() {
 
       <Card style={styles.editor}>
         <Text style={type.h2}>{count === 0 ? `Tu primer ${word}` : `Otro ${word}`}</Text>
-        <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} category={draft.category} />
+        <ProductEditor value={form} onChange={(f) => { setForm(f); setError(''); }} business={draft} />
         <Button title={count === 0 ? `Agregar ${word}` : `Agregar otro ${word}`} variant="primary" onPress={add} />
       </Card>
 
