@@ -163,7 +163,7 @@ Ninguno.
 | # | Problema | Evidencia | Estado |
 |---|---|---|---|
 | H1 | **No hay ambiente de pruebas separado.** El perfil `preview` de EAS (con el que se generarían los APK) y los `.env` apuntan al único proyecto de Supabase, el real. Un APK de pruebas escribiría en los mismos datos que usarán los negocios reales | `eas env:list preview`: la URL es igual a la del `.env` (comparada sin mostrarla), proyecto `auilsjqprobmhusvxmmz` | **Pendiente de decisión.** Opciones: (a) crear el proyecto de pruebas (Paso 9) antes de los APK, o (b) generar los APK contra el proyecto actual, aceptando que es el real |
-| H2 | **Next.js 16.4.3 tiene una vulnerabilidad conocida** (GHSA-mfr8-8qww-v76h, moderada, en `'use cache'` con `unstable_cache`). El panel **no usa** esa función: revisado en código, sin coincidencias. Pero la herramienta de Next.js **detiene** `next dev` y `next build` en el primer intento | `next build`: `SecurityFatalError` y salida 1; el segundo intento sale 0 | **Pendiente.** Actualizar a 16.4.5 (publicada el 3/11) desde el 17 de noviembre, cuando cumpla las dos semanas que exige la regla del proyecto |
+| H2 | **Next.js 16.4.3 tiene una vulnerabilidad conocida** (GHSA-mfr8-8qww-v76h, moderada, en `'use cache'` con `unstable_cache`). El panel **no usa** esa función: revisado en código, sin coincidencias. Pero la herramienta de Next.js **detiene** `next dev` y `next build` en el primer intento | `next build`: `SecurityFatalError` y salida 1; el segundo intento sale 0 | **Resuelto el 18 de noviembre:** `next` y `eslint-config-next` pasaron a 16.4.5 (15 días de publicada; la 16.4.6 tenía 9 y no cumplía la regla). `npm audit` ya no reporta `next`. `next build` y `next dev` arrancan al primer intento. Prueba de humo contra Supabase local: MFA, las 10 páginas responden 200, destacar y quitar funciona, Sistema 4/4 |
 
 ### Medio
 
@@ -183,6 +183,8 @@ Ninguno.
 | B2 | El script de carga descarga todas las reseñas de la ficha, aunque la app pide de a 20 | Documentado |
 | B3 | El CI fija la Supabase CLI 3.1.0 y el equipo local tiene la 3.2.0 | Informativo |
 | B4 | Queda un `stash` en el repositorio local con una edición de `ci.yml` que ya está en `main` | Se puede borrar |
+| B5 | `npm audit` reporta 24 avisos moderados en `glob`, `minimatch` y `uuid`, que llegan por las herramientas de pruebas y de Expo (Jest y la CLI). No están en el panel ni en las apps instaladas. El «arreglo» de npm sería volver a versiones antiguas (Jest 29 y Expo 52) | Documentado; revisar con la próxima versión del SDK de Expo |
+| B6 | El panel no tiene ícono de pestaña (`favicon.ico` responde 404) | Cosmético |
 
 ## 7. Correcciones realizadas (rama `audit/beta-2`, sin subir)
 
