@@ -11,6 +11,8 @@ import {
   colors,
   dayLabel,
   fonts,
+  PUSH_AFTER_RESERVATIONS,
+  PushPrompt,
   restaurantOf,
   useAuth,
   validateWindows,
@@ -25,6 +27,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { Notice, type } from '@/components/kit';
 import { Page } from '@/components/Page';
 import { BackButton } from '@/components/StepHeader';
+import { usePushPrompt } from '@/lib/notificaciones';
 
 const NOTICE = [{ id: 60, label: '1 hora' }, { id: 120, label: '2 horas' }, { id: 240, label: '4 horas' }, { id: 1440, label: '1 día' }];
 const ADVANCE = [{ id: 7, label: '1 semana' }, { id: 15, label: '15 días' }, { id: 30, label: '1 mes' }, { id: 60, label: '2 meses' }];
@@ -37,6 +40,8 @@ export default function ConfiguracionReservas() {
   const [newDate, setNewDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [ultimoPaso, setUltimoPaso] = useState(false); // después de activar: invitar a activar los avisos
+  const push = usePushPrompt(api);
   const [notRestaurant, setNotRestaurant] = useState(false);
 
   useEffect(() => {
@@ -84,13 +89,33 @@ export default function ConfiguracionReservas() {
     setError('');
     try {
       await api.saveReservationSettings({ ...s, instructions: s.instructions?.trim() || null });
-      router.back();
+      // Con reservas activas y avisos sin activar en este celular: un último paso explícito (P13).
+      if (s.enabled && push.state !== 'activadas' && push.state !== 'no_disponible') setUltimoPaso(true);
+      else router.back();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos guardar la configuración.');
     } finally {
       setSaving(false);
     }
   };
+
+  if (ultimoPaso) {
+    const listo = push.state === 'activadas';
+    return (
+      <Page>
+        <Text style={type.overline}>Reservas activadas</Text>
+        <Text style={type.h1}>Último paso: las notificaciones</Text>
+        <Text style={type.small}>{PUSH_AFTER_RESERVATIONS}</Text>
+        {listo ? (
+          <Notice tone="success"><Text style={type.strong}>Notificaciones activadas en este celular.</Text></Notice>
+        ) : (
+          <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} onRecheck={push.recheck} />
+        )}
+        <Button title={listo ? 'Listo' : 'Ahora no'} variant={listo ? 'primary' : 'outline'} onPress={() => router.back()} />
+        {!listo && <Text style={type.small}>Puedes activarlas después desde el Panel o desde la bandeja de Reservas.</Text>}
+      </Page>
+    );
+  }
 
   return (
     <Page>

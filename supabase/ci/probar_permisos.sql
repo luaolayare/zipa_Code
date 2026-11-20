@@ -1348,6 +1348,11 @@ begin
   if jsonb_array_length(public.tomar_notificaciones(50)) <> 0 then raise exception 'los avisos tomados se volvieron a entregar'; end if;
   select (x ->> 'id')::bigint into nueva from jsonb_array_elements(lote) x where x -> 'data' ->> 'reservationId' = ci_pruebas.reserva(101)::text and x -> 'data' ->> 'kind' = 'nueva_solicitud';
   select (x ->> 'id')::bigint into conf from jsonb_array_elements(lote) x where x -> 'data' ->> 'reservationId' = ci_pruebas.reserva(101)::text and x -> 'data' ->> 'kind' = 'confirmada';
+  -- Cada aviso indica su app (migración 0022): la Edge Function envía app por app (P1).
+  if (select x ->> 'app' from jsonb_array_elements(lote) x where (x ->> 'id')::bigint = nueva) <> 'negocios'
+     or (select x ->> 'app' from jsonb_array_elements(lote) x where (x ->> 'id')::bigint = conf) <> 'clientes' then
+    raise exception 'tomar_notificaciones no indica la app de cada aviso';
+  end if;
   -- El aviso al restaurante va a sus 2 celulares; el del cliente, solo a su token activo de la app clientes.
   select x into a from jsonb_array_elements(lote) x where (x ->> 'id')::bigint = nueva;
   if jsonb_array_length(a -> 'tokens') <> 2 then raise exception 'el aviso al restaurante debía ir a 2 dispositivos: %', a -> 'tokens'; end if;

@@ -27,8 +27,13 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---------- Servidor falso de Expo ----------
 const recibidos = []; // { to, title, body, data, channelId, ticket }
+const peticiones = []; // proyectos de cada petición a /send
 let caido = false;
+let caidoNegocios = false; // falla solo el proyecto de negocios
 let n = 0;
+// Como en Expo: cada token pertenece a un proyecto (aquí se marca en el token: «resto» = negocios,
+// «cliente» = clientes) y una petición con tokens de dos proyectos se rechaza entera.
+const proyectoDe = (token) => (/resto|duena/.test(token) ? 'negocios' : 'clientes');
 const ticketsMalosRecibo = new Set();
 const servidor = http.createServer((req, res) => {
   let cuerpo = '';
@@ -38,6 +43,10 @@ const servidor = http.createServer((req, res) => {
     if (req.url === '/send') {
       if (caido) return responder(503, { errors: [{ code: 'INTERNAL_SERVER_ERROR' }] });
       const mensajes = JSON.parse(cuerpo);
+      const proyectos = [...new Set(mensajes.map((m) => proyectoDe(m.to)))];
+      peticiones.push(proyectos);
+      if (proyectos.length > 1) return responder(400, { errors: [{ code: 'PUSH_TOO_MANY_EXPERIENCE_IDS', message: 'All push notification messages in the same request must be for the same project' }] });
+      if (caidoNegocios && proyectos[0] === 'negocios') return responder(503, { errors: [{ code: 'INTERNAL_SERVER_ERROR' }] });
       const data = mensajes.map((m) => {
         if (/malo/.test(m.to)) return { status: 'error', message: 'no registrado', details: { error: 'DeviceNotRegistered' } };
         const id = `tk-${++n}`;
@@ -165,6 +174,46 @@ async function hasta(cond, ms = 20000) {
   await hasta(() => (avisos(ids[0]).find((a) => a.kind === 'rechazada') ?? {}).status === 'sin_dispositivos');
   const aR = avisos(ids[0]).find((a) => a.kind === 'rechazada') ?? {};
   ok('N-10', 'Después de cerrar sesión, ese dispositivo ya no recibe avisos (el aviso queda «sin_dispositivos» y la solicitud sigue en la app)', para(`cliente-ok-${sfx}`).length === previos && aR.status === 'sin_dispositivos', JSON.stringify({ status: aR.status }));
+
+  // N-12 (regresión P1): avisos de las DOS apps en cola al mismo tiempo se entregan, cada petición con un solo proyecto.
+  // El cliente vuelve a activar los avisos en otro celular (los anteriores quedaron desactivados arriba).
+  await cliente.c.rpc('registrar_token_push', { p_token: `ExponentPushToken[cliente-nuevo-${sfx}]`, p_app: 'clientes', p_platform: 'android' });
+  caido = true;
+  const r12 = await pedir(hora(6, '12:00'));
+  await duena.c.rpc('confirmar_reserva', { p_id: r12.data.id });
+  await hasta(() => avisos(r12.data.id).filter((a) => a.attempts >= 1 && a.status === 'pendiente').length === 2);
+  caido = false;
+  const antes12 = peticiones.length;
+  psql(`update notifications set next_attempt_at = now() where reservation_id = '${r12.data.id}' and status = 'pendiente'`);
+  await llamar(SECRETO);
+  const a12 = avisos(r12.data.id);
+  const pet12 = peticiones.slice(antes12);
+  ok('N-12', 'Regresión P1: avisos para el restaurante y para el cliente en cola a la vez se entregan los dos, en peticiones separadas por proyecto',
+    a12.length === 2 && a12.every((a) => a.status === 'enviada') && pet12.length >= 2 && pet12.every((p) => p.length === 1),
+    JSON.stringify({ estados: a12.map((a) => `${a.kind}=${a.status}${a.last_error ? ' (' + a.last_error + ')' : ''}`), peticiones: pet12 }));
+
+  // N-13 (regresión P1): si falla solo el proyecto de negocios, el aviso al cliente se entrega igual.
+  caido = true;
+  const r13 = await pedir(hora(7, '12:00'));
+  await duena.c.rpc('confirmar_reserva', { p_id: r13.data.id });
+  await hasta(() => avisos(r13.data.id).filter((a) => a.attempts >= 1 && a.status === 'pendiente').length === 2);
+  caido = false;
+  caidoNegocios = true;
+  psql(`update notifications set next_attempt_at = now() where reservation_id = '${r13.data.id}' and status = 'pendiente'`);
+  await llamar(SECRETO);
+  const a13 = avisos(r13.data.id);
+  const neg = a13.find((a) => a.kind === 'nueva_solicitud') ?? {};
+  const cli = a13.find((a) => a.kind === 'confirmada') ?? {};
+  ok('N-13', 'Regresión P1: la falla de un proyecto no afecta al otro (negocios queda en reintento, cliente se entrega)',
+    cli.status === 'enviada' && neg.status === 'pendiente' && neg.last_error === 'HTTP 503', JSON.stringify({ negocios: `${neg.status} ${neg.last_error}`, clientes: cli.status }));
+  caidoNegocios = false;
+  psql(`update notifications set next_attempt_at = now() where id = ${neg.id}`);
+  await llamar(SECRETO);
+  const neg2 = avisos(r13.data.id).find((a) => a.kind === 'nueva_solicitud') ?? {};
+  const deliveries = Number(psql(`select count(*) from notification_deliveries where notification_id = ${cli.id}`));
+  ok('N-14', 'Al volver el proyecto de negocios, su aviso se entrega en el reintento y el del cliente no se reenvía (idempotencia)', neg2.status === 'enviada' && neg2.attempts === 3 && deliveries === 1,
+    JSON.stringify({ negocios: neg2.status, intentos: neg2.attempts, entregasCliente: deliveries }));
+  ok('N-15', 'Ninguna petición a Expo en toda la prueba mezcló proyectos', peticiones.every((p) => p.length === 1), JSON.stringify(peticiones.filter((p) => p.length > 1)));
 
   // N-11: el log de la función no contiene tokens ni textos.
   const log = execSync('docker logs supabase_edge_runtime_zipa-lo-tiene --since 10m 2>&1').toString();

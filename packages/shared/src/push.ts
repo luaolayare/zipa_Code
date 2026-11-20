@@ -35,8 +35,31 @@ export const PUSH_PROMPT: Record<PushApp, { title: string; body: string }> = {
     body: 'Activa las notificaciones y te contamos cuando el restaurante confirme o no tu solicitud.',
   },
 };
-export const PUSH_BLOCKED = 'Las notificaciones están bloqueadas para esta app. Puedes activarlas en los ajustes del celular.';
-export const PUSH_UNAVAILABLE = 'Las notificaciones no están disponibles en esta versión de la app. Revisa el estado aquí cuando quieras.';
+export const PUSH_BLOCKED = 'Las notificaciones están bloqueadas para esta app. Actívalas en los ajustes del celular y vuelve aquí.';
+export const PUSH_UNAVAILABLE = 'No pudimos activar las notificaciones en este celular. Revisa tu conexión e intenta de nuevo.';
+/** Después de activar las reservas (negocios): por qué conviene activar los avisos. Sin prometer que llegan siempre. */
+export const PUSH_AFTER_RESERVATIONS = 'Para enterarte de cada solicitud sin tener la app abierta, activa las notificaciones en este celular. Si no las activas, las solicitudes igual llegan a tu bandeja de Reservas, pero no te avisaremos.';
+
+/** Qué muestra la tarjeta de avisos en cada situación (lo usa PushPrompt; se prueba con Jest). */
+export type PushPromptMode = 'oculta' | 'invitar' | 'bloqueadas' | 'reintentar';
+export function pushPromptMode(state: PushState | null, failed: boolean): PushPromptMode {
+  if (failed) return 'reintentar'; // pidió activar y el celular no entregó el token: se puede volver a intentar
+  if (state === 'sin_preguntar') return 'invitar';
+  if (state === 'bloqueadas') return 'bloqueadas';
+  return 'oculta'; // activadas, no disponible (web) o aún no se sabe
+}
+
+/** Texto corto del estado de los avisos en este celular. No afirma que lleguen: solo si están activados aquí. */
+export function pushStateLabel(state: PushState | null, failed = false): string {
+  if (failed) return 'No se pudieron activar';
+  switch (state) {
+    case 'activadas': return 'Activadas en este celular';
+    case 'sin_preguntar': return 'Desactivadas';
+    case 'bloqueadas': return 'Bloqueadas en los ajustes';
+    case 'no_disponible': return 'No disponibles aquí';
+    default: return '…';
+  }
+}
 
 /** Enlace oficial de WhatsApp con un mensaje ya escrito (la persona lo puede cambiar antes de enviar). */
 export function whatsappLink(digits: string, text?: string): string | null {

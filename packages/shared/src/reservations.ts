@@ -225,3 +225,50 @@ export function validateWindows(windows: ReservationWindow[]): string | null {
 export function restaurantWhatsappMessage(r: Pick<Reservation, 'code' | 'startsAt' | 'partySize'>, businessName: string): string {
   return `Hola, te contactamos de ${businessName} por tu solicitud de reserva ${r.code} en ${BRAND.name} (${reservationWhen(r.startsAt)}, ${r.partySize} ${r.partySize === 1 ? 'persona' : 'personas'}). Queremos confirmar algunos detalles.`;
 }
+
+// ---------- Bandeja del restaurante (paginada en el servidor) ----------
+// Antes se pedían 300 solicitudes de la más vieja a la más nueva: con un historial largo, las
+// nuevas y pendientes quedaban fuera (auditoría Beta 2.2, P4). Ahora cada pestaña pide su propia
+// página, en el orden que importa, y «Ver más» trae la siguiente.
+
+export type InboxTab = 'pendientes' | 'confirmadas' | 'rechazadas' | 'canceladas' | 'finalizadas' | 'expiradas';
+
+/** Una reserva confirmada sigue en «Confirmadas» hasta 6 horas después de su hora; luego pasa a «Finalizadas» para marcar la asistencia. */
+export const CONFIRMED_GRACE_MS = 6 * 3600 * 1000;
+export const INBOX_PAGE = 30;
+
+export const INBOX_TABS: { id: InboxTab; label: string; empty: string }[] = [
+  { id: 'pendientes', label: 'Pendientes', empty: 'No hay solicitudes por responder.' },
+  { id: 'confirmadas', label: 'Confirmadas', empty: 'No hay reservas confirmadas próximas.' },
+  { id: 'rechazadas', label: 'Rechazadas', empty: 'No has rechazado solicitudes.' },
+  { id: 'canceladas', label: 'Canceladas', empty: 'No hay cancelaciones.' },
+  { id: 'finalizadas', label: 'Finalizadas', empty: 'Aún no hay reservas finalizadas.' },
+  { id: 'expiradas', label: 'Vencidas', empty: 'Ninguna solicitud ha vencido.' },
+];
+
+/**
+ * Qué pide cada pestaña al servidor: estados, filtro de fecha y orden. Pendientes por el plazo que
+ * vence antes; confirmadas por la visita más cercana; el resto, de la más reciente a la más vieja.
+ */
+export function inboxQuery(tab: InboxTab, now: Date): {
+  statuses: ReservationStatus[];
+  orFilter?: string; // filtro "or" de PostgREST (finalizadas incluye confirmadas ya pasadas)
+  startsFrom?: string; // starts_at >= (confirmadas próximas)
+  orderBy: 'respond_by' | 'starts_at' | 'created_at' | 'updated_at';
+  ascending: boolean;
+} {
+  const cutoff = new Date(now.getTime() - CONFIRMED_GRACE_MS).toISOString();
+  switch (tab) {
+    case 'pendientes': return { statuses: ['pendiente'], orderBy: 'respond_by', ascending: true };
+    case 'confirmadas': return { statuses: ['confirmada'], startsFrom: cutoff, orderBy: 'starts_at', ascending: true };
+    case 'rechazadas': return { statuses: ['rechazada'], orderBy: 'created_at', ascending: false };
+    case 'canceladas': return { statuses: ['cancelada'], orderBy: 'updated_at', ascending: false };
+    case 'finalizadas': return {
+      statuses: ['finalizada', 'no_asistio', 'confirmada'],
+      orFilter: `status.in.(finalizada,no_asistio),and(status.eq.confirmada,starts_at.lt."${cutoff}")`,
+      orderBy: 'starts_at',
+      ascending: false,
+    };
+    case 'expiradas': return { statuses: ['expirada'], orderBy: 'respond_by', ascending: false };
+  }
+}

@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, PushPrompt, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, PushPrompt, pushStateLabel, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -42,8 +42,8 @@ export default function Panel() {
       api.getBusinessLinks(b.id).then(setLinks).catch(() => {});
       // Reservas (solo restaurantes). Si falla, la tarjeta no se muestra; el resto del panel sigue.
       if (restaurantOf(b)) {
-        Promise.all([api.getReservationSettings(b.id), api.businessReservations(b.id)])
-          .then(([settings, list]) => setReservas({ settings, pending: list.filter((r) => r.status === 'pendiente').length }))
+        Promise.all([api.getReservationSettings(b.id), api.reservationCounts(b.id)])
+          .then(([settings, counts]) => setReservas({ settings, pending: counts.pendientes }))
           .catch(() => setReservas(null));
       }
       setReviews(r);
@@ -203,13 +203,14 @@ export default function Panel() {
               <Pressable accessibilityRole="button" accessibilityLabel={`Solicitudes de reserva: ${reservas.pending} pendientes`} onPress={() => router.push('/reservas')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
                 <DataRow label="Estado" value={reservas.settings?.enabled ? 'Recibiendo solicitudes' : 'Apagadas'} />
                 <DataRow label="Pendientes" value={reservas.pending ? `${reservas.pending} por responder` : 'Ninguna'} />
+                {reservas.settings?.enabled && push.state !== 'no_disponible' && <DataRow label="Notificaciones" value={pushStateLabel(push.state, push.failed)} />}
                 <View style={styles.edit}>
                   <Text style={styles.editText}>Ver solicitudes</Text>
                   <ChevronRight size={18} color={colors.primary} />
                 </View>
               </Pressable>
               <Button title={reservas.settings?.enabled ? 'Configurar reservas' : 'Activar reservas'} variant="outline" onPress={() => router.push('/reservas/configuracion')} />
-              {reservas.settings?.enabled && <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} />}
+              {reservas.settings?.enabled && <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} onRecheck={push.recheck} />}
             </>
           )}
 

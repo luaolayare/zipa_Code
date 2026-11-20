@@ -1,9 +1,23 @@
-// Bandeja de solicitudes de reserva del restaurante, por estado. Las pendientes van primero por
-// defecto (ordenadas por las que vencen antes). Desde aquí se activan las notificaciones.
-import { ChoiceChips, PushPrompt, ReservationPill, colors, fonts, reservationWhen, useAuth, type Reservation, type ReservationStatus } from '@zipa/shared';
+// Bandeja de solicitudes de reserva del restaurante, por estado. Cada pestaña se pide al servidor por
+// páginas (30 y «Ver más»), en el orden que importa: pendientes por el plazo que vence antes y
+// confirmadas por la visita más cercana. Un historial largo ya no tapa lo nuevo (auditoría Beta 2.2, P4).
+import {
+  ChoiceChips,
+  INBOX_PAGE,
+  INBOX_TABS,
+  PushPrompt,
+  ReservationPill,
+  colors,
+  createPager,
+  fonts,
+  reservationWhen,
+  useAuth,
+  type InboxTab,
+  type Reservation,
+} from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { ChevronRight, Settings } from 'lucide-react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -11,54 +25,51 @@ import { Notice, type } from '@/components/kit';
 import { BackButton } from '@/components/StepHeader';
 import { usePushPrompt } from '@/lib/notificaciones';
 
-type Tab = 'pendientes' | 'confirmadas' | 'rechazadas' | 'canceladas' | 'finalizadas' | 'expiradas';
-const TABS: { id: Tab; label: string; statuses: ReservationStatus[]; empty: string }[] = [
-  { id: 'pendientes', label: 'Pendientes', statuses: ['pendiente'], empty: 'No hay solicitudes por responder.' },
-  { id: 'confirmadas', label: 'Confirmadas', statuses: ['confirmada'], empty: 'No hay reservas confirmadas.' },
-  { id: 'rechazadas', label: 'Rechazadas', statuses: ['rechazada'], empty: 'No has rechazado solicitudes.' },
-  { id: 'canceladas', label: 'Canceladas', statuses: ['cancelada'], empty: 'No hay cancelaciones.' },
-  { id: 'finalizadas', label: 'Finalizadas', statuses: ['finalizada', 'no_asistio'], empty: 'Aún no hay reservas finalizadas.' },
-  { id: 'expiradas', label: 'Vencidas', statuses: ['expirada'], empty: 'Ninguna solicitud ha vencido.' },
-];
-
-/** Orden de cada pestaña: pendientes por plazo, confirmadas por fecha de visita, el resto de la más reciente a la más vieja. */
-function sortFor(tab: Tab, list: Reservation[]) {
-  if (tab === 'pendientes') return [...list].sort((a, b) => a.respondBy.localeCompare(b.respondBy));
-  if (tab === 'confirmadas') return [...list].sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-  return [...list].sort((a, b) => b.startsAt.localeCompare(a.startsAt));
-}
-
 export default function Reservas() {
   const { api, user } = useAuth();
-  const [list, setList] = useState<Reservation[] | null>(null);
-  const [tab, setTab] = useState<Tab>('pendientes');
+  const [tab, setTab] = useState<InboxTab>('pendientes');
+  const [counts, setCounts] = useState<Record<InboxTab, number> | null>(null);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const push = usePushPrompt(api);
 
-  const load = useCallback(async () => {
-    if (!user) return router.replace('/');
+  useEffect(() => {
+    if (!user) return void router.replace('/');
+    api.myBusiness(user.id)
+      .then((b) => (b ? setBusinessId(b.id) : router.replace('/panel')))
+      .catch(() => setError('No pudimos cargar las solicitudes. Desliza hacia abajo para intentar de nuevo.'));
+  }, [api, user]);
+
+  // La "búsqueda" del paginador es la pestaña: cambiarla reinicia la lista y descarta respuestas viejas.
+  const pager = useMemo(
+    () => createPager<Reservation>((t, offset, limit) => api.businessReservationsPage(businessId ?? '', t as InboxTab, offset, limit), INBOX_PAGE),
+    [api, businessId],
+  );
+  const page = useSyncExternalStore(pager.subscribe, pager.getState, pager.getState);
+
+  const load = useCallback(async (t: InboxTab) => {
+    if (!businessId) return;
     try {
-      const b = await api.myBusiness(user.id);
-      if (!b) return router.replace('/panel');
-      setList(await api.businessReservations(b.id));
+      const [c] = await Promise.all([api.reservationCounts(businessId), pager.search(t)]);
+      setCounts(c);
       setError('');
     } catch {
       setError('No pudimos cargar las solicitudes. Desliza hacia abajo para intentar de nuevo.');
     } finally {
       setRefreshing(false);
     }
-  }, [api, user]);
+  }, [api, businessId, pager]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  // Al volver a la pantalla (por ejemplo, después de confirmar una) se recarga la pestaña actual.
+  useFocusEffect(useCallback(() => { load(tab); }, [load, tab]));
 
-  const count = (t: (typeof TABS)[number]) => (list ?? []).filter((r) => t.statuses.includes(r.status)).length;
-  const current = TABS.find((t) => t.id === tab)!;
-  const items = sortFor(tab, (list ?? []).filter((r) => current.statuses.includes(r.status)));
+  const current = INBOX_TABS.find((t) => t.id === tab)!;
+  const total = counts ? Object.values(counts).reduce((a, b) => a + b, 0) : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}>
+      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(tab); }} />}>
         <View style={styles.head}>
           <BackButton />
           <Text style={[type.h1, { flex: 1 }]}>Reservas</Text>
@@ -67,18 +78,20 @@ export default function Reservas() {
           </Pressable>
         </View>
 
-        <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} />
+        <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} onRecheck={push.recheck} />
 
         {!!error && <Text style={type.error}>{error}</Text>}
-        {!list && !error && <ActivityIndicator size="large" />}
-        {list && (
+        {!counts && !error && <ActivityIndicator size="large" />}
+        {counts && (
           <>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <ChoiceChips label="Estado" wrap={false} options={TABS.map((t) => ({ id: t.id, label: `${t.label} (${count(t)})` }))} value={tab} onChange={setTab} />
+              <ChoiceChips label="Estado" wrap={false} options={INBOX_TABS.map((t) => ({ id: t.id, label: `${t.label} (${counts[t.id]})` }))} value={tab} onChange={setTab} />
             </ScrollView>
-            {!list.length && <Notice tone="info"><Text style={type.strong}>Aún no tienes solicitudes. Cuando un cliente pida una reserva, aparecerá aquí.</Text></Notice>}
-            {!!list.length && !items.length && <Text style={type.small}>{current.empty}</Text>}
-            {items.map((r) => (
+            {total === 0 && <Notice tone="info"><Text style={type.strong}>Aún no tienes solicitudes. Cuando un cliente pida una reserva, aparecerá aquí.</Text></Notice>}
+            {page.loading && <ActivityIndicator />}
+            {page.error && <Text style={type.error}>No pudimos cargar esta lista. Desliza hacia abajo para intentar de nuevo.</Text>}
+            {!!total && page.loaded && !page.loading && !page.items.length && !page.error && <Text style={type.small}>{current.empty}</Text>}
+            {page.items.map((r) => (
               <Pressable key={r.id} accessibilityRole="button" accessibilityLabel={`Solicitud ${r.code}, ${reservationWhen(r.startsAt)}, ${r.partySize} personas, ${r.contactName}`} onPress={() => router.push({ pathname: '/reservas/[id]', params: { id: r.id } })} style={({ pressed }) => [styles.row, pressed && { opacity: 0.9 }]}>
                 <View style={{ flex: 1, gap: 4 }}>
                   <View style={styles.rowTop}>
@@ -89,11 +102,18 @@ export default function Reservas() {
                   <Text style={type.small} numberOfLines={1}>{r.contactName}{r.tablePreference ? ` · ${r.tablePreference}` : ''}{r.items.length ? ` · ${r.items.length} ${r.items.length === 1 ? 'plato' : 'platos'}` : ''}</Text>
                   {!!r.notes && <Text style={type.small} numberOfLines={1}>«{r.notes}»</Text>}
                   {r.status === 'pendiente' && <Text style={styles.deadline}>Responde antes de: {reservationWhen(r.respondBy, new Date())}</Text>}
+                  {r.status === 'confirmada' && tab === 'finalizadas' && <Text style={styles.deadline}>Ya pasó la hora: marca si el cliente llegó</Text>}
                   <Text style={styles.created}>Recibida: {reservationWhen(r.createdAt, new Date())}</Text>
                 </View>
                 <ChevronRight size={20} color={colors.textMuted} />
               </Pressable>
             ))}
+            {page.hasMore && (
+              <Pressable accessibilityRole="button" accessibilityState={{ busy: page.loadingMore }} disabled={page.loadingMore} onPress={() => pager.more()} style={({ pressed }) => [styles.more, pressed && { opacity: 0.85 }]}>
+                {page.loadingMore ? <ActivityIndicator color={colors.primary} /> : <Text style={styles.moreText}>Ver más</Text>}
+              </Pressable>
+            )}
+            {page.moreError && <Text style={type.error}>No pudimos cargar más. Toca «Ver más» para intentar de nuevo.</Text>}
           </>
         )}
       </ScrollView>
@@ -110,4 +130,6 @@ const styles = StyleSheet.create({
   code: { fontFamily: fonts.display, fontSize: 18, color: colors.text, letterSpacing: 0.5 },
   deadline: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.accentText },
   created: { fontFamily: fonts.regular, fontSize: 12.5, color: colors.textMuted },
+  more: { minHeight: 48, borderRadius: 999, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  moreText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary },
 });

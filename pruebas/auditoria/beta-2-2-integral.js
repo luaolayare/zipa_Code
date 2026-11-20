@@ -24,6 +24,7 @@ function totp(secret) { const ctr = Buffer.alloc(8); ctr.writeBigUInt64BE(BigInt
 
 // Servidor falso de Expo.
 const avisos = [];
+const peticiones = [];
 const servidor = http.createServer((req, res) => {
   let b = '';
   req.on('data', (c) => { b += c; });
@@ -31,6 +32,10 @@ const servidor = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     if (req.url === '/send') {
       const m = JSON.parse(b);
+      // Como en Expo: una petición con tokens de los dos proyectos (clientes y negocios) se rechaza entera.
+      const proyectos = new Set(m.map((x) => (x.to.includes('integral-duena') ? 'negocios' : 'clientes')));
+      peticiones.push([...proyectos]);
+      if (proyectos.size > 1) { res.statusCode = 400; res.end(JSON.stringify({ errors: [{ code: 'PUSH_TOO_MANY_EXPERIENCE_IDS' }] })); return; }
       res.end(JSON.stringify({ data: m.map((x) => { avisos.push(x); return { status: 'ok', id: crypto.randomUUID() }; }) }));
     } else res.end(JSON.stringify({ data: Object.fromEntries((JSON.parse(b).ids ?? []).map((id) => [id, { status: 'ok' }])) }));
   });
@@ -166,6 +171,7 @@ const servidor = http.createServer((req, res) => {
   await br.close();
   servidor.close();
   ok('I-8', 'Sin errores de consola en las tres apps', errores.length === 0, JSON.stringify(errores));
+  ok('I-9', 'Ninguna petición a Expo mezcló los proyectos de clientes y negocios (P1)', peticiones.length > 0 && peticiones.every((x) => x.length === 1), JSON.stringify(peticiones));
   for (const x of R) console.log(`${x.resultado} ${x.id} ${x.prueba}${x.resultado === 'OK' ? '' : ' → ' + x.detalle}`);
   fs.writeFileSync(`${out}/integral.json`, JSON.stringify({ fecha: new Date().toISOString(), resultados: R, erroresConsola: errores }, null, 2));
   process.exit(R.every((x) => x.resultado === 'OK') ? 0 : 1);

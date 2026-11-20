@@ -24,7 +24,14 @@ const PUSH_URL = Deno.env.get('EXPO_PUSH_URL') ?? 'https://exp.host/--/api/v2/pu
 const RECEIPTS_URL = Deno.env.get('EXPO_RECEIPTS_URL') ?? 'https://exp.host/--/api/v2/push/getReceipts';
 const LOTE = 100;
 
-type Aviso = { id: number; title: string; body: string; data: Record<string, unknown>; attempt: number; tokens: { id: string; token: string }[] };
+type Aviso = { id: number; app?: 'clientes' | 'negocios'; title: string; body: string; data: Record<string, unknown>; attempt: number; tokens: { id: string; token: string }[] };
+
+/**
+ * A qué app (proyecto de Expo) va el aviso. La base lo entrega desde la migración 0022; si la función
+ * se despliega antes que esa migración, se deduce de la ruta del aviso (las rutas son distintas por app).
+ */
+const appDe = (a: Aviso): 'clientes' | 'negocios' =>
+  a.app ?? (String(a.data?.url ?? '').startsWith('/reservas/') ? 'negocios' : 'clientes');
 type Ticket = { token_id: string; status: 'ok' | 'error'; ticket_id?: string; error?: string };
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -76,28 +83,33 @@ Deno.serve(async (req) => {
     if (!avisos.length) break;
     resumen.avisos += avisos.length;
 
-    // Un mensaje por dispositivo; se recuerda a qué aviso y token corresponde cada uno.
-    const destinos: { aviso: number; token_id: string }[] = [];
-    const mensajes: unknown[] = [];
-    for (const a of avisos) {
-      for (const t of a.tokens) {
-        destinos.push({ aviso: a.id, token_id: t.id });
-        mensajes.push({ to: t.token, title: a.title, body: a.body, data: a.data, sound: 'default', priority: 'high', channelId: 'reservas', ttl: 86_400 });
-      }
-    }
+    // Clientes y negocios son DOS proyectos de Expo, y Expo rechaza entera una petición que mezcle
+    // proyectos (PUSH_TOO_MANY_EXPERIENCE_IDS). Por eso se envía por separado, app por app: una falla
+    // en una app no afecta a la otra (auditoría Beta 2.2, P1).
     const tickets = new Map<number, Ticket[]>(avisos.map((a) => [a.id, []]));
     const fallaGeneral = new Map<number, string>();
-    for (let i = 0; i < mensajes.length; i += LOTE) {
-      const r = await enviarLote(mensajes.slice(i, i + LOTE));
-      destinos.slice(i, i + LOTE).forEach((d, j) => {
-        if ('error' in r) fallaGeneral.set(d.aviso, r.error);
-        else {
-          const t = r.tickets[j];
-          tickets.get(d.aviso)!.push(t?.status === 'ok'
-            ? { token_id: d.token_id, status: 'ok', ticket_id: t.id }
-            : { token_id: d.token_id, status: 'error', error: t?.details?.error ?? 'Error' });
+    for (const app of ['negocios', 'clientes'] as const) {
+      // Un mensaje por dispositivo; se recuerda a qué aviso y token corresponde cada uno.
+      const destinos: { aviso: number; token_id: string }[] = [];
+      const mensajes: unknown[] = [];
+      for (const a of avisos.filter((x) => appDe(x) === app)) {
+        for (const t of a.tokens) {
+          destinos.push({ aviso: a.id, token_id: t.id });
+          mensajes.push({ to: t.token, title: a.title, body: a.body, data: a.data, sound: 'default', priority: 'high', channelId: 'reservas', ttl: 86_400 });
         }
-      });
+      }
+      for (let i = 0; i < mensajes.length; i += LOTE) {
+        const r = await enviarLote(mensajes.slice(i, i + LOTE));
+        destinos.slice(i, i + LOTE).forEach((d, j) => {
+          if ('error' in r) fallaGeneral.set(d.aviso, r.error);
+          else {
+            const t = r.tickets[j];
+            tickets.get(d.aviso)!.push(t?.status === 'ok'
+              ? { token_id: d.token_id, status: 'ok', ticket_id: t.id }
+              : { token_id: d.token_id, status: 'error', error: t?.details?.error ?? 'Error' });
+          }
+        });
+      }
     }
     for (const a of avisos) {
       const general = fallaGeneral.get(a.id) ?? null;

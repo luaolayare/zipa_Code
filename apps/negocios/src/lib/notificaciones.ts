@@ -9,7 +9,7 @@ import * as Notifications from 'expo-notifications';
 import { AndroidImportance } from 'expo-notifications';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 const APP: PushApp = 'negocios';
 const native = Platform.OS === 'android' || Platform.OS === 'ios';
@@ -98,17 +98,32 @@ export function usePushSetup(api: Api, userId: string | null) {
   }, [api, userId]);
 }
 
-/** Estado y acción para la tarjeta «Activar notificaciones» de una pantalla. */
+/**
+ * Estado y acciones para la tarjeta de avisos de una pantalla: activar (acción explícita), reintentar
+ * si falló, y volver a revisar el permiso (con un botón y al regresar de los ajustes del celular).
+ */
 export function usePushPrompt(api: Api) {
   const [state, setState] = useState<PushState | null>(null);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  useEffect(() => { pushState().then(setState).catch(() => setState('no_disponible')); }, []);
+  const recheck = useCallback(() => {
+    pushState().then((s) => {
+      setState(s);
+      if (s === 'activadas') { setFailed(false); register(api).catch(() => {}); }
+    }).catch(() => setState('no_disponible'));
+  }, [api]);
+  useEffect(() => {
+    recheck();
+    // Si la persona fue a los ajustes y volvió, se actualiza sola.
+    const sub = AppState.addEventListener('change', (s) => { if (s === 'active') recheck(); });
+    return () => sub.remove();
+  }, [recheck]);
   const enable = useCallback(async () => {
     setBusy(true);
     const r = await enablePush(api).catch(() => 'error' as const);
     setBusy(false);
-    if (r === 'error') { setFailed(true); setState('no_disponible'); } else setState(r);
+    if (r === 'error') setFailed(true); // la tarjeta ofrece «Intentar de nuevo»
+    else { setFailed(false); setState(r); }
   }, [api]);
-  return { state, busy, failed, enable };
+  return { state, busy, failed, enable, recheck };
 }

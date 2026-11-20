@@ -1,0 +1,48 @@
+{
+  "fecha": "2026-11-20T16:02:19.872Z",
+  "resultados": [
+    {
+      "id": "P4-0",
+      "prueba": "Con la consulta anterior, las solicitudes nuevas quedaban fuera de la bandeja (el problema existía)",
+      "resultado": "OK",
+      "detalle": "total 324, nuevas en la consulta vieja: false, false"
+    },
+    {
+      "id": "P4-1",
+      "prueba": "El panel cuenta las 2 pendientes aunque haya más de 300 solicitudes",
+      "resultado": "OK",
+      "detalle": ""
+    },
+    {
+      "id": "P4-2",
+      "prueba": "Con 324 solicitudes, la bandeja abre en Pendientes con las 2 nuevas y las cantidades correctas en cada pestaña",
+      "resultado": "OK",
+      "detalle": "{\"pestañas\":{\"pendientes\":1,\"confirmadas\":1,\"finalizadas\":1,\"canceladas\":1},\"enPendientes\":{\"p1\":1,\"p2\":1,\"filas\":2}}"
+    },
+    {
+      "id": "P4-3",
+      "prueba": "Finalizadas: 30 por página, la confirmada que ya pasó aparece primero para marcar asistencia, y «Ver más» trae 30 más sin repetir",
+      "resultado": "OK",
+      "detalle": "{\"pagina1\":30,\"pasada\":1,\"pagina2\":60,\"unicas\":60,\"primera\":\"Solicitud R-B43E2B, Jue 19 nov. · 11:01 a. m., 3 personas, Cliente Pasado\"}"
+    },
+    {
+      "id": "P4-4",
+      "prueba": "Confirmadas muestra solo la próxima (la que ya pasó está en Finalizadas)",
+      "resultado": "OK",
+      "detalle": "{\"fila\":1,\"total\":1}"
+    },
+    {
+      "id": "P4-5",
+      "prueba": "Cambiar rápido de pestaña no mezcla resultados (Pendientes vuelve a mostrar solo las 2)",
+      "resultado": "OK",
+      "detalle": "{\"filas\":2,\"p1\":1}"
+    },
+    {
+      "id": "P4-6",
+      "prueba": "Sin errores de consola",
+      "resultado": "OK",
+      "detalle": "[]"
+    }
+  ],
+  "erroresConsola": []
+}

@@ -132,7 +132,7 @@ export default function MiReserva() {
         )}
 
         {(r.status === 'pendiente' || r.status === 'confirmada') && future && (
-          <PushPrompt app="clientes" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} />
+          <PushPrompt app="clientes" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} onRecheck={push.recheck} />
         )}
 
         {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}

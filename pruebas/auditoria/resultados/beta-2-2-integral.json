@@ -1,17 +1,17 @@
 {
-  "fecha": "2026-11-19T19:35:00.911Z",
+  "fecha": "2026-11-20T16:05:00.613Z",
   "resultados": [
     {
       "id": "I-1",
       "prueba": "El cliente envía la solicitud desde la ficha y ve su código",
       "resultado": "OK",
-      "detalle": "{\"id\":\"f8212751-069a-4524-85ad-51b895dd862f\",\"code\":\"R-3WHG9X\",\"status\":\"pendiente\"}"
+      "detalle": "{\"id\":\"af8fdc49-7609-4786-b573-0457e6a27ebf\",\"code\":\"R-QJ8AA6\",\"status\":\"pendiente\"}"
     },
     {
       "id": "I-2",
       "prueba": "El restaurante recibe el aviso de la nueva solicitud (sin datos personales en el texto)",
       "resultado": "OK",
-      "detalle": "{\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el vie 20 nov., 8:00 p. m. · 2 personas. Ábrela para responder.\"}"
+      "detalle": "{\"title\":\"Tienes una nueva solicitud de reserva\",\"body\":\"Para el sáb 21 nov., 8:00 p. m. · 2 personas. Ábrela para responder.\"}"
     },
     {
       "id": "I-3",
@@ -41,13 +41,19 @@
       "id": "I-7",
       "prueba": "Sin ninguna app abierta ni llamada manual, la solicitud vence sola (pg_cron) y el cliente recibe el aviso",
       "resultado": "OK",
-      "detalle": "{\"vencio\":true,\"llego4\":true,\"segundos\":214,\"ultimaCorrida\":\"2026-11-19 19:35:00.016129+00\"}"
+      "detalle": "{\"vencio\":true,\"llego4\":true,\"segundos\":147,\"ultimaCorrida\":\"2026-11-20 16:05:00.014428+00\"}"
     },
     {
       "id": "I-8",
       "prueba": "Sin errores de consola en las tres apps",
       "resultado": "OK",
       "detalle": "[]"
+    },
+    {
+      "id": "I-9",
+      "prueba": "Ninguna petición a Expo mezcló los proyectos de clientes y negocios (P1)",
+      "resultado": "OK",
+      "detalle": "[[\"negocios\"],[\"negocios\"],[\"clientes\"],[\"negocios\"],[\"clientes\"]]"
     }
   ],
   "erroresConsola": []

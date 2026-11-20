@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { createTracker, type KeyValueStore } from './analytics';
 import { emptyLinks, type BusinessLinks, type DeliveryMode } from './contact';
-import type { RejectReason, Reservation, ReservationRequest, ReservationSettings, ReservationStatus } from './reservations';
+import { INBOX_TABS, inboxQuery, type InboxTab, type RejectReason, type Reservation, type ReservationRequest, type ReservationSettings, type ReservationStatus } from './reservations';
 import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categories';
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
@@ -540,12 +540,36 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       return list;
     },
 
-    /** Solicitudes que recibió el restaurante propio, por fecha de la visita. */
-    async businessReservations(businessId: string): Promise<Reservation[]> {
+    /**
+     * Una página de la bandeja del restaurante propio, para una pestaña (ver inboxQuery). Cada pestaña
+     * trae primero lo que importa (pendientes por plazo, confirmadas por la visita más cercana) y
+     * «Ver más» pide la siguiente página: un historial largo ya no tapa las solicitudes nuevas.
+     */
+    async businessReservationsPage(businessId: string, tab: InboxTab, offset: number, limit: number, now = new Date()): Promise<Reservation[]> {
       if (!db) return [];
-      const { data, error } = await db.from('reservations').select(RESERVATION_SELECT).eq('business_id', businessId).order('starts_at').limit(300);
+      const q = inboxQuery(tab, now);
+      let query = db.from('reservations').select(RESERVATION_SELECT).eq('business_id', businessId);
+      query = q.orFilter ? query.or(q.orFilter) : query.in('status', q.statuses);
+      if (q.startsFrom) query = query.gte('starts_at', q.startsFrom);
+      const { data, error } = await query.order(q.orderBy, { ascending: q.ascending }).order('id').range(offset, offset + limit - 1);
       if (error) throw error;
       return (data ?? []).map(toReservation);
+    },
+
+    /** Cuántas solicitudes hay en cada pestaña de la bandeja (consultas de solo conteo). */
+    async reservationCounts(businessId: string, now = new Date()): Promise<Record<InboxTab, number>> {
+      const empty = Object.fromEntries(INBOX_TABS.map((t) => [t.id, 0])) as Record<InboxTab, number>;
+      if (!db) return empty;
+      const entries = await Promise.all(INBOX_TABS.map(async (t) => {
+        const q = inboxQuery(t.id, now);
+        let query = db.from('reservations').select('id', { count: 'exact', head: true }).eq('business_id', businessId);
+        query = q.orFilter ? query.or(q.orFilter) : query.in('status', q.statuses);
+        if (q.startsFrom) query = query.gte('starts_at', q.startsFrom);
+        const { count, error } = await query;
+        if (error) throw error;
+        return [t.id, count ?? 0] as const;
+      }));
+      return Object.fromEntries(entries) as Record<InboxTab, number>;
     },
 
     /** Una solicitud con sus platos y su historial (para quien la hizo o para el restaurante). */
