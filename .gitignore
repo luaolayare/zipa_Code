@@ -14,3 +14,7 @@ android/
 .env*.local
 npm-debug.*
 .DS_Store
+
+# Firebase: se entregan a EAS como archivos privados, nunca en el repositorio público.
+google-services*.json
+*firebase-adminsdk*.json
