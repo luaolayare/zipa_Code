@@ -1,0 +1,88 @@
+﻿
+== Integral
+OK I-1 El cliente envía la solicitud desde la ficha y ve su código
+OK I-2 El restaurante recibe el aviso de la nueva solicitud (sin datos personales en el texto)
+OK I-3 Desde la ruta del aviso se abre el detalle correcto y el restaurante confirma
+OK I-4 El cliente recibe «Tu reserva fue confirmada» y la ve en «Mis reservas → Confirmadas»
+OK I-5 El cliente cancela y el restaurante recibe «Un cliente canceló su reserva»
+OK I-6 Panel del equipo (con MFA): cifras, restaurantes, tiempo de respuesta y tareas; sin datos de clientes y sin poder confirmar
+OK I-7 Sin ninguna app abierta ni llamada manual, la solicitud vence sola (pg_cron) y el cliente recibe el aviso
+OK I-8 Sin errores de consola en las tres apps
+== Entrega C
+OK C-1 Bandeja con 6 pestañas y sus cantidades; abre en Pendientes con su nota (en la web no se ofrece activar notificaciones)
+OK C-2 Cada pestaña muestra solo las solicitudes de su estado
+OK C-3 Mensaje prellenado con el restaurante, el código, la fecha y las personas
+OK C-4 Abre WhatsApp oficial (wa.me) con el número del cliente y el mensaje EDITADO, sin enviar nada ni confirmar la reserva
+OK C-5 El cliente contacta al restaurante por WhatsApp con su código (y en la web no se ofrece activar notificaciones)
+OK C-6 La ruta que trae una notificación del restaurante abre el detalle correcto
+errores de consola: []
+== Notificaciones
+OK N-1 La función rechaza llamadas sin el secreto o con uno equivocado (401)
+OK N-2 Nueva solicitud: el restaurante recibe «Tienes una nueva solicitud de reserva» sin intervención (pg_net), con canal «reservas» y enlace al detalle
+OK N-3 El token que Expo dice que no existe (DeviceNotRegistered) queda desactivado
+OK N-4 Confirmar: el cliente recibe «Tu reserva fue confirmada» en sus dispositivos, con enlace a su solicitud
+OK N-5 Ningún aviso lleva el nombre, el teléfono, las observaciones ni la mesa del cliente
+OK N-6 Con el servicio de push caído, la solicitud se crea igual y el aviso queda pendiente para reintento (HTTP 503)
+OK N-7 Cuando el servicio vuelve, el reintento lo entrega (sin duplicar)
+OK N-8 Tres envíos simultáneos sobre la misma cola: ningún aviso se entrega dos veces al mismo dispositivo
+OK N-9 Recibos: se revisan y un DeviceNotRegistered en el recibo desactiva ese token
+OK N-10 Después de cerrar sesión, ese dispositivo ya no recibe avisos (el aviso queda «sin_dispositivos» y la solicitud sigue en la app)
+OK N-11 El log de la función no tiene tokens, nombres ni teléfonos (solo cuentas)
+== Concurrencia
+OK RC-1 5 envíos simultáneos con la misma clave crean una sola solicitud y todos reciben la misma
+OK RC-2 Dos solicitudes simultáneas para la misma hora (claves distintas): solo una se crea
+OK RC-3 Confirmar y rechazar al mismo tiempo (8 veces): exactamente una gana, el estado coincide y el historial tiene 2 eventos
+OK RC-4 Cancelación simultánea de cliente y restaurante: una sola gana y queda un solo evento de cancelación
+OK RC-5 Confirmar después del plazo mientras corre la expiración: queda vencida, no confirmada, con historial coherente
+OK RC-6 La expiración es idempotente: correrla otra vez no cambia nada
+OK RC-8 Después de 10 solicitudes en 24 horas, la siguiente se rechaza (protección contra envíos masivos)
+OK RC-7 Un usuario de la app no puede ejecutar la expiración
+== Entrega B
+OK B-1 Un horario con la hora final antes de la inicial se avisa y no se guarda
+OK B-2 El restaurante activa las reservas: 7 horarios, 1 hora de anticipación e instrucciones; el panel muestra «Recibiendo solicitudes»
+OK B-3 Ficha del restaurante: «Solicitar reserva»; sin sesión lleva a iniciar sesión y vuelve al formulario
+OK B-4 Formulario: instrucciones, aviso de confirmación y nombre de la cuenta ya puesto
+OK B-5 Se crea PENDIENTE con 3 personas, WhatsApp con indicativo, mesa, observaciones y 2 ajiacos con su precio; se muestra el código
+OK B-6 Doble toque en «Enviar solicitud»: se crea una sola solicitud
+OK B-7 El restaurante ve sus solicitudes pendientes y el detalle: WhatsApp, mesa, platos y el aviso de que no están pagados
+OK B-8 Rechazo: con «Otro motivo» exige explicación; con motivo de la lista queda RECHAZADA con motivo y nota
+OK B-9 Confirmar (después de aceptar el aviso) deja la reserva CONFIRMADA y registra quién decidió
+OK B-10 Una reserva confirmada ya no ofrece «No puedo confirmarla» (sí «Cancelar reserva»)
+OK B-11 El cliente ve el motivo del rechazo y «Solicitar otro horario» abre el formulario con sus datos (sin crear nada solo)
+OK B-12 Perfil → «Mis reservas» lista las dos solicitudes con su estado
+OK B-13 El cliente cancela su reserva confirmada: CANCELADA por el cliente
+OK B-14 Ni la heladería ni un restaurante sin reservas muestran el botón; entrar directo al formulario lo explica
+OK B-15 El panel de un emprendimiento no muestra la sección de reservas
+errores de consola: []
+== Entrega A
+OK A-1 Panel: aparece «Contacto y entregas», vacío al inicio 
+OK A-2 Un enlace peligroso (javascript:) se rechaza con un mensaje y no se guarda 
+OK A-3 Se guardan normalizados: https, sin «www.», modalidades en orden y condiciones sin espacios de más 
+OK A-4 El panel resume las redes y las entregas guardadas 
+OK A-5 Guardar contacto y entregas no devuelve el negocio a revisión 
+OK A-6 Ayuda «¿Qué vendes principalmente?»: plegada y con los ejemplos de café empacado, café preparado y artesanías 
+OK A-7 Abrir la ayuda no cambia la clasificación del negocio 
+OK A-8 Clientes: solo las redes configuradas, las entregas en una línea, las condiciones y WhatsApp sigue 
+OK A-9 Tocar Instagram abre el enlace https normalizado 
+OK A-10 Un negocio sin «Contacto y entregas» no muestra ese bloque 
+OK A-11 Clientes: tocar la foto la abre a pantalla completa, acerca a 2x y se cierra 
+OK A-12 Panel del equipo: ve las redes como texto (para revisar el dominio sin abrirlo) y las entregas 
+errores de consola: []
+== Beta 2.1
+OK B1-1 Cafetería (Restaurantes, categoría vieja cafe_dulces): «Tu menú», «Agregar plato», secciones del menú y «Disponible hoy» 
+OK B1-2 Heladería (Emprendimientos): «Tu catálogo», «Agregar producto», sección opcional sin sugerencias de menú y «Disponible»/«Agotado» 
+OK B1-3 Clientes: la heladería muestra «Catálogo» y «Agotado» 
+OK B1-4 Clientes: la cafetería muestra «Menú» con sus secciones 
+OK B2-1 La heladería muestra la ilustración de helado, no la de taza 
+OK B2-2 La cafetería muestra la taza 
+OK B2-3 Portada por categoría principal: cafetería terracota (Restaurantes) y heladería verde petróleo (Emprendimientos) 
+OK B4-1 El producto sin modelo no ofrece «Ver en 3D» 
+OK B4-2 El inicio no muestra indicadores «en 3D» 
+OK B3-1 Búsqueda: 20 resultados y «Ver más»; luego 27 sin duplicados y sin más botón 
+OK B3-2 Cambiar la búsqueda reinicia la paginación 
+OK B5-1 El panel sirve favicon.ico e icon.svg (antes 404) 
+errores de consola: []
+== Funcional
+48 pruebas · 46 OK · 0 FALLA · 2 NO_PROBADO
+errores de consola: 0
+fin
