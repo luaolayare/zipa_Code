@@ -115,6 +115,15 @@
 
 Los APK actuales (`447a6fcf` y `b11b486a`, commit `6eb31c4`) **no** tienen P4 ni P13. Sí se benefician de P1 apenas se despliegue la función, porque P1 está en el servidor.
 
+### Despliegue realizado (20-nov-2026, con autorización)
+
+- ✅ Migración 0022 aplicada en producción. Hay 22 migraciones, iguales en local y en remoto.
+- ✅ `enviar-notificaciones` desplegada (versión 3, `verify_jwt=false`, protegida con `x-zipa-cron`).
+- ✅ Commits `f279122` y `83cfd00` subidos a `feature/beta-2-2-reservas`. No se fusionó con `main`.
+- ✅ APK nuevos con P4 y P13, del commit `83cfd00`:
+  - clientes: build `0bdf6a86`;
+  - negocios: build `a7d59426`.
+
 ---
 
 ## 4. Qué hay que probar físicamente (Android)
