@@ -1,4 +1,4 @@
-import { businessSpecialty, colors, fonts, formatRating, type Business } from '@zipa/shared';
+import { businessSpecialty, colors, formatRating, radius, spacing, typography, type Business } from '@zipa/shared';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { openBusiness } from './BusinessRow';
@@ -22,12 +22,12 @@ export function RankCard({ business: b, rank, badge }: { business: Business; ran
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, backgroundColor: colors.primary, borderRadius: 18 },
+  card: { flexDirection: 'row', gap: spacing.sm, alignItems: 'center', padding: spacing.md, backgroundColor: colors.primary, borderRadius: radius.lg },
   pressed: { opacity: 0.9 },
-  rank: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  rankText: { fontSize: 18, fontFamily: fonts.display, color: colors.text },
-  info: { flex: 1, gap: 3, minWidth: 0 },
-  badge: { fontSize: 11, fontFamily: fonts.bold, color: colors.accent, textTransform: 'uppercase', letterSpacing: 0.66 },
-  name: { fontSize: 15, fontFamily: fonts.bold, color: '#FFFFFF' },
-  meta: { fontSize: 12, fontFamily: fonts.regular, color: colors.onPrimaryMuted },
+  rank: { width: 40, height: 40, borderRadius: radius.md, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  rankText: { ...typography.heading, color: colors.text },
+  info: { flex: 1, gap: spacing.xxs, minWidth: 0 },
+  badge: { ...typography.overline, color: colors.accent },
+  name: { ...typography.subtitle, color: '#FFFFFF' },
+  meta: { ...typography.caption, color: colors.onPrimaryMuted },
 });

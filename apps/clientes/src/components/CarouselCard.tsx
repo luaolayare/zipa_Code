@@ -1,4 +1,4 @@
-import { businessSpecialty, colors, fonts, formatDistance, formatRating, type Business } from '@zipa/shared';
+import { businessSpecialty, colors, fonts, formatDistance, radius, spacing, typography, formatRating, type Business } from '@zipa/shared';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { openBusiness } from './BusinessRow';
@@ -26,12 +26,12 @@ export function CarouselCard({ business: b, badge }: { business: Business; badge
 
 const styles = StyleSheet.create({
   // Borde de 1 y una línea extra abajo, como el box-shadow del prototipo.
-  card: { width: 210, backgroundColor: colors.surface, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderBottomWidth: 2, borderColor: colors.border },
+  card: { width: 210, backgroundColor: colors.surface, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderBottomWidth: 2, borderColor: colors.border },
   pressed: { opacity: 0.85 },
   cover: { height: 120 },
-  badgeFeatured: { position: 'absolute', left: 10, top: 10, fontSize: 11.5, fontFamily: fonts.bold, backgroundColor: colors.text, color: colors.accent, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
-  body: { padding: 12, gap: 4 },
-  name: { fontSize: 15, lineHeight: 19, fontFamily: fonts.bold, color: colors.text },
-  meta: { fontSize: 12, fontFamily: fonts.regular, color: colors.textMuted },
-  count: { fontSize: 13, fontFamily: fonts.medium, color: colors.textMuted },
+  badgeFeatured: { position: 'absolute', left: spacing.sm, top: spacing.sm, ...typography.caption, fontFamily: fonts.bold, backgroundColor: colors.text, color: colors.accent, paddingHorizontal: spacing.xs, paddingVertical: spacing.xxs, borderRadius: radius.pill, overflow: 'hidden' },
+  body: { padding: spacing.sm, gap: spacing.xxs },
+  name: typography.subtitle,
+  meta: typography.caption,
+  count: typography.caption,
 });

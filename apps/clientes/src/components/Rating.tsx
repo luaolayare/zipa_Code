@@ -1,10 +1,10 @@
-import { colors, fonts } from '@zipa/shared';
+import { colors, fonts, spacing, typography } from '@zipa/shared';
 import { Star } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 /** Estrella rellena + calificación ("4,8"). */
-export function Rating({ value, size = 14, fontSize = 13, color = colors.star, textColor = colors.text, gap = 4, children }: {
+export function Rating({ value, size = 14, fontSize = typography.caption.fontSize, color = colors.star, textColor = colors.text, gap = spacing.xxs, children }: {
   value: string;
   size?: number;
   fontSize?: number;

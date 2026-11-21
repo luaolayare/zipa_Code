@@ -1,4 +1,4 @@
-import { colors, fonts } from '@zipa/shared';
+import { colors, fonts, spacing, typography } from '@zipa/shared';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { House, Store, User, type LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -37,6 +37,6 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
-  label: { fontSize: 12, fontFamily: fonts.bold },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs },
+  label: { ...typography.caption, fontFamily: fonts.bold },
 });

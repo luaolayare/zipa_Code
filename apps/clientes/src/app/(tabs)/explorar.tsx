@@ -1,4 +1,4 @@
-import { BRAND, Logo, MAIN_CATEGORIES, MIN_REVIEWS_FOR_RANKING, colors, fonts, useAuth, type Business, type MainCategory } from '@zipa/shared';
+import { BRAND, Logo, MAIN_CATEGORIES, MIN_REVIEWS_FOR_RANKING, colors, fonts, radius, sizes, spacing, typography, useAuth, type Business, type MainCategory } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { ChevronRight, MapPin, Search, ShoppingBag, UtensilsCrossed, X, type LucideIcon } from 'lucide-react-native';
@@ -234,54 +234,54 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1 },
 
   // Cabecera verde
-  header: { backgroundColor: colors.primary, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 22, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  location: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: colors.primaryDeep },
-  locationText: { fontSize: 13, fontFamily: fonts.semibold, color: colors.onPrimaryMuted },
-  greeting: { gap: 2 },
-  hello: { fontSize: 15, fontFamily: fonts.bold, color: colors.accent },
-  title: { fontSize: 32, lineHeight: 36, fontFamily: fonts.display, letterSpacing: -0.7, color: '#FFFFFF' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, backgroundColor: colors.surface, borderRadius: 16, paddingLeft: 16, paddingRight: 8 },
-  searchInput: { flex: 1, minWidth: 0, height: '100%', fontSize: 15.5, fontFamily: fonts.regular, color: colors.text, padding: 0, outlineWidth: 0 },
-  clear: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  header: { backgroundColor: colors.primary, paddingTop: spacing.md, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl, gap: spacing.md },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  location: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs, borderRadius: radius.pill, backgroundColor: colors.primaryDeep },
+  locationText: { ...typography.caption, fontFamily: fonts.semibold, color: colors.onPrimaryMuted },
+  greeting: { gap: spacing.xxs },
+  hello: { ...typography.label, fontFamily: fonts.bold, color: colors.accent },
+  title: { ...typography.display, color: '#FFFFFF' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.input, backgroundColor: colors.surface, borderRadius: radius.md, paddingLeft: spacing.md, paddingRight: spacing.xs },
+  searchInput: { flex: 1, minWidth: 0, alignSelf: 'stretch', fontSize: typography.body.fontSize, fontFamily: fonts.regular, color: colors.text, padding: 0, outlineWidth: 0 },
+  clear: { width: sizes.touchMin, height: sizes.touchMin, borderRadius: radius.pill, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
 
   // Contenido
-  body: { padding: 20, gap: 26 },
-  section: { gap: 12 },
-  sectionHead: { gap: 2 },
-  h2: { fontSize: 21, fontFamily: fonts.display, letterSpacing: -0.3, color: colors.text },
-  sub: { fontSize: 13.5, fontFamily: fonts.regular, color: colors.textMuted },
+  body: { padding: spacing.lg, gap: spacing.xxl },
+  section: { gap: spacing.sm },
+  sectionHead: { gap: spacing.xxs },
+  h2: typography.heading,
+  sub: typography.caption,
 
   // Tarjetas de las dos categorías principales
-  cards: { flexDirection: 'row', gap: 12 },
+  cards: { flexDirection: 'row', gap: spacing.sm },
   cardsColumn: { flexDirection: 'column' },
   cardWide: { minHeight: 0 },
-  card: { flex: 1, minHeight: 196, padding: 16, gap: 8, borderRadius: 24 },
+  card: { flex: 1, minHeight: 196, padding: spacing.md, gap: spacing.xs, borderRadius: radius.lg },
   cardEmp: { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.border },
   cardRest: { backgroundColor: colors.primary },
-  cardIcon: { width: 48, height: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  // 16 en dos columnas: "Emprendimientos" cabe completo desde 385 px de ancho.
+  cardIcon: { width: 48, height: 48, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xxs },
+  // Excepción a la escala: 16 en dos columnas para que "Emprendimientos" quepa completo desde 385 px de ancho.
   cardTitle: { fontSize: 16, lineHeight: 21, fontFamily: fonts.display, letterSpacing: -0.4, color: colors.text },
-  cardTitleWide: { fontSize: 19, lineHeight: 23 },
-  cardText: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: colors.textBody, flexGrow: 1 },
+  cardTitleWide: { fontSize: typography.heading.fontSize, lineHeight: typography.heading.lineHeight },
+  cardText: { ...typography.caption, fontFamily: fonts.regular, color: colors.textBody, flexGrow: 1 },
   cardFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardCount: { fontSize: 13, fontFamily: fonts.bold, color: colors.primary },
+  cardCount: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
   pressed: { opacity: 0.88 },
 
-  carousel: { marginHorizontal: -20 },
-  carouselContent: { paddingHorizontal: 20, paddingBottom: 4, gap: 12 },
+  carousel: { marginHorizontal: -spacing.lg },
+  carouselContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxs, gap: spacing.sm },
 
-  hint: { fontSize: 14, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
-  more: { minHeight: 48, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  moreText: { fontSize: 15, fontFamily: fonts.bold, color: colors.primary },
-  moreError: { fontSize: 13.5, fontFamily: fonts.semibold, color: colors.danger, textAlign: 'center' },
-  resultsLabel: { fontSize: 14, fontFamily: fonts.semibold, color: colors.textBody },
-  empty: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.inputBorder, borderRadius: 16, padding: 20, gap: 6, alignItems: 'center' },
-  emptyTitle: { fontSize: 15, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },
-  emptyText: { fontSize: 13.5, lineHeight: 19, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
+  hint: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
+  more: { minHeight: sizes.button, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  moreText: { ...typography.subtitle, color: colors.primary },
+  moreError: { ...typography.label, color: colors.danger, textAlign: 'center' },
+  resultsLabel: { ...typography.label, color: colors.textBody },
+  empty: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.inputBorder, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs, alignItems: 'center' },
+  emptyTitle: { ...typography.subtitle, textAlign: 'center' },
+  emptyText: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
 
-  demo: { fontSize: 12, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
-  loading: { marginVertical: 32 },
-  retry: { marginTop: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  retryText: { fontSize: 15, fontFamily: fonts.bold, color: '#FFFFFF' },
+  demo: { ...typography.caption, textAlign: 'center' },
+  loading: { marginVertical: spacing.xxl },
+  retry: { marginTop: spacing.xs, minHeight: sizes.touchMin, paddingHorizontal: spacing.lg, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  retryText: { ...typography.label, fontFamily: fonts.bold, color: '#FFFFFF' },
 });
