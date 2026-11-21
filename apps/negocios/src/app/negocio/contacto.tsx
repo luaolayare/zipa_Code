@@ -8,12 +8,14 @@ import {
   SOCIAL_NETWORKS,
   TextField,
   colors,
-  fonts,
   socialLabel,
   useAuth,
   validateLinks,
   type DeliveryMode,
   type SocialNetwork,
+  radius,
+  spacing,
+  typography,
 } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Check } from 'lucide-react-native';
@@ -56,7 +58,7 @@ export default function ContactoYEntregas() {
   }, [api, user]);
 
   if (!f || !businessId) {
-    return <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
+    return <View style={{ flex: 1, justifyContent: 'center', padding: spacing.xl }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
   }
 
   const set = (patch: Partial<Form>) => { setF({ ...f, ...patch }); setError(''); setErrorField(null); };
@@ -83,15 +85,15 @@ export default function ContactoYEntregas() {
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <Text style={type.h1}>Contacto y entregas</Text>
+        <Text style={type.title}>Contacto y entregas</Text>
       </View>
-      <Text style={type.small}>Todo es opcional. Los clientes solo verán lo que llenes. WhatsApp sigue siendo el contacto principal.</Text>
+      <Text style={type.help}>Todo es opcional. Los clientes solo verán lo que llenes. WhatsApp sigue siendo el contacto principal.</Text>
 
       <Text style={styles.section}>Redes sociales</Text>
       {SOCIAL_NETWORKS.map((n) => (
-        <View key={n.id} style={{ gap: 6 }}>
+        <View key={n.id} style={{ gap: spacing.xs }}>
           <TextField
             label={n.label}
             value={f[n.id]}
@@ -107,7 +109,7 @@ export default function ContactoYEntregas() {
       ))}
 
       <Text style={styles.section}>¿Cómo entregas?</Text>
-      <Text style={type.small}>Marca las que ofreces. Los clientes acuerdan el pedido y el pago contigo por WhatsApp.</Text>
+      <Text style={type.help}>Marca las que ofreces. Los clientes acuerdan el pedido y el pago contigo por WhatsApp.</Text>
       <View style={styles.row}>
         {DELIVERY_MODES.map((m) => {
           const on = f.deliveryModes.includes(m.id);
@@ -142,9 +144,9 @@ export default function ContactoYEntregas() {
 }
 
 const styles = StyleSheet.create({
-  section: { fontFamily: fonts.display, fontSize: 20, color: colors.text, marginTop: 8 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  chip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  section: { ...typography.heading, color: colors.text, marginTop: spacing.xs },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   chipOn: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  chipText: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.text },
+  chipText: { ...typography.label, color: colors.text },
 });

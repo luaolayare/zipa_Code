@@ -1,5 +1,5 @@
 // Editar los datos del negocio desde el panel.
-import { Button, TextField, legacyCategoryFor, useAuth, type Business, type BusinessType } from '@zipa/shared';
+import { Button, TextField, legacyCategoryFor, useAuth, type Business, type BusinessType, spacing } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -31,7 +31,7 @@ export default function EditarNegocio() {
   }, [api, user]);
 
   if (!original) {
-    return <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
+    return <View style={{ flex: 1, justifyContent: 'center', padding: spacing.xl }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
   }
 
   // Cambios que, en un negocio ya publicado, lo devuelven a revisión (migración 0009).
@@ -59,9 +59,9 @@ export default function EditarNegocio() {
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <Text style={type.h1}>Tus datos</Text>
+        <Text style={type.title}>Tus datos</Text>
       </View>
       <LogoPicker
         name={f.name}

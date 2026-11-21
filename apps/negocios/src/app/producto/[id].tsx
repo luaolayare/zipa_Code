@@ -1,5 +1,5 @@
 // Agregar o editar un producto desde el panel. id = "nuevo" para uno nuevo.
-import { Button, confirmAsync, useAuth, type Business, type Product, productWord } from '@zipa/shared';
+import { Button, confirmAsync, useAuth, type Business, type Product, productWord, spacing } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -78,9 +78,9 @@ export default function ProductoScreen() {
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <Text style={[type.h1, { flex: 1 }]} numberOfLines={1}>{isNew ? `Nuevo ${word}` : `Editar ${word}`}</Text>
+        <Text style={[type.title, { flex: 1 }]} numberOfLines={1}>{isNew ? `Nuevo ${word}` : `Editar ${word}`}</Text>
       </View>
       {saved?.videoPath && !form.video && saved.videoStatus === 'pendiente' && (
         <Notice tone="warn">Tu video está en revisión. Cuando el equipo lo apruebe, los clientes lo verán en tu vitrina.</Notice>
@@ -90,10 +90,10 @@ export default function ProductoScreen() {
       )}
       {saved?.videoPath && !form.video && saved.videoStatus === 'rechazado' && (
         <Notice tone="danger">
-          <View style={{ gap: 6 }}>
-            <Text style={[type.strong, { color: '#A12E15' }]}>No aprobamos este video.</Text>
+          <View style={{ gap: spacing.xs }}>
+            <Text style={[type.label, { color: '#A12E15' }]}>No aprobamos este video.</Text>
             {!!saved.videoNote && <Text style={type.body}>Motivo: {saved.videoNote}</Text>}
-            <Text style={type.small}>Graba uno nuevo y toca «Guardar cambios».</Text>
+            <Text style={type.help}>Graba uno nuevo y toca «Guardar cambios».</Text>
           </View>
         </Notice>
       )}

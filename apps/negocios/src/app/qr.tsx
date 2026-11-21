@@ -1,5 +1,5 @@
 // QR del negocio para imprimir o compartir.
-import { Button, useAuth, type Business, restaurantOf } from '@zipa/shared';
+import { Button, useAuth, type Business, restaurantOf, spacing } from '@zipa/shared';
 import * as Sharing from 'expo-sharing';
 import { router } from 'expo-router';
 import { Share2 } from 'lucide-react-native';
@@ -44,15 +44,15 @@ export default function Qr() {
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <Text style={type.h1}>Tu QR</Text>
+        <Text style={type.title}>Tu QR</Text>
       </View>
       <Text style={type.body}>Imprímelo para tus mesas o mostrador. El cliente lo escanea con la cámara de su celular y llega directo a tu vitrina. Si después te califica, su reseña sale con el sello «Visitó el negocio».</Text>
       {business ? (
         <QrPoster ref={poster} businessId={business.id} token={token} name={business.name} restaurant={restaurantOf(business)} />
       ) : (
-        !error && <ActivityIndicator style={{ marginVertical: 40 }} />
+        !error && <ActivityIndicator style={{ marginVertical: spacing.xxxl }} />
       )}
       <Notice tone="warn">
         Versión de prueba: por ahora este QR solo abre la app en celulares que ya la tienen instalada. Antes del lanzamiento lo cambiaremos por el definitivo, así que todavía no lo mandes a imprimir en cantidad.

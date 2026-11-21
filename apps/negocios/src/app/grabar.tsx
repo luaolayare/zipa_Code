@@ -1,6 +1,6 @@
 // Cámara para grabar el video del producto (sin sonido; el equipo lo aprueba antes de mostrarlo).
 // Sin sonido: la app nunca pide permiso de micrófono.
-import { Button, colors, fonts } from '@zipa/shared';
+import { Button, colors, fonts, radius, spacing, typography } from '@zipa/shared';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { router } from 'expo-router';
 import { X } from 'lucide-react-native';
@@ -111,23 +111,23 @@ export default function Grabar() {
 
 const styles = StyleSheet.create({
   dark: { flex: 1, backgroundColor: '#0B1413' },
-  center: { justifyContent: 'center', padding: 28, gap: 16 },
-  title: { fontFamily: fonts.display, fontSize: 28, color: '#FFFFFF' },
-  body: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: '#CFE1DF' },
-  overlay: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 20 },
-  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 },
-  badge: { backgroundColor: 'rgba(20,33,31,0.8)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999 },
-  badgeText: { fontFamily: fonts.bold, fontSize: 15, color: '#FFFFFF' },
-  close: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(20,33,31,0.8)', alignItems: 'center', justifyContent: 'center' },
+  center: { justifyContent: 'center', padding: spacing.xxl, gap: spacing.md },
+  title: { ...typography.title, color: '#FFFFFF' },
+  body: { ...typography.body, color: colors.onPrimaryMuted },
+  overlay: { flex: 1, justifyContent: 'space-between', paddingHorizontal: spacing.lg },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.xs },
+  badge: { backgroundColor: 'rgba(20,33,31,0.8)', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.pill },
+  badgeText: { ...typography.label, fontFamily: fonts.bold, color: '#FFFFFF' },
+  close: { width: 52, height: 52, borderRadius: radius.pill, backgroundColor: 'rgba(20,33,31,0.8)', alignItems: 'center', justifyContent: 'center' },
   guide: { alignItems: 'center' },
-  ring: { width: 250, height: 250, borderRadius: 125, borderWidth: 3, borderColor: 'rgba(255,255,255,0.7)', borderStyle: 'dashed' },
+  ring: { width: 250, height: 250, borderRadius: radius.pill, borderWidth: 3, borderColor: 'rgba(255,255,255,0.7)', borderStyle: 'dashed' },
   ringOn: { borderColor: colors.accent, borderStyle: 'solid' },
-  bottom: { gap: 16, paddingBottom: 12, alignItems: 'center' },
-  tip: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22, color: '#FFFFFF', textAlign: 'center', backgroundColor: 'rgba(20,33,31,0.75)', padding: 14, borderRadius: 18, overflow: 'hidden', alignSelf: 'stretch' },
-  track: { alignSelf: 'stretch', height: 8, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
+  bottom: { gap: spacing.md, paddingBottom: spacing.sm, alignItems: 'center' },
+  tip: { ...typography.body, fontFamily: fonts.medium, color: '#FFFFFF', textAlign: 'center', backgroundColor: 'rgba(20,33,31,0.75)', padding: spacing.md, borderRadius: radius.lg, overflow: 'hidden', alignSelf: 'stretch' },
+  track: { alignSelf: 'stretch', height: 8, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   fill: { height: 8, backgroundColor: colors.accent },
   error: { fontFamily: fonts.semibold, color: '#FFB4A2' },
-  shutter: { width: 84, height: 84, borderRadius: 42, borderWidth: 5, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  recIcon: { width: 62, height: 62, borderRadius: 31, backgroundColor: colors.price },
-  stopIcon: { width: 30, height: 30, borderRadius: 6, backgroundColor: colors.price },
+  shutter: { width: 84, height: 84, borderRadius: radius.pill, borderWidth: 5, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  recIcon: { width: 62, height: 62, borderRadius: radius.pill, backgroundColor: colors.price },
+  stopIcon: { width: 30, height: 30, borderRadius: radius.sm, backgroundColor: colors.price },
 });
