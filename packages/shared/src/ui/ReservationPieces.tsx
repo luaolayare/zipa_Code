@@ -2,13 +2,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RESERVATION_STATUS, type ReservationStatus } from '../reservations';
-import { colors, fonts } from '../theme';
+import { colors, fonts, radius, sizes, spacing, typography } from '../theme';
 
 const TONES = {
-  warn: { bg: colors.accentSoft, fg: colors.accentText },
-  success: { bg: '#DCEFE2', fg: colors.success },
-  danger: { bg: '#F9DED6', fg: colors.danger },
-  muted: { bg: colors.chipIdle, fg: colors.textMuted },
+  warn: { bg: colors.warningSoft, fg: colors.accentText },
+  success: { bg: colors.successSoft, fg: colors.success },
+  danger: { bg: colors.dangerSoft, fg: colors.danger },
+  muted: { bg: colors.neutralSoft, fg: colors.textMuted },
 };
 
 /** Estado de la solicitud en una píldora de color. */
@@ -72,15 +72,15 @@ export function Stepper({ label, value, min, max, onChange }: { label: string; v
 }
 
 const styles = StyleSheet.create({
-  pill: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999 },
-  pillText: { fontFamily: fonts.bold, fontSize: 13.5 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 44, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  pill: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs, borderRadius: radius.pill },
+  pillText: { ...typography.caption, fontFamily: fonts.bold },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chip: { minHeight: sizes.touchMin, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   on: { backgroundColor: colors.primary, borderColor: colors.primary },
-  text: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
+  text: typography.label,
   textOn: { color: '#FFFFFF' },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  round: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  roundText: { fontFamily: fonts.bold, fontSize: 22, color: colors.text, lineHeight: 26 },
-  value: { minWidth: 28, textAlign: 'center', fontFamily: fonts.display, fontSize: 24, color: colors.text },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  round: { width: sizes.touchMin, height: sizes.touchMin, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  roundText: { ...typography.heading, fontFamily: fonts.bold },
+  value: { ...typography.title, minWidth: 28, textAlign: 'center' },
 });

@@ -14,6 +14,10 @@ import {
   dayLabel,
   fonts,
   formatCop,
+  radius,
+  sizes,
+  spacing,
+  typography,
   newIdempotencyKey,
   normalizeWhatsapp,
   slotsFor,
@@ -126,7 +130,7 @@ export default function SolicitarReserva() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <BackButton />
             <View style={{ flex: 1 }}>
               <Text style={styles.overline}>Solicitar reserva</Text>
@@ -137,7 +141,7 @@ export default function SolicitarReserva() {
 
           <Text style={styles.label}>Día</Text>
           {days.length ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
               <ChoiceChips label="Día" wrap={false} options={days.map((d) => ({ id: d, label: dayLabel(d, today) }))} value={date} onChange={(d) => { setDate(d); setTime(null); setError(''); }} />
             </ScrollView>
           ) : (
@@ -151,7 +155,7 @@ export default function SolicitarReserva() {
             </>
           )}
 
-          <View style={{ gap: 8 }}>
+          <View style={{ gap: spacing.xs }}>
             <Text style={styles.label}>Personas</Text>
             <Stepper label="Personas" value={party} min={1} max={settings.maxParty} onChange={setParty} />
             <Text style={styles.muted}>Hasta {settings.maxParty} por solicitud.</Text>
@@ -197,19 +201,19 @@ export default function SolicitarReserva() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background },
-  content: { padding: 20, paddingBottom: 48, gap: 18 },
-  overline: { fontFamily: fonts.bold, fontSize: 12.5, letterSpacing: 1.4, textTransform: 'uppercase', color: colors.textMuted },
-  h1: { fontFamily: fonts.display, fontSize: 26, letterSpacing: -0.5, color: colors.text },
-  label: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  muted: { fontFamily: fonts.regular, fontSize: 14.5, lineHeight: 21, color: colors.textMuted },
-  note: { padding: 14, borderRadius: 16, backgroundColor: colors.primarySoft },
-  noteText: { fontFamily: fonts.semibold, fontSize: 14.5, lineHeight: 21, color: colors.primary },
-  dishes: { gap: 12, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  dishesHead: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
-  dish: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dishName: { fontFamily: fonts.semibold, fontSize: 15.5, color: colors.text },
-  notice: { padding: 16, borderRadius: 18, backgroundColor: colors.accentSoft },
-  noticeText: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, color: colors.accentText },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, lineHeight: 20, color: colors.danger },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
+  overline: typography.overline,
+  h1: typography.title,
+  label: typography.label,
+  muted: { ...typography.caption, fontFamily: fonts.regular },
+  note: { padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.infoSoft },
+  noteText: { ...typography.label, lineHeight: 22, color: colors.primary },
+  dishes: { gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  dishesHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchMin },
+  dish: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  dishName: typography.label,
+  notice: { padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.warningSoft },
+  noticeText: { ...typography.label, lineHeight: 22, color: colors.accentText },
+  error: { ...typography.label, color: colors.danger },
 });
