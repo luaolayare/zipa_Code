@@ -31,7 +31,7 @@ export function ChoiceChips<T extends string | number>({
   wrap = true,
 }: {
   label: string;
-  options: { id: T; label: string }[];
+  options: { id: T; label: string; count?: number }[]; // count: conteo en burbuja (bandeja de reservas)
   value: T | null;
   onChange: (v: T) => void;
   wrap?: boolean;
@@ -45,10 +45,15 @@ export function ChoiceChips<T extends string | number>({
             key={String(o.id)}
             accessibilityRole="radio"
             accessibilityState={{ checked: on }}
-            accessibilityLabel={o.label}
+            accessibilityLabel={o.count == null ? o.label : `${o.label} (${o.count})`}
             onPress={() => onChange(o.id)}
-            style={({ pressed }) => [styles.chip, on && styles.on, pressed && { opacity: 0.8 }]}>
+            style={({ pressed }) => [styles.chip, o.count != null && styles.chipCount, on && styles.on, pressed && { opacity: 0.8 }]}>
             <Text style={[styles.text, on && styles.textOn]}>{o.label}</Text>
+            {o.count != null && (
+              <View style={[styles.count, on && styles.countOn]}>
+                <Text style={[styles.countText, on && styles.countTextOn]}>{o.count}</Text>
+              </View>
+            )}
           </Pressable>
         );
       })}
@@ -79,6 +84,11 @@ const styles = StyleSheet.create({
   on: { backgroundColor: colors.primary, borderColor: colors.primary },
   text: typography.label,
   textOn: { color: '#FFFFFF' },
+  chipCount: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingRight: spacing.xs },
+  count: { minWidth: 26, paddingHorizontal: spacing.xs, paddingVertical: 2, borderRadius: radius.pill, backgroundColor: colors.neutralSoft, alignItems: 'center' },
+  countOn: { backgroundColor: colors.accent },
+  countText: { ...typography.caption, fontFamily: fonts.bold, color: colors.textMuted },
+  countTextOn: { color: colors.text },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   round: { width: sizes.touchMin, height: sizes.touchMin, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   roundText: { ...typography.heading, fontFamily: fonts.bold },

@@ -21,6 +21,9 @@ import {
   whatsappLink,
   type RejectReason,
   type Reservation,
+  radius,
+  spacing,
+  typography,
 } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -93,9 +96,9 @@ export default function SolicitudDetalle() {
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
           <Text style={type.overline}>Solicitud</Text>
           <Text style={styles.code}>{r.code}</Text>
         </View>
@@ -115,25 +118,25 @@ export default function SolicitudDetalle() {
 
       {r.items.length > 0 && (
         <View style={styles.card}>
-          <Text style={type.h3}>Platos que le gustaría pedir</Text>
+          <Text style={type.subtitle}>Platos que le gustaría pedir</Text>
           {r.items.map((i, k) => (
             <View key={k} style={styles.item}>
-              <Text style={[type.strong, { flex: 1 }]}>{i.quantity} × {i.name}</Text>
-              {i.unitPriceCop != null && <Text style={type.small}>{formatCop(i.unitPriceCop * i.quantity)}</Text>}
+              <Text style={[type.label, { flex: 1 }]}>{i.quantity} × {i.name}</Text>
+              {i.unitPriceCop != null && <Text style={type.caption}>{formatCop(i.unitPriceCop * i.quantity)}</Text>}
             </View>
           ))}
-          {total > 0 && <Text style={type.small}>Total informativo: {formatCop(total)}</Text>}
-          <Text style={type.small}>{DISHES_NOTICE_RESTAURANT}</Text>
+          {total > 0 && <Text style={type.caption}>Total informativo: {formatCop(total)}</Text>}
+          <Text style={type.help}>{DISHES_NOTICE_RESTAURANT}</Text>
         </View>
       )}
 
       {r.status === 'rechazada' && (
-        <Notice tone="danger"><Text style={type.strong}>Rechazada: {rejectReasonLabel(r.rejectReason)}{r.rejectNote ? `. ${r.rejectNote}` : ''}</Text></Notice>
+        <Notice tone="danger"><Text style={type.label}>Rechazada: {rejectReasonLabel(r.rejectReason)}{r.rejectNote ? `. ${r.rejectNote}` : ''}</Text></Notice>
       )}
       {r.status === 'cancelada' && (
-        <Notice tone="warn"><Text style={type.strong}>Cancelada por {r.cancelledBy === 'cliente' ? 'el cliente' : 'tu restaurante'}{r.cancelReason ? `: ${r.cancelReason}` : ''}</Text></Notice>
+        <Notice tone="warn"><Text style={type.label}>Cancelada por {r.cancelledBy === 'cliente' ? 'el cliente' : 'tu restaurante'}{r.cancelReason ? `: ${r.cancelReason}` : ''}</Text></Notice>
       )}
-      {r.status === 'expirada' && <Notice tone="warn"><Text style={type.strong}>Venció sin respuesta. El cliente puede enviar otra solicitud.</Text></Notice>}
+      {r.status === 'expirada' && <Notice tone="warn"><Text style={type.label}>Venció sin respuesta. El cliente puede enviar otra solicitud.</Text></Notice>}
 
       {/* Contactar al cliente por WhatsApp: mensaje editable; no envía nada solo ni cambia el estado. */}
       {!!wa && !contacting && (
@@ -142,7 +145,7 @@ export default function SolicitudDetalle() {
       {!!wa && contacting && (
         <View style={styles.card}>
           <TextField label="Mensaje para el cliente (puedes cambiarlo)" value={message} onChangeText={setMessage} multiline maxLength={600} style={{ minHeight: 170, textAlignVertical: 'top' }} />
-          <Text style={type.small}>Se abre WhatsApp con este mensaje; tú decides si lo envías. Abrirlo no confirma la reserva.</Text>
+          <Text style={type.help}>Se abre WhatsApp con este mensaje; tú decides si lo envías. Abrirlo no confirma la reserva.</Text>
           <Button title="Abrir WhatsApp" icon={<WhatsAppIcon size={20} />} onPress={() => { const url = whatsappLink(wa, message); if (url) Linking.openURL(url); setContacting(false); }} />
           <Button title="Cancelar" variant="link" onPress={() => setContacting(false)} />
         </View>
@@ -152,15 +155,15 @@ export default function SolicitudDetalle() {
 
       {/* Pendiente: confirmar o rechazar con motivo. */}
       {r.status === 'pendiente' && mode === 'ver' && (
-        <View style={{ gap: 12 }}>
-          <Text style={type.small}>Coordina los detalles con el cliente por WhatsApp y después confirma o rechaza.</Text>
+        <View style={{ gap: spacing.sm }}>
+          <Text style={type.help}>Coordina los detalles con el cliente por WhatsApp y después confirma o rechaza.</Text>
           <Button title="Confirmar reserva" onPress={confirm} loading={busy} />
           <Button title="No puedo confirmarla" variant="danger" onPress={() => setMode('rechazar')} disabled={busy} />
         </View>
       )}
       {r.status === 'pendiente' && mode === 'rechazar' && (
-        <View style={{ gap: 12 }}>
-          <Text style={type.h3}>¿Por qué no puedes confirmarla?</Text>
+        <View style={{ gap: spacing.sm }}>
+          <Text style={type.subtitle}>¿Por qué no puedes confirmarla?</Text>
           <ChoiceChips label="Motivo del rechazo" options={REJECT_REASONS} value={reason} onChange={setReason} />
           <TextField label={reason === 'otro' ? 'Cuéntale el motivo' : 'Mensaje para el cliente (opcional)'} value={note} onChangeText={setNote} maxLength={200} multiline placeholder="Ej: Ese día tenemos un evento privado. ¿Te sirve el domingo?" />
           <Button title="Enviar rechazo" variant="danger" onPress={() => {
@@ -177,7 +180,7 @@ export default function SolicitudDetalle() {
         <Button title="Cancelar reserva" variant="danger" onPress={() => setMode('cancelar')} />
       )}
       {r.status === 'confirmada' && !started && mode === 'cancelar' && (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: spacing.sm }}>
           <TextField label="¿Por qué cancelas? (lo verá el cliente)" value={note} onChangeText={setNote} maxLength={200} multiline />
           <Button title="Cancelar la reserva" variant="danger" onPress={() => {
             if (note.trim().length < 3) return setError('Cuéntale al cliente por qué cancelas la reserva.');
@@ -187,18 +190,18 @@ export default function SolicitudDetalle() {
         </View>
       )}
       {r.status === 'confirmada' && started && (
-        <View style={{ gap: 12 }}>
-          <Text style={type.h3}>¿Llegó el cliente?</Text>
+        <View style={{ gap: spacing.sm }}>
+          <Text style={type.subtitle}>¿Llegó el cliente?</Text>
           <Button title="Sí, llegó" onPress={() => run(() => api.markAttendance(r.id, true))} loading={busy} />
           <Button title="No llegó" variant="outline" onPress={() => run(() => api.markAttendance(r.id, false))} disabled={busy} />
         </View>
       )}
 
       {!!r.events?.length && (
-        <View style={{ gap: 6 }}>
+        <View style={{ gap: spacing.xs }}>
           <Text style={type.overline}>Historial</Text>
           {r.events.map((e, k) => (
-            <Text key={k} style={type.small}>
+            <Text key={k} style={type.help}>
               {reservationWhen(e.createdAt, new Date())}: {e.fromStatus ? `pasó a «${RESERVATION_STATUS[e.toStatus].label}»` : 'solicitud recibida'} ({ACTOR[e.actorRole]})
             </Text>
           ))}
@@ -219,10 +222,10 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  code: { fontFamily: fonts.display, fontSize: 28, letterSpacing: 0.5, color: colors.text },
-  card: { gap: 12, padding: 18, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  row: { gap: 2 },
-  label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textMuted },
-  value: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  code: { ...typography.title, color: colors.text },
+  card: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  row: { gap: spacing.xxs },
+  label: { ...typography.caption, fontFamily: fonts.semibold, color: colors.textMuted },
+  value: { ...typography.body, fontFamily: fonts.semibold, color: colors.text },
+  item: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

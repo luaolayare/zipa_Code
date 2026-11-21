@@ -18,6 +18,9 @@ import {
   validateWindows,
   type ReservationSettings,
   type ReservationWindow,
+  radius,
+  spacing,
+  typography,
 } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Plus, Trash2 } from 'lucide-react-native';
@@ -59,12 +62,12 @@ export default function ConfiguracionReservas() {
     return (
       <Page>
         <BackButton />
-        <Notice tone="info"><Text style={type.strong}>Las reservas son solo para restaurantes.</Text></Notice>
+        <Notice tone="info"><Text style={type.label}>Las reservas son solo para restaurantes.</Text></Notice>
       </Page>
     );
   }
   if (!s) {
-    return <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
+    return <View style={{ flex: 1, justifyContent: 'center', padding: spacing.xl }}>{error ? <Text style={type.error}>{error}</Text> : <ActivityIndicator size="large" />}</View>;
   }
 
   const set = (patch: Partial<ReservationSettings>) => { setS({ ...s, ...patch }); setError(''); };
@@ -104,46 +107,46 @@ export default function ConfiguracionReservas() {
     return (
       <Page>
         <Text style={type.overline}>Reservas activadas</Text>
-        <Text style={type.h1}>Último paso: las notificaciones</Text>
-        <Text style={type.small}>{PUSH_AFTER_RESERVATIONS}</Text>
+        <Text style={type.title}>Último paso: las notificaciones</Text>
+        <Text style={type.help}>{PUSH_AFTER_RESERVATIONS}</Text>
         {listo ? (
-          <Notice tone="success"><Text style={type.strong}>Notificaciones activadas en este celular.</Text></Notice>
+          <Notice tone="success"><Text style={type.label}>Notificaciones activadas en este celular.</Text></Notice>
         ) : (
           <PushPrompt app="negocios" state={push.state} busy={push.busy} failed={push.failed} onEnable={push.enable} onRecheck={push.recheck} />
         )}
         <Button title={listo ? 'Listo' : 'Ahora no'} variant={listo ? 'primary' : 'outline'} onPress={() => router.back()} />
-        {!listo && <Text style={type.small}>Puedes activarlas después desde el Panel o desde la bandeja de Reservas.</Text>}
+        {!listo && <Text style={type.help}>Puedes activarlas después desde el Panel o desde la bandeja de Reservas.</Text>}
       </Page>
     );
   }
 
   return (
     <Page>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <BackButton />
-        <Text style={type.h1}>Reservas</Text>
+        <Text style={type.title}>Reservas</Text>
       </View>
-      <Text style={type.small}>
+      <Text style={type.help}>
         Los clientes te envían una solicitud y tú decides si la confirmas. No tienes que registrar mesas: los horarios solo dicen cuándo se puede pedir.
       </Text>
 
       <Pressable accessibilityRole="switch" accessibilityState={{ checked: s.enabled }} accessibilityLabel="Recibir solicitudes de reserva" onPress={() => set({ enabled: !s.enabled })} style={styles.toggleRow}>
         <View style={{ flex: 1 }}>
-          <Text style={type.h3}>Recibir solicitudes de reserva</Text>
-          <Text style={type.small}>{s.enabled ? 'Los clientes ven «Solicitar reserva» en tu ficha.' : 'Apagado: nadie puede solicitar reservas.'}</Text>
+          <Text style={type.subtitle}>Recibir solicitudes de reserva</Text>
+          <Text style={type.help}>{s.enabled ? 'Los clientes ven «Solicitar reserva» en tu ficha.' : 'Apagado: nadie puede solicitar reservas.'}</Text>
         </View>
         <View style={[styles.track, s.enabled && styles.trackOn]}><View style={[styles.knob, s.enabled && styles.knobOn]} /></View>
       </Pressable>
 
       <Text style={styles.section}>Horarios para recibir solicitudes</Text>
-      <Text style={type.small}>Hora en que puede empezar la reserva. Ej: de 12:00 a 15:00 (la última sería 14:30).</Text>
+      <Text style={type.help}>Hora en que puede empezar la reserva. Ej: de 12:00 a 15:00 (la última sería 14:30).</Text>
       {WEEKDAYS.map((name, i) => {
         const day = i + 1;
         const list = windowsOf(day);
         return (
           <View key={name} style={styles.day}>
             <View style={styles.dayHead}>
-              <Text style={type.h3}>{name}</Text>
+              <Text style={type.subtitle}>{name}</Text>
               {list.length < 2 && (
                 <Pressable accessibilityRole="button" accessibilityLabel={`Agregar horario el ${name.toLowerCase()}`} onPress={() => set({ windows: [...s.windows, { weekday: day, starts: list.length ? '18:00' : '12:00', ends: list.length ? '21:00' : '15:00' }] })} style={styles.add} hitSlop={6}>
                   <Plus size={16} color={colors.primary} />
@@ -151,11 +154,11 @@ export default function ConfiguracionReservas() {
                 </Pressable>
               )}
             </View>
-            {!list.length && <Text style={type.small}>Sin reservas este día</Text>}
+            {!list.length && <Text style={type.caption}>Sin reservas este día</Text>}
             {list.map((w, j) => (
               <View key={j} style={styles.windowRow}>
                 <TextInput accessibilityLabel={`${name}: desde`} value={w.starts} onChangeText={(v) => setWindow(w, { starts: v })} style={styles.time} maxLength={5} keyboardType="numbers-and-punctuation" placeholder="12:00" />
-                <Text style={type.small}>a</Text>
+                <Text style={type.caption}>a</Text>
                 <TextInput accessibilityLabel={`${name}: hasta`} value={w.ends} onChangeText={(v) => setWindow(w, { ends: v })} style={styles.time} maxLength={5} keyboardType="numbers-and-punctuation" placeholder="15:00" />
                 <Pressable accessibilityRole="button" accessibilityLabel={`Quitar horario del ${name.toLowerCase()}`} onPress={() => set({ windows: s.windows.filter((x) => x !== w) })} hitSlop={8} style={styles.trash}>
                   <Trash2 size={18} color={colors.danger} />
@@ -167,33 +170,33 @@ export default function ConfiguracionReservas() {
       })}
 
       <Text style={styles.section}>Reglas</Text>
-      <View style={{ gap: 8 }}>
-        <Text style={type.strong}>Máximo de personas por solicitud</Text>
+      <View style={{ gap: spacing.xs }}>
+        <Text style={type.label}>Máximo de personas por solicitud</Text>
         <Stepper label="Máximo de personas" value={s.maxParty} min={1} max={50} onChange={(maxParty) => set({ maxParty })} />
       </View>
-      <View style={{ gap: 8 }}>
-        <Text style={type.strong}>Anticipación mínima</Text>
+      <View style={{ gap: spacing.xs }}>
+        <Text style={type.label}>Anticipación mínima</Text>
         <ChoiceChips label="Anticipación mínima" options={NOTICE} value={s.minNoticeMinutes} onChange={(minNoticeMinutes) => set({ minNoticeMinutes })} />
       </View>
-      <View style={{ gap: 8 }}>
-        <Text style={type.strong}>Hasta cuándo se puede pedir</Text>
+      <View style={{ gap: spacing.xs }}>
+        <Text style={type.label}>Hasta cuándo se puede pedir</Text>
         <ChoiceChips label="Anticipación máxima" options={ADVANCE} value={s.maxAdvanceDays} onChange={(maxAdvanceDays) => set({ maxAdvanceDays })} />
       </View>
-      <View style={{ gap: 8 }}>
-        <Text style={type.strong}>Horas que se ofrecen</Text>
+      <View style={{ gap: spacing.xs }}>
+        <Text style={type.label}>Horas que se ofrecen</Text>
         <ChoiceChips label="Intervalo" options={SLOTS} value={s.slotMinutes} onChange={(slotMinutes) => set({ slotMinutes: slotMinutes as 15 | 30 | 60 })} />
       </View>
-      <View style={{ gap: 8 }}>
-        <Text style={type.strong}>Tiempo para responder</Text>
-        <Text style={type.small}>Si no respondes en ese tiempo (o antes de 30 minutos de la hora pedida), la solicitud vence y se le avisa al cliente.</Text>
+      <View style={{ gap: spacing.xs }}>
+        <Text style={type.label}>Tiempo para responder</Text>
+        <Text style={type.help}>Si no respondes en ese tiempo (o antes de 30 minutos de la hora pedida), la solicitud vence y se le avisa al cliente.</Text>
         <ChoiceChips label="Tiempo para responder" options={RESPONSE} value={s.responseHours} onChange={(responseHours) => set({ responseHours })} />
       </View>
 
       <Text style={styles.section}>Fechas sin reservas</Text>
-      <Text style={type.small}>Festivos, eventos privados o días en que cierras.</Text>
+      <Text style={type.help}>Festivos, eventos privados o días en que cierras.</Text>
       {s.blockedDates.map((d) => (
         <View key={d} style={styles.windowRow}>
-          <Text style={[type.strong, { flex: 1 }]}>{dayLabel(d, today)} · {d}</Text>
+          <Text style={[type.label, { flex: 1 }]}>{dayLabel(d, today)} · {d}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel={`Quitar ${d}`} onPress={() => set({ blockedDates: s.blockedDates.filter((x) => x !== d) })} hitSlop={8} style={styles.trash}>
             <Trash2 size={18} color={colors.danger} />
           </Pressable>
@@ -220,17 +223,17 @@ export default function ConfiguracionReservas() {
 }
 
 const styles = StyleSheet.create({
-  section: { fontFamily: fonts.display, fontSize: 20, color: colors.text, marginTop: 8 },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  track: { width: 52, height: 32, borderRadius: 16, backgroundColor: colors.chipIdle, padding: 3 },
+  section: { ...typography.heading, color: colors.text, marginTop: spacing.xs },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  track: { width: 52, height: 32, borderRadius: radius.lg, backgroundColor: colors.chipIdle, padding: spacing.xxs },
   trackOn: { backgroundColor: colors.success },
-  knob: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#FFFFFF' },
+  knob: { width: 26, height: 26, borderRadius: radius.pill, backgroundColor: '#FFFFFF' },
   knobOn: { transform: [{ translateX: 20 }] },
-  day: { gap: 8, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  day: { gap: spacing.xs, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
   dayHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 },
-  addText: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.primary },
-  windowRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  time: { minWidth: 86, minHeight: 48, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1.5, borderColor: colors.inputBorder, backgroundColor: colors.surface, fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
+  add: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, minHeight: 32 },
+  addText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
+  windowRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  time: { ...typography.body, minWidth: 86, minHeight: 48, paddingHorizontal: spacing.sm, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.inputBorder, backgroundColor: colors.surface, fontFamily: fonts.semibold, color: colors.text },
   trash: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });
