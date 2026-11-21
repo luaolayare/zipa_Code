@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { PROYECTO_PRODUCCION, revisarEntorno } from '../../entorno';
+import { PROYECTO_PRODUCCION, revisarEntorno, revisarEntornoPanel } from '../../entorno';
 
 const PROD = `https://${PROYECTO_PRODUCCION}.supabase.co`;
 const PRUEBAS = 'https://abcdefghijklmnopqrst.supabase.co';
@@ -37,5 +37,33 @@ describe('candado de entornos de EAS', () => {
 
   test('sin URL de Supabase en un build: se detiene', () => {
     expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'preview' })).toThrow(/no tiene EXPO_PUBLIC_SUPABASE_URL/);
+  });
+});
+
+describe('candado del panel del equipo (Next.js)', () => {
+  const dev = { desarrollo: true };
+  test('desarrollo + pruebas (o Supabase local): permitido', () => {
+    expect(revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PRUEBAS }, dev).destino).toBe('pruebas');
+    expect(revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321' }, dev).destino).toBe('pruebas');
+  });
+
+  test('desarrollo + producción: bloqueado, aunque se declare producción', () => {
+    expect(() => revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PROD }, dev)).toThrow(/en desarrollo apunta a PRODUCCIÓN/);
+    expect(() => revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PROD, ZIPA_ENTORNO: 'produccion' }, dev)).toThrow(/en desarrollo/);
+  });
+
+  test('producción declarada + producción: permitido', () => {
+    expect(revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PROD, ZIPA_ENTORNO: 'produccion' }).destino).toBe('produccion');
+  });
+
+  test('producción declarada + pruebas (o sin URL): bloqueado', () => {
+    expect(() => revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PRUEBAS, ZIPA_ENTORNO: 'produccion' })).toThrow(/no apunta al proyecto de producción/);
+    expect(() => revisarEntornoPanel({ ZIPA_ENTORNO: 'produccion' })).toThrow(/no apunta/);
+  });
+
+  test('build o start sin declarar producción: pruebas sí, producción no', () => {
+    expect(revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PRUEBAS }).destino).toBe('pruebas');
+    expect(() => revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PROD })).toThrow(/sin declarar el entorno/);
+    expect(() => revisarEntornoPanel({ NEXT_PUBLIC_SUPABASE_URL: PROD, ZIPA_ENTORNO: 'Produccion' })).toThrow(/sin declarar/);
   });
 });

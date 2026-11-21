@@ -39,4 +39,29 @@ function revisarEntorno(env = process.env) {
   return { perfil, destino: apuntaAProduccion ? 'produccion' : 'pruebas' };
 }
 
-module.exports = { revisarEntorno, PROYECTO_PRODUCCION };
+// Candado del panel del equipo (apps/admin, Next.js). Lo usa apps/admin/next.config.ts.
+// - `next dev` (desarrollo): solo pruebas o Supabase local, nunca producción, sin excepción.
+// - `next build` / `next start`: producción SOLO si el entorno lo declara con ZIPA_ENTORNO=produccion;
+//   con esa variable, el panel DEBE apuntar a producción. Sin ella, no puede apuntar a producción.
+function revisarEntornoPanel(env = process.env, { desarrollo = false } = {}) {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const apuntaAProduccion = url.includes(PROYECTO_PRODUCCION);
+  if (desarrollo) {
+    if (apuntaAProduccion) {
+      throw new Error(`[Zipa] El panel en desarrollo apunta a PRODUCCIÓN (${PROYECTO_PRODUCCION}). Pon las variables del proyecto de PRUEBAS en apps/admin/.env.development.local.`);
+    }
+    return { destino: 'pruebas' };
+  }
+  if (env.ZIPA_ENTORNO === 'produccion') {
+    if (!apuntaAProduccion) {
+      throw new Error(`[Zipa] ZIPA_ENTORNO=produccion, pero el panel no apunta al proyecto de producción (${PROYECTO_PRODUCCION}).`);
+    }
+    return { destino: 'produccion' };
+  }
+  if (apuntaAProduccion) {
+    throw new Error(`[Zipa] El panel apunta a PRODUCCIÓN (${PROYECTO_PRODUCCION}) sin declarar el entorno. Solo un entorno de producción con ZIPA_ENTORNO=produccion puede usarla.`);
+  }
+  return { destino: 'pruebas' };
+}
+
+module.exports = { revisarEntorno, revisarEntornoPanel, PROYECTO_PRODUCCION };
