@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
-import { colors, fonts, radius } from '../theme';
+import { colors, radius, sizes, spacing, typography } from '../theme';
 
 type Variant = 'primary' | 'accent' | 'outline' | 'link' | 'danger' | 'dark';
 
@@ -48,13 +48,13 @@ const variants = {
   dark: { box: { backgroundColor: colors.dark }, text: { color: '#FFFFFF' } },
   outline: { box: { borderWidth: 1.5, borderColor: colors.text, backgroundColor: 'transparent' }, text: { color: colors.text } },
   danger: { box: { borderWidth: 1.5, borderColor: colors.danger, backgroundColor: 'transparent' }, text: { color: colors.danger } },
-  link: { box: { backgroundColor: 'transparent', minHeight: 44 }, text: { color: colors.primary, textDecorationLine: 'underline' as const } },
+  link: { box: { backgroundColor: 'transparent', minHeight: sizes.touchMin }, text: { color: colors.primary, textDecorationLine: 'underline' as const } },
 };
 
 const styles = StyleSheet.create({
-  base: { minHeight: 56, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  label: { fontSize: 16.5, fontFamily: fonts.bold, letterSpacing: 0.1 },
+  base: { minHeight: sizes.button, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  label: { ...typography.subtitle, textAlign: 'center' }, // el color lo pone cada variante
   pressed: { opacity: 0.85, transform: [{ scale: 0.985 }] },
   dim: { opacity: 0.5 },
 });

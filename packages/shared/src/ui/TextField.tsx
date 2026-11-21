@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 
-import { colors, fonts, radius } from '../theme';
+import { colors, fonts, radius, sizes, spacing, typography } from '../theme';
 
 export function TextField({ label, hint, style, onFocus, onBlur, ...props }: { label: string; hint?: string } & TextInputProps) {
   const [focused, setFocused] = useState(false);
@@ -24,20 +24,20 @@ export function TextField({ label, hint, style, onFocus, onBlur, ...props }: { l
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text },
+  wrap: { gap: spacing.xs },
+  label: typography.label,
   input: {
-    minHeight: 56,
+    minHeight: sizes.input,
     borderWidth: 1.5,
     borderColor: colors.inputBorder,
-    borderRadius: radius.lg,
-    paddingHorizontal: 16,
-    fontSize: 16.5,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    fontSize: typography.body.fontSize,
     fontFamily: fonts.regular,
     backgroundColor: colors.surface,
     color: colors.text,
   },
-  multiline: { minHeight: 110, paddingTop: 14, textAlignVertical: 'top' },
+  multiline: { minHeight: 112, paddingTop: spacing.sm, textAlignVertical: 'top' },
   focused: { borderColor: colors.primary },
-  hint: { fontSize: 13, lineHeight: 18, fontFamily: fonts.regular, color: colors.textMuted },
+  hint: typography.caption,
 });
