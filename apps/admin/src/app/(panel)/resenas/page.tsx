@@ -40,7 +40,7 @@ export default async function Resenas() {
               <div>
                 <p className="overline">{b ? <Link href={`/negocios/${b.id}`}>{b.name}</Link> : 'Negocio'}</p>
                 <h3>{'★'.repeat(r.stars)}<span className="muted">{'★'.repeat(5 - r.stars)}</span> · {a?.full_name ?? 'Usuario'}</h3>
-                <p className="small muted">{fecha(r.created_at)} · {total(r.user_id)} {total(r.user_id) === 1 ? 'reseña en total' : 'reseñas en total'} · {r.visited ? 'Visitó el negocio (QR)' : 'Sin visita verificada'}</p>
+                <p className="small muted">{fecha(r.created_at)} · {total(r.user_id)} {total(r.user_id) === 1 ? 'reseña en total' : 'reseñas en total'} · {r.visited ? 'Reseña con QR' : 'Sin QR'}</p>
               </div>
               {r.text ? <div className="quote"><p>{r.text}</p></div> : <p className="muted small">(sin texto)</p>}
               {r.photo_url && <img src={r.photo_url} alt="Foto de la reseña" className="photo" />}

@@ -94,7 +94,7 @@ export interface Review {
   reply: string | null;
   createdAt: string;
   status?: ReviewStatus; // 'en_espera': la ve solo su autor hasta que el equipo la revise
-  visited?: boolean; // escaneó el QR del negocio (sello "Visitó el negocio")
+  visited?: boolean; // abrió la ficha con el QR del negocio (sello "Reseña con QR"; no prueba visita ni consumo)
   photoUrl?: string | null; // foto que agregó el cliente
 }
 

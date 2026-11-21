@@ -753,8 +753,8 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
     },
 
     /**
-     * Registra que esta persona visitó el negocio (abrió su QR del mostrador). Así su reseña sale
-     * con el sello "Visitó el negocio". El código del QR solo lo tienen el negocio y el equipo.
+     * Registra que esta persona abrió la ficha con el QR del negocio (token validado en el servidor).
+     * Así su reseña sale con el sello "Reseña con QR", que NO prueba visita ni consumo.
      */
     async registerVisit(businessId: string, token: string): Promise<boolean> {
       if (!db) return true;

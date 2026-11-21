@@ -1,6 +1,6 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
 import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Product, type Review, PlateArt, availabilityLabels, type Classified, radius, spacing, typography } from '@zipa/shared';
-import { BadgeCheck, ChevronRight } from 'lucide-react-native';
+import { ChevronRight, QrCode } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -91,7 +91,9 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
         <Stars n={review.stars} />
       </View>
       {review.visited && (
-        <View style={styles.visited}><BadgeCheck size={15} color={colors.success} /><Text style={styles.visitedText}>Visitó el negocio</Text></View>
+        <View style={styles.visited} accessible accessibilityLabel={'Reseña con QR: esta persona abrió tu ficha con tu código QR. El QR no acredita por sí solo una visita ni un consumo.'}>
+          <QrCode size={15} color={colors.primary} /><Text style={styles.visitedText}>Reseña con QR</Text>
+        </View>
       )}
       <Text style={styles.reviewText}>{review.text}</Text>
       {!!review.photoUrl && <Image resizeMethod="resize" source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${review.authorName}`} />}
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
   reviewTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   stars: { ...typography.subtitle, color: colors.starText },
   visited: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
-  visitedText: { ...typography.caption, fontFamily: fonts.bold, color: colors.success },
+  visitedText: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
   reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.stage3d },
   reviewText: { ...typography.body, color: colors.textBody },
   reply: { gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },

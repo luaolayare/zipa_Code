@@ -2,7 +2,7 @@
 import { Button, WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, radius, sizes, spacing, typography, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
-import { AtSign, Ban, BadgeCheck, CalendarDays, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
+import { AtSign, Ban, CalendarDays, Camera, Flag, Globe, MapPin, Package, QrCode } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +12,9 @@ import { ProductCard } from '@/components/ProductCard';
 import { mapsUrl, setPendingVisit, takePendingVisit, takeReviewed, whatsappUrl } from '@/lib/contacto';
 
 const REVIEWS_PAGE = 20;
+// «Reseña con QR» solo dice que la cuenta abrió la ficha con el código QR del negocio (token validado
+// en el servidor por registrar_visita; la reseña lo marca guardar_mi_resena). No prueba visita ni consumo.
+const QR_NOTE = 'El QR no acredita por sí solo una visita ni un consumo.';
 
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('');
 
@@ -185,7 +188,7 @@ export default function NegocioDetalle() {
         )}
         {visit && !thanks && (
           <View style={styles.thanks} accessibilityLiveRegion="polite">
-            <Text style={styles.thanksText}>Registramos tu visita. Si calificas este negocio, tu reseña saldrá con el sello «Visitó el negocio».</Text>
+            <Text style={styles.thanksText}>Abriste este negocio con su código QR. Si lo calificas, tu reseña mostrará «Reseña con QR». El QR no acredita por sí solo una visita ni un consumo.</Text>
           </View>
         )}
 
@@ -261,6 +264,7 @@ export default function NegocioDetalle() {
         {products.length > 0 && <Text style={styles.muted}>Para pedir o preguntar por un {productWord(business)}, escríbele al negocio por WhatsApp.</Text>}
 
         <Text style={styles.h2} accessibilityRole="header">Lo que dicen los clientes</Text>
+        {reviews.some((r) => r.visited) && <Text style={styles.qrNote}>«Reseña con QR»: quien la escribió abrió este negocio con su código QR. {QR_NOTE}</Text>}
         {reviews.length === 0 && <Text style={styles.muted}>Aún no hay reseñas. ¡Sé el primero en contar cómo te fue!</Text>}
         {(myReview && !reviews.some((r) => r.id === myReview.id) ? [myReview, ...reviews] : reviews).map((r) => {
           const isMine = r.userId === user?.id;
@@ -276,7 +280,9 @@ export default function NegocioDetalle() {
                 <View style={styles.badges}>
                   {r.status === 'en_espera' && <Text style={[styles.badge, styles.badgeWait]}>En revisión (solo la ves tú)</Text>}
                   {r.visited && (
-                    <View style={styles.badgeRow}><BadgeCheck size={15} color={colors.success} /><Text style={[styles.badge, styles.badgeOk]}>Visitó el negocio</Text></View>
+                    <View style={styles.badgeRow} accessible accessibilityLabel={`Reseña con QR: quien la escribió abrió este negocio con su código QR. ${QR_NOTE}`}>
+                      <QrCode size={15} color={colors.primary} /><Text style={styles.badge}>Reseña con QR</Text>
+                    </View>
                   )}
                   {!!r.photoUrl && (
                     <View style={styles.badgeRow}><Camera size={15} color={colors.primary} /><Text style={styles.badge}>Con foto</Text></View>
@@ -350,6 +356,7 @@ const styles = StyleSheet.create({
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
   badge: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
   badgeOk: { color: colors.success },
+  qrNote: { ...typography.caption, fontFamily: fonts.regular },
   badgeWait: { color: colors.accentText, backgroundColor: colors.warningSoft, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.pill, overflow: 'hidden' },
   reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.stage3d },
   thanksText: { ...typography.body, fontFamily: fonts.medium, color: colors.primary },

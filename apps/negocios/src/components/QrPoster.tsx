@@ -7,7 +7,7 @@ import QRCode from 'react-native-qrcode-svg';
 
 /**
  * Enlace que abre el negocio en la app de clientes. `v` es el código de visita del negocio
- * (migración 0012): quien escanea el QR del mostrador queda como "Visitó el negocio".
+ * (migración 0012): quien abre la ficha con este QR obtiene el sello "Reseña con QR" (no prueba visita ni consumo).
  * PROVISIONAL: usa el esquema de la app (vitrinalocal://). Cuando exista el dominio propio se cambia
  * por https://<dominio>/n/<id>, que abre la app si está instalada o lleva a la tienda si no.
  */

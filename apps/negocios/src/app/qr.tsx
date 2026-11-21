@@ -48,7 +48,7 @@ export default function Qr() {
         <BackButton />
         <Text style={type.title}>Tu QR</Text>
       </View>
-      <Text style={type.body}>Imprímelo para tus mesas o mostrador. El cliente lo escanea con la cámara de su celular y llega directo a tu vitrina. Si después te califica, su reseña sale con el sello «Visitó el negocio».</Text>
+      <Text style={type.body}>Imprímelo para tus mesas o mostrador. El cliente lo escanea con la cámara de su celular y llega directo a tu vitrina. Si después te califica, su reseña muestra «Reseña con QR». El QR no acredita por sí solo una visita ni un consumo.</Text>
       {business ? (
         <QrPoster ref={poster} businessId={business.id} token={token} name={business.name} restaurant={restaurantOf(business)} />
       ) : (

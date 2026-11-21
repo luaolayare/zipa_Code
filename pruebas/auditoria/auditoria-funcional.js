@@ -179,7 +179,7 @@ async function paso(id, area, desc, fn) {
   });
   await paso('C15', 'Clientes', 'Visita por QR, reseña con foto y edición', async () => {
     await p.goto(`http://localhost:8083/negocio/${bR.id}?v=${token}`, { waitUntil: 'load' }); await p.waitForTimeout(4500);
-    const visita = await texto(p, /Registramos tu visita/);
+    const visita = await texto(p, /Abriste este negocio con su código QR/);
     await vis(p, p.getByText('Calificar', { exact: true })).click(); await p.waitForTimeout(2500);
     await vis(p, p.getByLabel('5 estrellas')).click();
     await vis(p, p.getByLabel('Cuéntanos más', { exact: true })).fill('Excelente changua');
