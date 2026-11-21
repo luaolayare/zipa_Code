@@ -90,7 +90,7 @@ export default function VistaPrevia() {
       router.dismissAll();
       router.replace(logoFailed ? { pathname: '/panel', params: { aviso: 'logo' } } : '/panel');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No pudimos enviar tu negocio. Revisa tu conexión e intenta de nuevo.');
+      setError((e as { message?: string } | null)?.message || 'No pudimos enviar tu negocio. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setProgress('');
     }

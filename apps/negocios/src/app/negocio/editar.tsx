@@ -65,7 +65,9 @@ export default function EditarNegocio() {
       await api.setBusinessTags(original.id, c.tags);
       router.back();
     } catch (e) {
-      setError(e instanceof Error && (e.message.includes('etiqueta') || e.message.includes('todavía no está disponible')) ? e.message : 'Ocurrió un problema al guardar los cambios. Intenta de nuevo.');
+      // Los errores de Supabase no siempre son instancias de Error: se lee su mensaje.
+      const msg = (e as { message?: string } | null)?.message ?? '';
+      setError(msg.includes('etiqueta') || msg.includes('todavía no está disponible') ? msg : 'Ocurrió un problema al guardar los cambios. Intenta de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -117,7 +119,14 @@ export default function EditarNegocio() {
         <MunicipioPicker
           value={lugar.municipioCodigo}
           ciudades={ciudades}
-          onPick={(m) => { setLugar({ municipioCodigo: m.codigo, latitud: null, longitud: null }); setCambiarMunicipio(false); }}
+          onPick={(m) => {
+            // Solo a ciudades activas o en preparación (la base también lo exige).
+            const e = ciudades.estadoDe(m.codigo);
+            if (e !== 'activa' && e !== 'en_preparacion') return setError(`LocalmenteTuyo todavía no está disponible en ${m.nombre}. Tu negocio sigue en ${muni?.nombre ?? 'su municipio'}.`);
+            setError('');
+            setLugar({ municipioCodigo: m.codigo, latitud: null, longitud: null });
+            setCambiarMunicipio(false);
+          }}
         />
       )}
       <TextField label="Dirección" value={f.address} onChangeText={(address) => setF({ ...f, address })} />
