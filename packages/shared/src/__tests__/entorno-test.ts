@@ -6,8 +6,12 @@ const PROD = `https://${PROYECTO_PRODUCCION}.supabase.co`;
 const PRUEBAS = 'https://abcdefghijklmnopqrst.supabase.co';
 
 describe('candado de entornos de EAS', () => {
-  test('en local (sin perfil de EAS) no se aplica', () => {
-    expect(revisarEntorno({ EXPO_PUBLIC_SUPABASE_URL: PROD }).destino).toBe('local');
+  test('en local (sin perfil de EAS): pruebas o Supabase local sí; producción NO, sin excepción', () => {
+    expect(revisarEntorno({ EXPO_PUBLIC_SUPABASE_URL: PRUEBAS }).destino).toBe('local');
+    expect(revisarEntorno({ EXPO_PUBLIC_SUPABASE_URL: 'http://127.0.0.1:54321' }).destino).toBe('local');
+    expect(revisarEntorno({}).destino).toBe('local');
+    expect(() => revisarEntorno({ EXPO_PUBLIC_SUPABASE_URL: PROD })).toThrow(/desarrollo local apunta a PRODUCCIÓN/);
+    expect(() => revisarEntorno({ EXPO_PUBLIC_SUPABASE_URL: PROD, ZIPA_PERMITIR_PRODUCCION_EN_PRUEBAS: '1' })).toThrow(/desarrollo local/);
   });
 
   test('producción contra producción: sí', () => {

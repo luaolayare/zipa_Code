@@ -9,15 +9,22 @@
 // Excepción consciente: ZIPA_PERMITIR_PRODUCCION_EN_PRUEBAS=1 deja compilar un `preview` contra
 // producción (como los APK de Beta 2.2, mientras no exista el entorno de pruebas). Solo con
 // autorización expresa; queda escrito en el registro del build.
-// En desarrollo local (`expo start`, sin EAS_BUILD_PROFILE) no se aplica: Expo Go usa el .env local.
+// En desarrollo local (`expo start`, sin EAS_BUILD_PROFILE) tampoco se permite producción, sin excepción:
+// el .env local debe ser el del proyecto de pruebas (o Supabase local).
 
 const PROYECTO_PRODUCCION = 'auilsjqprobmhusvxmmz';
 
 function revisarEntorno(env = process.env) {
   const perfil = env.EAS_BUILD_PROFILE;
-  if (!perfil) return { perfil: null, destino: 'local' };
   const url = env.EXPO_PUBLIC_SUPABASE_URL || '';
   const apuntaAProduccion = url.includes(PROYECTO_PRODUCCION);
+  // Desarrollo local (`expo start`, Expo Go): solo pruebas o Supabase local, nunca producción (sin excepción).
+  if (!perfil) {
+    if (apuntaAProduccion) {
+      throw new Error(`[Zipa] El desarrollo local apunta a PRODUCCIÓN (${PROYECTO_PRODUCCION}). Pon en apps/<app>/.env las variables del proyecto de PRUEBAS.`);
+    }
+    return { perfil: null, destino: 'local' };
+  }
   if (!url) throw new Error(`[Zipa] El build "${perfil}" no tiene EXPO_PUBLIC_SUPABASE_URL. Revisa las variables del ambiente de EAS.`);
   if (perfil === 'production' && !apuntaAProduccion) {
     throw new Error(`[Zipa] El build de producción no apunta al proyecto de producción (${PROYECTO_PRODUCCION}). Revisa el ambiente "production" de EAS.`);
