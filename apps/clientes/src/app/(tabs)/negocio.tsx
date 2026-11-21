@@ -62,7 +62,7 @@ export default function TienesNegocio() {
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.xl, paddingBottom: 30, gap: spacing.sm, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden' },
+  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl, overflow: 'hidden' },
   plate: { position: 'absolute', right: -24, top: 18, opacity: 0.9, transform: [{ rotate: '10deg' }] },
   kicker: { ...typography.label, color: colors.onPrimaryMuted },
   title: { ...typography.display, color: '#FFFFFF', maxWidth: 320, marginTop: 70 }, // 70: deja ver la ilustración encima (posición, no ritmo)

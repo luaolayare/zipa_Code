@@ -58,7 +58,7 @@ export default function Inicio() {
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: colors.dark, overflow: 'hidden', borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+  hero: { backgroundColor: colors.dark, overflow: 'hidden', borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl },
   heroInner: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.xl },
   ring: { position: 'absolute', right: -110, top: -30, width: 290, height: 290, borderRadius: radius.pill, borderWidth: 38, borderColor: '#1E3431' },
   plate: { position: 'absolute', right: -18, top: 74, transform: [{ rotate: '-9deg' }] },

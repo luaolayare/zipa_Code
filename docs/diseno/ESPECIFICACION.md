@@ -1,6 +1,12 @@
-# Especificación de diseño: Vitrina Local
+# Especificación de diseño: Zipa lo tiene
 
-Fuente de verdad visual para las dos apps. El código del prototipo está en `prototipo/`:
+> **Fuente de verdad: `packages/shared/src/theme.ts`.** Este documento la describe.
+> Si algo de aquí no coincide con `theme.ts`, manda `theme.ts`.
+>
+> - **Sección 1 (tokens):** actualizada el 20-nov-2026 con el rediseño de tipografía y espacios. Las referencias están en `rediseno-tipografia/`; el antes y después, en `docs/capturas-tipografia/comparacion/`.
+> - **Secciones 2 a 4:** describen el prototipo original y quedan como **referencia histórica de la estructura**. Sus medidas (tamaños, radios y espacios) ya no son las vigentes: hoy salen de los tokens de la sección 1.
+
+El código del prototipo está en `prototipo/`:
 
 - `prototipo/app-clientes.prototipo.html`: todas las pantallas de la app de clientes.
 - `prototipo/app-negocios.prototipo.html`: registro en 5 pasos y panel del negocio.
@@ -39,7 +45,19 @@ Los valores exactos (px, colores, radios, pesos) se copian de ahí a `StyleSheet
 | `star` | `#E09A00` | Estrellas |
 | `starText` | `#8A5A00` | Texto de estrellas en reseñas |
 | `chipIdle` | `#ECE7DE` | Fondo de botones circulares neutros |
-| `stage3d` | `#E9EFEE` | Fondo del visor 3D |
+| `stage3d` | `#E9EFEE` | Fondo del visor 3D y de la galería |
+
+**Fondos de estado** (píldoras, avisos y plazos). Cada uno va con su color de texto:
+
+| Token | Hex | Texto | Uso |
+| --- | --- | --- | --- |
+| `successSoft` | `#DCEFE2` | `success` | Confirmada, Abierto, Publicado, «Solicitud enviada» |
+| `warningSoft` | `#FDEFD0` | `accentText` | Pendiente, En revisión, avisos |
+| `dangerSoft` | `#F9DED6` | `danger` | Rechazada, plazo «Responde antes de», errores |
+| `infoSoft` | `#DDEBEA` | `primary` | Avisos informativos, «Clásico de la zona» |
+| `neutralSoft` | `#ECE7DE` | `textMuted` | Cancelada, Vencida, conteos inactivos |
+
+**No se escriben colores a mano en las pantallas:** siempre van por token. Las únicas excepciones son los colores sobre fondos oscuros, como el blanco o los translúcidos de la cámara y del visor de fotos.
 
 Colores de portada por negocio (fondo / círculo interior), mientras no haya fotos:
 
@@ -57,29 +75,80 @@ Para negocios nuevos sin foto: portada por categoría (`comer` `#C2381B`, `artes
 
 ### Tipografía
 
-- Títulos y números grandes: **Space Grotesk** 700 (`@expo-google-fonts/space-grotesk`).
-- Todo lo demás: **DM Sans** 400 / 500 / 600 / 700 (`@expo-google-fonts/dm-sans`).
-- Cargar con `useFonts` en el `_layout.tsx` raíz de cada app y mantener el splash hasta que carguen.
+- **Familias:**
+  - títulos y números grandes: **Bricolage Grotesque** 600 / 700 / 800 (`@expo-google-fonts/bricolage-grotesque`);
+  - textos, botones y formularios: **DM Sans** 400 / 500 / 600 / 700 (`@expo-google-fonts/dm-sans`).
+- **Carga:** las dos apps las cargan con `useFonts(APP_FONTS)` en su `_layout.tsx` raíz.
+- **Peso:** cada peso es un archivo distinto, así que se elige con `fontFamily` (`fonts.*`), no con `fontWeight`.
+- **Escala:** son 8 estilos compartidos por las dos apps, en `typography` de `@zipa/shared`. En negocios, `type` de `kit.tsx` los repite y agrega dos:
+  - `error`: `label` en rojo;
+  - `help`: `body` en gris, para párrafos de ayuda.
 
-| Estilo | Fuente | Tamaño / alto de línea | Peso | Extra |
+| Estilo | Fuente | Tamaño / alto de línea | Tracking | Uso |
 | --- | --- | --- | --- | --- |
-| Display (bienvenida) | Space Grotesk | 40 / 42 | 700 | letterSpacing -0.8 |
-| H1 pantalla | Space Grotesk | 28 / 31 | 700 | letterSpacing -0.56 |
-| H1 detalle | Space Grotesk | 24–26 | 700 | |
-| H2 sección | Space Grotesk | 20 | 700 | |
-| Cuerpo | DM Sans | 15 / 22 | 400 | |
-| Nombre en tarjeta | DM Sans | 15 | 700 | |
-| Meta | DM Sans | 12–13 | 400–600 | color `textMuted` |
-| Etiqueta (badge) | DM Sans | 11–12 | 700 | píldora |
-| Sobretítulo | DM Sans | 11–12 | 700 | MAYÚSCULAS, letterSpacing 0.7 |
+| `display` | Bricolage 800 | 34 / 40 | −0,8 | Titular de portada, código de reserva, números grandes |
+| `title` | Bricolage 700 | 26 / 32 | −0,5 | Título de pantalla, nombre del negocio o producto, precio grande |
+| `heading` | Bricolage 700 | 20 / 26 | −0,3 | Títulos de sección: Destacados, Menú, Tu menú |
+| `subtitle` | DM Sans 700 | 17 / 24 | 0 | Título de tarjeta, texto de botones |
+| `body` | DM Sans 400 | 16 / 24 | 0 | Descripciones, mensajes y textos largos (color `textBody`) |
+| `label` | DM Sans 600 | 15 / 20 | 0 | Datos, chips, precios en listas, rótulos de campos |
+| `caption` | DM Sans 500 | 13 / 18 | 0 | Información secundaria: categoría, «Recibida hoy» (color `textMuted`) |
+| `overline` | DM Sans 700 | 13 / 16 | +1,2 | Rótulos en MAYÚSCULAS sobre secciones |
 
-### Espaciado y radios
+**Reglas:**
+- Se usan los estilos de la tabla; un estilo puede cambiar solo el color o el peso (`fontFamily`), por ejemplo un `caption` en negrita para una etiqueta.
+- Texto de lectura: 16. **Nada importante por debajo de 13.**
+- **No se desactiva `allowFontScaling` ni se ponen alturas fijas a cajas con texto:** todo debe aguantar el tamaño de letra del celular al 130 %. Se usa `minHeight`, nunca `height`.
 
-- Margen lateral de pantalla: 20 (24 en bienvenida, inicio de negocios e inicio de sesión).
-- Separación entre secciones: 22; dentro de una sección: 12; entre tarjetas: 10–14.
-- Radios: inputs 12–14, botones 14 (16 el principal de bienvenida), tarjetas 16–20, portadas internas 14, píldoras 999.
-- Cabeceras verdes: esquinas inferiores redondeadas 28.
-- Alturas táctiles: botón principal 52–56, secundario 44–48, chips 40, iconos circulares 44.
+**Excepciones aceptadas** (cada una lleva su comentario en el código):
+
+| Dónde | Por qué |
+| --- | --- |
+| Título de las dos tarjetas grandes del Inicio de clientes | 16, para que «Emprendimientos» quepa en dos columnas |
+| Iniciales del logo y número grande de la calificación (ficha del negocio) | Son gráficos, no texto de lectura |
+| Estrellas de las reseñas | Son un símbolo |
+| Palomita de la casilla de consentimiento | Es un símbolo |
+| Afiche QR (`QrPoster`) | Es una imagen para imprimir y tiene sus propias medidas |
+
+### Espacios, radios y medidas
+
+Los espacios son todos múltiplos de 4 (`spacing`):
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `xxs` | 4 | Ícono y texto |
+| `xs` | 8 | Líneas dentro de una tarjeta |
+| `sm` | 12 | Entre tarjetas |
+| `md` | 16 | Relleno de tarjetas y botones |
+| `lg` | 20 | **Margen lateral de pantalla** (las dos apps) |
+| `xl` | 24 | Debajo de cabeceras |
+| `xxl` | 32 | Entre secciones |
+| `xxxl` | 48 | Final de pantalla |
+
+Radios (`radius`):
+
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `sm` | 8 | Etiquetas pequeñas |
+| `md` | 12 | Botones, buscador e inputs |
+| `lg` | 20 | Tarjetas |
+| `xl` | 28 | Cabeceras, galerías y hojas |
+| `pill` | 999 | Píldoras, chips, avatares y círculos |
+
+Medidas fijas (`sizes`):
+- botones e inputs: 56 de alto;
+- nada que se toque mide menos de 44 (`touchMin`).
+
+**Excepciones de posición:** no son ritmo, solo ubican el titular debajo de la ilustración.
+- Bienvenida de negocios: `marginTop` 128.
+- «¿Tienes negocio?» en clientes: `marginTop` 70.
+
+**Formas aprobadas en el rediseño:**
+- Estados en píldora con su fondo de estado.
+- Datos de «Mi reserva» en filas de etiqueta y valor dentro de una tarjeta.
+- Productos del panel de negocios en una tarjeta con separadores. El menú de la ficha del negocio sigue en cuadrícula con fotos.
+- Pestañas de Reservas de 44 de alto con el conteo en una burbuja. El nombre accesible sigue siendo «Pendientes (2)».
+- Plazo «Responde antes de» en una etiqueta `dangerSoft`.
 
 ### Iconos
 
@@ -109,7 +178,7 @@ Usar `lucide-react-native` (trazo 2, color heredado). Equivalencias con el proto
 
 **Tiles de categoría**: grilla de 4 columnas, gap 10, alto 84, radio 18. Inactivo: blanco con borde. Activo: `primary` con texto e icono blancos. Icono 24 arriba, etiqueta 13/700 abajo.
 
-**Tarjeta de ranking** ("Lo más destacado"): fondo `primary`, radio 18, padding 12. Izquierda: cuadro 40 mostaza radio 12 con el puesto (Space Grotesk 18). Centro: sobretítulo mostaza ("MEJOR EN COMER" / "PUESTO 2 EN ARTESANÍAS"), nombre blanco 15/700, meta `onPrimaryMuted` 12. Derecha: estrella mostaza + calificación 16/700 blanco.
+**Tarjeta de ranking** ("Lo más destacado"): fondo `primary`, radio 18, padding 12. Izquierda: cuadro 40 mostaza radio 12 con el puesto (Bricolage Grotesque 18). Centro: sobretítulo mostaza ("MEJOR EN COMER" / "PUESTO 2 EN ARTESANÍAS"), nombre blanco 15/700, meta `onPrimaryMuted` 12. Derecha: estrella mostaza + calificación 16/700 blanco.
 
 **Tarjeta de carrusel** (Emprendimientos del barrio): ancho 210, scroll horizontal que llega al borde (margen -20, padding 20). Portada 120 de alto con círculo 64 (borde blanco 6 al 85 %) y sello mostaza "N en 3D" abajo a la izquierda. Cuerpo: nombre 15/700, "categoría · distancia" 12, estrella + calificación + (n reseñas).
 
@@ -123,7 +192,7 @@ Usar `lucide-react-native` (trazo 2, color heredado). Equivalencias con el proto
 
 **Barra inferior** (app de clientes): alto 72, blanco, borde superior. Tres pestañas iguales: Explorar, ¿Tienes negocio?, Perfil. Activa `primary`, inactiva `textMuted`. 12/700. "¿Tienes negocio?" abre la app de negocios o su página en la tienda.
 
-**Encabezado de pasos** (app de negocios): botón atrás circular 44, sobretítulo "PASO N DE 5", título 18 Space Grotesk, y 5 barras de 6 de alto (completadas `primary`, pendientes `#DCD6CC`).
+**Encabezado de pasos** (app de negocios): botón atrás circular 44, sobretítulo "PASO N DE 5", título 18 Bricolage Grotesque, y 5 barras de 6 de alto (completadas `primary`, pendientes `#DCD6CC`).
 
 ---
 
@@ -144,16 +213,16 @@ Bloques en `prototipo/app-clientes.prototipo.html`:
 
 Ignorar el bloque `MI NEGOCIO` de este archivo: quedó de una versión anterior y ahora vive en la app de negocios.
 
-**Bienvenida**: fondo `primary` a pantalla completa. Logo (cuadro mostaza 36 con tienda) + "Vitrina Local". Decoración: anillo de 260 con borde 36 `primaryDeep` saliendo por la derecha y un cuadro mostaza 90 girado 14° con icono 3D. Abajo: título display "Lo mejor de Cartagena, hecho aquí." (la ciudad sale de la ubicación), párrafo `onPrimaryMuted`, tarjeta `primaryDeep` "Llegaste por el QR de tu hotel…", botón mostaza "Empezar a explorar" (56) y enlace mostaza "¿Tienes un negocio? Regístralo aquí".
+**Bienvenida**: fondo `primary` a pantalla completa. Logo (cuadro mostaza 36 con tienda) + "Zipa lo tiene". Decoración: anillo de 260 con borde 36 `primaryDeep` saliendo por la derecha y un cuadro mostaza 90 girado 14° con icono 3D. Abajo: título display "Lo mejor de Cartagena, hecho aquí." (la ciudad sale de la ubicación), párrafo `onPrimaryMuted`, tarjeta `primaryDeep` "Llegaste por el QR de tu hotel…", botón mostaza "Empezar a explorar" (56) y enlace mostaza "¿Tienes un negocio? Regístralo aquí".
 
-**Iniciar sesión**: botón atrás, logo 44, H1 "Entra a Vitrina Local", texto. Aviso `accentSoft` "Inicia sesión para publicar tu reseña." cuando viene de calificar. Botones "Continuar con Google" (blanco con borde) y "Continuar con Apple" (`text` con texto blanco), divisor "o con tu correo", inputs, error en `danger`, botón `primary` "Entrar o crear cuenta", enlace subrayado "Seguir como invitado".
+**Iniciar sesión**: botón atrás, logo 44, H1 "Entra a Zipa lo tiene", texto. Aviso `accentSoft` "Inicia sesión para publicar tu reseña." cuando viene de calificar. Botones "Continuar con Google" (blanco con borde) y "Continuar con Apple" (`text` con texto blanco), divisor "o con tu correo", inputs, error en `danger`, botón `primary` "Entrar o crear cuenta", enlace subrayado "Seguir como invitado".
 
 **Explorar** (orden de arriba abajo):
 1. Cabecera verde con buscador.
 2. Si hay texto en el buscador: solo "N resultados para «texto»" y las filas, o el estado vacío (borde punteado: "No encontramos ese nombre").
 3. Si no: tiles de categoría → "Lo más destacado" (subtítulo: "El mejor calificado de cada categoría" o "Los mejor calificados en {categoría}") → "Emprendimientos del barrio" (carrusel + contador "N negocios") → "Clásicos de la zona" (lista). Cada sección se oculta si queda vacía al filtrar.
 
-**Detalle del negocio**: cabecera del color de portada del negocio, botón atrás blanco al 92 %, logo cuadrado blanco 64 con iniciales (o la foto), nombre H1 blanco y meta. Debajo: aviso verde tras publicar reseña, etiqueta de tipo + horario en `success`, tarjeta de calificación (número 34 Space Grotesk, "Calificación de clientes", "N reseñas", botón `primary` "Calificar"), sección "Menú en 3D" (comer) o "Vitrina en 3D" (resto) con grilla de productos, sección "Lo que dicen los clientes".
+**Detalle del negocio**: cabecera del color de portada del negocio, botón atrás blanco al 92 %, logo cuadrado blanco 64 con iniciales (o la foto), nombre H1 blanco y meta. Debajo: aviso verde tras publicar reseña, etiqueta de tipo + horario en `success`, tarjeta de calificación (número 34 Bricolage Grotesque, "Calificación de clientes", "N reseñas", botón `primary` "Calificar"), sección "Menú en 3D" (comer) o "Vitrina en 3D" (resto) con grilla de productos, sección "Lo que dicen los clientes".
 
 **Producto en 3D**: escenario 380 de alto fondo `stage3d` con el modelo girando, botón atrás, sello mostaza "Vista 3D", texto "Arrastra para girar". Controles: botón "Pausar giro / Girar solo" y deslizador "Girar". Datos: negocio, nombre H1 26, descripción, precio 20 en `price`, chips de etiquetas, botón `primary` con `ScanLine` "Ver en mi mesa" (comida) o "Ver en mi espacio" (productos), botón con borde "Ya lo probé: calificar" / "Ya lo compré: calificar".
 
@@ -178,7 +247,7 @@ Bloques en `prototipo/app-negocios.prototipo.html`:
 | Paso 5 Vista previa | `PASO 5: VISTA PREVIA` | `src/app/registro/vista-previa.tsx` |
 | Panel | `PANEL DEL NEGOCIO` | `src/app/panel.tsx` |
 
-**Inicio**: cabecera `text` (oscura) con logo "Vitrina Local **Negocios**" (Negocios en mostaza), H1 34 "Que los turistas encuentren tu negocio.", párrafo. Tres beneficios con check en círculo `primarySoft`. Tarjeta "Registro en 5 pasos, unos 10 minutos…". Botón mostaza "Registrar mi negocio", botón con borde "Ya tengo cuenta".
+**Inicio**: cabecera `text` (oscura) con logo "Zipa lo tiene **Negocios**" (Negocios en mostaza), H1 34 "Que los turistas encuentren tu negocio.", párrafo. Tres beneficios con check en círculo `primarySoft`. Tarjeta "Registro en 5 pasos, unos 10 minutos…". Botón mostaza "Registrar mi negocio", botón con borde "Ya tengo cuenta".
 
 **Paso 2**: tipo de negocio en 2 tarjetas seleccionables (borde 2, seleccionada `primary` con fondo `stage3d`), con título y descripción; categorías como chips (seleccionado `primary`).
 

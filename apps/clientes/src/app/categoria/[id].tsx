@@ -68,7 +68,7 @@ export default function Categoria() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 32 + insets.bottom }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: spacing.xxl + insets.bottom }]} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <BackButton />
           <View style={{ flex: 1, gap: spacing.xxs }}>

@@ -273,7 +273,7 @@ function DataRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  header: { backgroundColor: colors.dark, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
+  header: { backgroundColor: colors.dark, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl },
   headerInner: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
   kicker: { ...typography.label, color: '#AFC2BE' },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

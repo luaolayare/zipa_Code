@@ -22,7 +22,7 @@ export default function Welcome() {
   );
 
   return (
-    <View style={[styles.screen, { paddingTop: 28 + insets.top, paddingBottom: 32 + insets.bottom }]}>
+    <View style={[styles.screen, { paddingTop: spacing.xxl + insets.top, paddingBottom: spacing.xxl + insets.bottom }]}>
       {/* Decoración: anillo que sale por la derecha y cuadro mostaza. */}
       <View style={styles.ring} aria-hidden />
       <View style={styles.cube} aria-hidden>
@@ -63,7 +63,7 @@ export default function Welcome() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.primary, paddingHorizontal: spacing.xl, gap: spacing.xl, overflow: 'hidden' },
+  screen: { flex: 1, backgroundColor: colors.primary, paddingHorizontal: spacing.lg, gap: spacing.xl, overflow: 'hidden' },
   // En el prototipo: 260 de ancho + borde 36 por lado = 332 en total.
   ring: { position: 'absolute', right: -70, top: 120, width: 332, height: 332, borderRadius: radius.pill, borderWidth: 36, borderColor: colors.primaryDeep },
   cube: { position: 'absolute', right: 30, top: 210, width: 90, height: 90, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '14deg' }] },

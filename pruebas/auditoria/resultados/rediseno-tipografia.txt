@@ -1,0 +1,17 @@
+Rediseño de tipografía y espacios: pruebas de cierre (20-nov-2026, Supabase local)
+Rama feature/tipografia-espacios
+
+typecheck: 0 errores · lint: 0 problemas · Jest: 128/128
+expo export android: clientes OK, negocios OK
+
+beta-2-2-notificaciones: 15/15
+beta-2-2-reservas-concurrencia: 8/8
+auditoria-2-2-repro-proyectos-expo (P1): no se reproduce
+beta-2-2-integral: 9/9
+beta-2-2-entrega-a: 12/12
+beta-2-2-entrega-b: 14/15
+beta-2-2-entrega-c: 6/6
+correcciones-beta-2-1: 12/12
+beta-2-2-correcciones (P4, bandeja con 324 solicitudes): 7/7
+auditoria-funcional: 48 pruebas · 46 OK · 0 FALLA · 2 NO_PROBADO
+auditoria-funcional: errores de consola: 0
