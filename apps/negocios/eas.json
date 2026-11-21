@@ -7,18 +7,27 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "ZIPA_PERFIL_EAS": "development"
+      }
     },
     "preview": {
       "distribution": "internal",
       "environment": "preview",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "ZIPA_PERFIL_EAS": "preview"
       }
     },
     "production": {
       "environment": "production",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "ZIPA_PERFIL_EAS": "production"
+      }
     },
     "production-apk": {
       "extends": "production",
@@ -26,6 +35,9 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "ZIPA_PERFIL_EAS": "production-apk"
       }
     }
   },

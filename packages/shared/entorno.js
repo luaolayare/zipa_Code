@@ -17,7 +17,10 @@ const PROYECTO_PRODUCCION = 'auilsjqprobmhusvxmmz';
 const PERFILES_PRODUCCION = ['production', 'production-apk'];
 
 function revisarEntorno(env = process.env) {
-  const perfil = env.EAS_BUILD_PROFILE;
+  // En el servidor de EAS llega EAS_BUILD_PROFILE. Al lanzar `eas build`, el CLI evalúa la configuración
+  // en el computador sin esa variable, pero con el `env` del perfil (eas.json), donde cada perfil declara su
+  // nombre en ZIPA_PERFIL_EAS. `expo start` no tiene ninguna de las dos: es desarrollo local.
+  const perfil = env.EAS_BUILD_PROFILE || env.ZIPA_PERFIL_EAS;
   const url = env.EXPO_PUBLIC_SUPABASE_URL || '';
   const apuntaAProduccion = url.includes(PROYECTO_PRODUCCION);
   // Desarrollo local (`expo start`, Expo Go): solo pruebas o Supabase local, nunca producción (sin excepción).
@@ -27,6 +30,9 @@ function revisarEntorno(env = process.env) {
     }
     return { perfil: null, destino: 'local' };
   }
+  // Primera lectura del CLI de EAS en el computador (solo busca el id del proyecto, todavía sin las variables
+  // del ambiente): no hay nada que revisar. En el servidor de EAS (EAS_BUILD_PROFILE) la URL es obligatoria.
+  if (!url && !env.EAS_BUILD_PROFILE) return { perfil, destino: 'pendiente' };
   if (!url) throw new Error(`[Zipa] El build "${perfil}" no tiene EXPO_PUBLIC_SUPABASE_URL. Revisa las variables del ambiente de EAS.`);
   const esProduccion = PERFILES_PRODUCCION.includes(perfil);
   if (esProduccion && !apuntaAProduccion) {

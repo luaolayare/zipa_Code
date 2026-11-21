@@ -24,6 +24,15 @@ describe('candado de entornos de EAS', () => {
     expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production-apk2', EXPO_PUBLIC_SUPABASE_URL: PROD })).toThrow(/apunta a PRODUCCIÓN/);
   });
 
+  test('al lanzar eas build (sin EAS_BUILD_PROFILE) vale el perfil declarado en eas.json', () => {
+    expect(revisarEntorno({ ZIPA_PERFIL_EAS: 'production', EXPO_PUBLIC_SUPABASE_URL: PROD }).destino).toBe('produccion');
+    expect(() => revisarEntorno({ ZIPA_PERFIL_EAS: 'preview', EXPO_PUBLIC_SUPABASE_URL: PROD })).toThrow(/apunta a PRODUCCIÓN/);
+    expect(() => revisarEntorno({ ZIPA_PERFIL_EAS: 'production', EXPO_PUBLIC_SUPABASE_URL: PRUEBAS })).toThrow(/no apunta al proyecto de producción/);
+    // Primera lectura del CLI, sin variables todavía: no decide; en el servidor de EAS, sin URL se detiene.
+    expect(revisarEntorno({ ZIPA_PERFIL_EAS: 'production' }).destino).toBe('pendiente');
+    expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production' })).toThrow(/no tiene EXPO_PUBLIC_SUPABASE_URL/);
+  });
+
   test('producción contra otro proyecto: se detiene', () => {
     expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production', EXPO_PUBLIC_SUPABASE_URL: PRUEBAS })).toThrow(/no apunta al proyecto de producción/);
   });
