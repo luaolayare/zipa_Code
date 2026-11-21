@@ -144,6 +144,9 @@ No hizo falta cambiar el esquema, borrar información ni cambiar reglas del nego
 | Cierres o bloqueos (Logcat) | 0 | Ni en `co.zipa.vitrinalocal` ni en `co.zipa.vitrinanegocios` |
 | Avisos push | **No se pueden probar en emulador** | La app solo pide el token push en un teléfono físico (`Device.isDevice`), a propósito. Hay que probarlo con un Android conectado por USB e instalando estos mismos APK |
 
+**Avisos push desde el servidor (proyecto de pruebas y Expo real), 9/9:** una solicitud real de Lucía dejó en cola el aviso «Tienes una nueva solicitud de reserva» para la dueña. La base despertó la función sola, en unos 2 segundos. La función rechaza llamadas sin su secreto (401). El texto no lleva nombre, teléfono ni observaciones. La función llegó al servicio de Expo y guardó su respuesta. Con un token ficticio, Expo respondió `DeviceNotRegistered` y el sistema desactivó ese token. La solicitud de prueba quedó cancelada.
+Falta solo el último tramo: que Expo entregue el aviso a un teléfono real a través de Firebase. Eso exige un Android físico.
+
 **Variables de producción en EAS:** el ambiente `production` de las dos apps ya tiene `EXPO_PUBLIC_SUPABASE_URL` (proyecto `auilsjqprobmhusvxmmz`) y `EXPO_PUBLIC_SUPABASE_ANON_KEY` (clave pública `anon`, guardada como *sensitive*). Solo se leyó la clave; no se cambió nada en Supabase de producción. El candado aprueba `production → producción` y sigue bloqueando `preview → producción`.
 
 **`main`:** con la CI en verde, se adelantó `main` hasta la rama (fast-forward, sin conflictos). La CI solo prueba contra un Supabase local y no despliega nada.
