@@ -1,5 +1,5 @@
 // "¿Tienes negocio?": explica qué gana un negocio y lleva a la app de negocios.
-import { BRAND, PlateArt, colors, fonts } from '@zipa/shared';
+import { BRAND, PlateArt, colors, radius, spacing, typography } from '@zipa/shared';
 import { useFocusEffect } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { QrCode } from 'lucide-react-native';
@@ -26,7 +26,7 @@ export default function TienesNegocio() {
   );
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
       <View style={[styles.header, { paddingTop: insets.top + 22 }]}>
         <View style={styles.plate} pointerEvents="none"><PlateArt art="artesania" main="emprendimientos" size={150} /></View>
         <Text style={styles.kicker}>Para restaurantes y emprendedores</Text>
@@ -37,7 +37,7 @@ export default function TienesNegocio() {
         {PASOS.map(([title, text], i) => (
           <View key={title} style={styles.step}>
             <View style={styles.num}><Text style={styles.numText}>{i + 1}</Text></View>
-            <View style={{ flex: 1, gap: 4 }}>
+            <View style={{ flex: 1, gap: spacing.xxs }}>
               <Text style={styles.stepTitle}>{title}</Text>
               <Text style={styles.stepText}>{text}</Text>
             </View>
@@ -46,7 +46,7 @@ export default function TienesNegocio() {
 
         <View style={styles.qr}>
           <View style={styles.qrIcon}><QrCode size={40} color={colors.text} /></View>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: spacing.xxs }}>
             <Text style={styles.stepTitle}>Tu QR de mesa o mostrador</Text>
             <Text style={styles.stepText}>El cliente escanea, ve tus productos y al final te deja su reseña.</Text>
           </View>
@@ -62,19 +62,19 @@ export default function TienesNegocio() {
 }
 
 const styles = StyleSheet.create({
-  header: { backgroundColor: colors.primary, paddingHorizontal: 22, paddingBottom: 30, gap: 10, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden' },
+  header: { backgroundColor: colors.primary, paddingHorizontal: spacing.xl, paddingBottom: 30, gap: spacing.sm, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: 'hidden' },
   plate: { position: 'absolute', right: -24, top: 18, opacity: 0.9, transform: [{ rotate: '10deg' }] },
-  kicker: { fontFamily: fonts.semibold, fontSize: 15, color: colors.onPrimaryMuted },
-  title: { fontFamily: fonts.hero, fontSize: 38, lineHeight: 41, letterSpacing: -1.2, color: '#FFFFFF', maxWidth: 320, marginTop: 70 },
-  body: { padding: 20, gap: 14 },
-  step: { flexDirection: 'row', gap: 16, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  num: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
-  numText: { fontFamily: fonts.display, fontSize: 19, color: colors.text },
-  stepTitle: { fontFamily: fonts.bold, fontSize: 17, lineHeight: 22, color: colors.text },
-  stepText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  qr: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  qrIcon: { width: 64, height: 64, borderRadius: 16, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
-  cta: { minHeight: 58, borderRadius: 18, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
-  ctaText: { fontFamily: fonts.bold, fontSize: 17, color: colors.text },
-  note: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted, textAlign: 'center' },
+  kicker: { ...typography.label, color: colors.onPrimaryMuted },
+  title: { ...typography.display, color: '#FFFFFF', maxWidth: 320, marginTop: 70 }, // 70: deja ver la ilustración encima (posición, no ritmo)
+  body: { padding: spacing.lg, gap: spacing.md },
+  step: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  num: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  numText: { ...typography.heading, color: colors.text },
+  stepTitle: { ...typography.subtitle, color: colors.text },
+  stepText: { ...typography.body, color: colors.textMuted },
+  qr: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  qrIcon: { width: 64, height: 64, borderRadius: radius.lg, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  cta: { minHeight: 58, borderRadius: radius.lg, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs },
+  ctaText: { ...typography.subtitle, color: colors.text },
+  note: { ...typography.body, color: colors.textMuted, textAlign: 'center' },
 });

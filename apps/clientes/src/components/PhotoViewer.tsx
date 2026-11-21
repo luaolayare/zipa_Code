@@ -1,7 +1,7 @@
 // Fotos a pantalla completa: deslizar entre fotos y acercar (2x, 3x) para ver detalles.
 // Sin librerías nuevas: al acercar, la foto se agranda y se mueve arrastrando (desplazamiento en
 // los dos ejes). Funciona igual en Android, iOS y la vista web de desarrollo.
-import { slideIndex } from '@zipa/shared';
+import { slideIndex, radius, spacing, typography } from '@zipa/shared';
 import { X, ZoomIn, ZoomOut } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
@@ -87,12 +87,12 @@ export function PhotoViewer({ photos, start, onClose, title }: { photos: ViewerP
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000000' },
-  top: { position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: 12, paddingHorizontal: 16, alignItems: 'center' },
-  round: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  top: { position: 'absolute', left: 0, right: 0, top: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, gap: spacing.sm, paddingHorizontal: spacing.md, alignItems: 'center' },
+  round: { width: 48, height: 48, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
   off: { opacity: 0.35 },
-  counter: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.18)', overflow: 'hidden' },
-  caption: { color: '#FFFFFF', fontSize: 15, textAlign: 'center' },
-  zoomRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  zoomText: { color: '#FFFFFF', fontSize: 14, minWidth: 170, textAlign: 'center' },
+  counter: { ...typography.caption, color: '#FFFFFF', fontWeight: '700', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.18)', overflow: 'hidden' },
+  caption: { ...typography.caption, color: '#FFFFFF', textAlign: 'center' },
+  zoomRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  zoomText: { ...typography.caption, color: '#FFFFFF', minWidth: 170, textAlign: 'center' },
 });

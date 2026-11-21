@@ -5,7 +5,7 @@ import { BellOff, BellRing } from 'lucide-react-native';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { PUSH_BLOCKED, PUSH_PROMPT, PUSH_UNAVAILABLE, pushPromptMode, type PushApp, type PushState } from '../push';
-import { colors, fonts } from '../theme';
+import { colors, fonts, radius, spacing, typography } from '../theme';
 
 export function PushPrompt({
   app,
@@ -29,7 +29,7 @@ export function PushPrompt({
   return (
     <View style={[styles.card, off && styles.cardOff]} accessibilityRole="alert">
       <View style={styles.icon}>{off ? <BellOff size={20} color={colors.danger} /> : <BellRing size={20} color={colors.primary} />}</View>
-      <View style={{ flex: 1, gap: 6 }}>
+      <View style={{ flex: 1, gap: spacing.xs }}>
         <Text style={[styles.title, off && { color: colors.danger }]}>{off ? 'Notificaciones desactivadas' : t.title}</Text>
         {mode === 'invitar' && (
           <>
@@ -64,10 +64,10 @@ function Action({ label, busy, onPress }: { label: string; busy?: boolean; onPre
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: 'row', gap: 12, padding: 16, borderRadius: 20, backgroundColor: colors.primarySoft },
-  cardOff: { backgroundColor: '#F9DED6' },
-  icon: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary },
-  body: { fontFamily: fonts.regular, fontSize: 14.5, lineHeight: 21, color: colors.text },
-  action: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary, textDecorationLine: 'underline' },
+  card: { flexDirection: 'row', gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.primarySoft },
+  cardOff: { backgroundColor: colors.dangerSoft },
+  icon: { width: 38, height: 38, borderRadius: radius.pill, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  title: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
+  body: { ...typography.body, color: colors.text },
+  action: { ...typography.label, fontFamily: fonts.bold, color: colors.primary, textDecorationLine: 'underline' },
 });

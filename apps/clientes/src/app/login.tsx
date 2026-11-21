@@ -1,4 +1,4 @@
-import { BRAND, Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, fonts, useAuth } from '@zipa/shared';
+import { BRAND, Button, CheckEmailView, ConsentCheckbox, Screen, TextField, colors, consentsFor, fonts, useAuth, radius, spacing, typography } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Store } from 'lucide-react-native';
 import { useState } from 'react';
@@ -90,10 +90,10 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  logo: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  title: { fontFamily: fonts.hero, fontSize: 36, lineHeight: 39, letterSpacing: -1, color: colors.text },
-  subtitle: { fontFamily: fonts.regular, fontSize: 16.5, lineHeight: 24, color: colors.textMuted, marginTop: -8 },
-  notice: { backgroundColor: colors.accentSoft, borderRadius: 18, padding: 16 },
-  noticeText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.accentText },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
+  logo: { width: 56, height: 56, borderRadius: radius.lg, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xxs },
+  title: { ...typography.display, color: colors.text },
+  subtitle: { ...typography.body, color: colors.textMuted, marginTop: -8 },
+  notice: { backgroundColor: colors.accentSoft, borderRadius: radius.lg, padding: spacing.md },
+  noticeText: { ...typography.label, fontFamily: fonts.bold, color: colors.accentText },
+  error: { ...typography.label, color: colors.danger },
 });

@@ -1,5 +1,5 @@
 // Una categoría principal (Emprendimientos o Restaurantes) con sus subcategorías.
-import { MAIN_CATEGORIES, MIN_REVIEWS_FOR_RANKING, colors, fonts, subcategoriesOf, useAuth, type Business, type CategoryNode, type MainCategory, type SearchOrder } from '@zipa/shared';
+import { MAIN_CATEGORIES, MIN_REVIEWS_FOR_RANKING, colors, fonts, subcategoriesOf, useAuth, type Business, type CategoryNode, type MainCategory, type SearchOrder, radius, spacing, typography } from '@zipa/shared';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -71,7 +71,7 @@ export default function Categoria() {
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: 32 + insets.bottom }]} showsVerticalScrollIndicator={false}>
         <View style={styles.head}>
           <BackButton />
-          <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flex: 1, gap: spacing.xxs }}>
             <Text style={styles.title} accessibilityRole="header">{main.name}</Text>
             <Text style={styles.sub} numberOfLines={2}>{main.description}</Text>
           </View>
@@ -102,7 +102,7 @@ export default function Categoria() {
         )}
 
         {status === 'cargando' ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: 40 }} accessibilityLabel="Cargando negocios" />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xxxl }} accessibilityLabel="Cargando negocios" />
         ) : status === 'error' ? (
           <View style={styles.empty} accessibilityRole="alert">
             <Text style={styles.emptyTitle}>No pudimos cargar los negocios</Text>
@@ -135,30 +135,30 @@ export default function Categoria() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  scroll: { padding: 20, gap: 18 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  title: { fontSize: 30, lineHeight: 34, fontFamily: fonts.display, letterSpacing: -0.7, color: colors.text },
-  sub: { fontSize: 14, lineHeight: 19, fontFamily: fonts.regular, color: colors.textMuted },
+  scroll: { padding: spacing.lg, gap: spacing.lg },
+  head: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  title: { ...typography.title, color: colors.text },
+  sub: { ...typography.body, color: colors.textMuted },
 
   chipsWrap: { marginHorizontal: -20 },
-  chips: { paddingHorizontal: 20, gap: 8 },
-  chip: { minHeight: 44, paddingHorizontal: 16, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  chips: { paddingHorizontal: spacing.lg, gap: spacing.xs },
+  chip: { minHeight: 44, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: 14.5, fontFamily: fonts.bold, color: colors.text },
+  chipText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
   chipTextOn: { color: '#FFFFFF' },
 
-  orders: { flexDirection: 'row', alignSelf: 'flex-start', padding: 4, gap: 4, borderRadius: 999, backgroundColor: colors.chipIdle },
-  order: { minHeight: 36, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 999 },
+  orders: { flexDirection: 'row', alignSelf: 'flex-start', padding: spacing.xxs, gap: spacing.xxs, borderRadius: radius.pill, backgroundColor: colors.chipIdle },
+  order: { minHeight: 36, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.pill },
   orderOn: { backgroundColor: colors.surface },
-  orderText: { fontSize: 13.5, fontFamily: fonts.bold, color: colors.textMuted },
+  orderText: { ...typography.caption, fontFamily: fonts.bold, color: colors.textMuted },
 
-  list: { gap: 10 },
-  count: { fontSize: 13.5, fontFamily: fonts.semibold, color: colors.textMuted },
-  empty: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.inputBorder, borderRadius: 16, padding: 20, gap: 6, alignItems: 'center' },
-  emptyTitle: { fontSize: 15, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },
-  emptyText: { fontSize: 13.5, lineHeight: 19, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
-  error: { fontSize: 14, fontFamily: fonts.semibold, color: colors.danger, textAlign: 'center' },
-  button: { marginTop: 6, minHeight: 46, paddingHorizontal: 18, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  list: { gap: spacing.sm },
+  count: { ...typography.caption, fontFamily: fonts.semibold, color: colors.textMuted },
+  empty: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.inputBorder, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.xs, alignItems: 'center' },
+  emptyTitle: { ...typography.label, fontFamily: fonts.bold, color: colors.text, textAlign: 'center' },
+  emptyText: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
+  error: { ...typography.label, color: colors.danger, textAlign: 'center' },
+  button: { marginTop: spacing.xs, minHeight: 46, paddingHorizontal: spacing.lg, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   moreButton: { alignSelf: 'stretch' },
-  buttonText: { fontSize: 15, fontFamily: fonts.bold, color: '#FFFFFF' },
+  buttonText: { ...typography.label, fontFamily: fonts.bold, color: '#FFFFFF' },
 });

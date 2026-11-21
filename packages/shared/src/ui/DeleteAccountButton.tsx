@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '../auth';
-import { colors } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { confirmAsync } from './confirm';
 
 /**
@@ -45,9 +45,9 @@ export function DeleteAccountButton({ loses, onDeleted }: { loses: string; onDel
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 6 },
-  button: { minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  wrap: { gap: spacing.xs },
+  button: { minHeight: 48, borderRadius: radius.md, borderWidth: 1, borderColor: colors.danger, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
   pressed: { opacity: 0.7 },
-  text: { fontSize: 15, fontWeight: '700', color: colors.danger },
+  text: { ...typography.caption, fontWeight: '700', color: colors.danger },
   error: { color: colors.danger, fontWeight: '600' },
 });

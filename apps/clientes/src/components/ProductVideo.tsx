@@ -6,7 +6,7 @@
 // - junta más video antes de arrancar y antes de seguir tras una pausa por señal (`bufferOptions`);
 // - solo se reproduce mientras se ve: se pausa al deslizar a una foto o al salir de la pantalla;
 // - mientras carga se ve un indicador, y si no se puede reproducir lo dice en vez de quedarse negro.
-import { colors, fonts } from '@zipa/shared';
+import { colors, radius, spacing, typography } from '@zipa/shared';
 import { useEvent } from 'expo';
 import { useFocusEffect } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
@@ -50,7 +50,7 @@ export function ProductVideo({ url, label, active = true }: { url: string; label
 }
 
 const styles = StyleSheet.create({
-  video: { width: '100%', height: '100%', borderRadius: 28, backgroundColor: colors.dark, overflow: 'hidden' },
-  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  msg: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 21, color: '#FFFFFF', textAlign: 'center' },
+  video: { width: '100%', height: '100%', borderRadius: radius.xl, backgroundColor: colors.dark, overflow: 'hidden' },
+  overlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  msg: { ...typography.label, color: '#FFFFFF', textAlign: 'center' },
 });

@@ -1,4 +1,4 @@
-import { colors } from '@zipa/shared';
+import { colors, radius } from '@zipa/shared';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
@@ -18,6 +18,6 @@ export function BackButton({ onDark = false }: { onDark?: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  back: { width: 50, height: 50, borderRadius: 25, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  back: { width: 50, height: 50, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   onDark: { backgroundColor: 'rgba(255,255,255,0.92)', borderColor: 'transparent' },
 });

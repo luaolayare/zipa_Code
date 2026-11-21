@@ -1,4 +1,4 @@
-import { Button, OffensiveTextError, Screen, TextField, colors, fonts, useAuth, type LocalFile, type Review } from '@zipa/shared';
+import { Button, OffensiveTextError, Screen, TextField, colors, fonts, useAuth, type LocalFile, type Review, radius, spacing, typography } from '@zipa/shared';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ImagePlus, Star, X } from 'lucide-react-native';
@@ -66,7 +66,7 @@ export default function Calificar() {
   return (
     <Screen>
       <BackButton />
-      <View style={{ gap: 6 }}>
+      <View style={{ gap: spacing.xs }}>
         {!!businessName && <Text style={styles.business}>{businessName}</Text>}
         <Text style={styles.title} accessibilityRole="header">{editing ? 'Edita tu reseña' : '¿Cómo te fue?'}</Text>
         <Text style={styles.body}>{editing ? 'Ya calificaste este negocio. Puedes cambiar tus estrellas o tu comentario.' : 'Califica al negocio en general: la comida o los productos, la atención y el lugar.'}</Text>
@@ -83,7 +83,7 @@ export default function Calificar() {
       </View>
       {!!stars && <Text style={styles.label}>{LABELS[stars]}</Text>}
       <TextField label="Cuéntanos más" value={text} onChangeText={setText} multiline maxLength={600} placeholder="¿Qué pediste o compraste? ¿Cómo te atendieron?" />
-      <View style={{ gap: 10 }}>
+      <View style={{ gap: spacing.sm }}>
         <Text style={styles.photoLabel}>Foto (opcional)</Text>
         {photo || savedPhoto ? (
           <View>
@@ -109,18 +109,18 @@ export default function Calificar() {
 }
 
 const styles = StyleSheet.create({
-  business: { fontFamily: fonts.semibold, fontSize: 16, color: colors.textMuted },
-  title: { fontFamily: fonts.hero, fontSize: 38, lineHeight: 41, letterSpacing: -1.2, color: colors.text },
-  body: { fontFamily: fonts.regular, fontSize: 16.5, lineHeight: 24, color: colors.textMuted },
-  stars: { flexDirection: 'row', gap: 10 },
-  star: { flex: 1, aspectRatio: 1, maxWidth: 64, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  starOn: { borderColor: colors.star, backgroundColor: '#FFF6DF' },
-  label: { fontFamily: fonts.display, fontSize: 20, color: colors.starText, marginTop: -6 },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
-  photoLabel: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: 18, backgroundColor: colors.stage3d },
-  photoRemove: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(20,33,31,0.75)', alignItems: 'center', justifyContent: 'center' },
-  photoButton: { minHeight: 56, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingHorizontal: 14 },
-  photoButtonText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary },
-  note: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, textAlign: 'center' },
+  business: { ...typography.body, fontFamily: fonts.semibold, color: colors.textMuted },
+  title: { ...typography.display, color: colors.text },
+  body: { ...typography.body, color: colors.textMuted },
+  stars: { flexDirection: 'row', gap: spacing.sm },
+  star: { flex: 1, aspectRatio: 1, maxWidth: 64, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  starOn: { borderColor: colors.star, backgroundColor: colors.warningSoft },
+  label: { ...typography.heading, color: colors.starText, marginTop: -6 },
+  error: { ...typography.label, color: colors.danger },
+  photoLabel: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.stage3d },
+  photoRemove: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: radius.pill, backgroundColor: 'rgba(20,33,31,0.75)', alignItems: 'center', justifyContent: 'center' },
+  photoButton: { minHeight: 56, borderRadius: radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
+  photoButtonText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
+  note: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
 });

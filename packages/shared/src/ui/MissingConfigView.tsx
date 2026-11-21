@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BRAND } from '../brand';
-import { colors } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 
 /**
  * Se muestra si una compilación de producción no tiene las variables de Supabase.
@@ -24,8 +24,8 @@ export function MissingConfigView() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background, justifyContent: 'center' },
-  box: { margin: 24, padding: 20, gap: 12, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  title: { fontSize: 22, fontWeight: '700', color: colors.text },
-  body: { fontSize: 15, lineHeight: 22, color: colors.textBody },
-  code: { fontSize: 12, color: colors.textMuted },
+  box: { margin: spacing.xl, padding: spacing.lg, gap: spacing.sm, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  title: { ...typography.heading, fontWeight: '700', color: colors.text },
+  body: { ...typography.body, color: colors.textBody },
+  code: { ...typography.caption, color: colors.textMuted },
 });

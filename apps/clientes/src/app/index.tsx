@@ -1,4 +1,4 @@
-import { BRAND, Logo, colors, fonts } from '@zipa/shared';
+import { BRAND, Logo, colors, fonts, radius, spacing, typography } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Box, ScanQrCode } from 'lucide-react-native';
@@ -63,24 +63,24 @@ export default function Welcome() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.primary, paddingHorizontal: 24, gap: 22, overflow: 'hidden' },
+  screen: { flex: 1, backgroundColor: colors.primary, paddingHorizontal: spacing.xl, gap: spacing.xl, overflow: 'hidden' },
   // En el prototipo: 260 de ancho + borde 36 por lado = 332 en total.
-  ring: { position: 'absolute', right: -70, top: 120, width: 332, height: 332, borderRadius: 166, borderWidth: 36, borderColor: colors.primaryDeep },
+  ring: { position: 'absolute', right: -70, top: 120, width: 332, height: 332, borderRadius: radius.pill, borderWidth: 36, borderColor: colors.primaryDeep },
   cube: { position: 'absolute', right: 30, top: 210, width: 90, height: 90, borderRadius: 22, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '14deg' }] },
 
 
   spacer: { flex: 1 },
 
-  copy: { gap: 12 },
-  title: { fontSize: 40, lineHeight: 42, letterSpacing: -0.8, fontFamily: fonts.display, color: '#FFFFFF' },
-  subtitle: { fontSize: 16, lineHeight: 24, fontFamily: fonts.regular, color: colors.onPrimaryMuted },
+  copy: { gap: spacing.sm },
+  title: { ...typography.display, fontFamily: fonts.display, color: '#FFFFFF' },
+  subtitle: { ...typography.body, color: colors.onPrimaryMuted },
 
-  qrCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: colors.primaryDeep },
-  qrText: { flex: 1, fontSize: 14, lineHeight: 20, fontFamily: fonts.regular, color: '#E6F0EF' },
+  qrCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.primaryDeep },
+  qrText: { ...typography.body, flex: 1, color: colors.onPrimaryMuted },
 
-  cta: { height: 56, borderRadius: 16, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  cta: { height: 56, borderRadius: radius.lg, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.9 },
-  ctaText: { fontSize: 17, fontFamily: fonts.bold, color: colors.text },
-  bizLink: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 12, minHeight: 44, justifyContent: 'center' },
-  bizLinkText: { fontSize: 14, fontFamily: fonts.bold, color: colors.accent, textAlign: 'center' },
+  ctaText: { ...typography.subtitle, color: colors.text },
+  bizLink: { alignSelf: 'center', paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, minHeight: 44, justifyContent: 'center' },
+  bizLinkText: { ...typography.label, fontFamily: fonts.bold, color: colors.accent, textAlign: 'center' },
 });

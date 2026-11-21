@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { REPORT_REASONS, type ReportReason, type ReportTargetType } from '../api';
 import { useAuth } from '../auth';
-import { colors } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 import { Button } from './Button';
 
 const WHAT: Record<ReportTargetType, string> = {
@@ -95,22 +95,22 @@ export function ReportView({ targetType, targetId, targetName, onDone }: {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  bar: { paddingHorizontal: 12, paddingTop: 8 },
-  back: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, lineHeight: 30, color: colors.text, marginTop: -2 },
-  content: { padding: 20, gap: 14 },
-  done: { gap: 14 },
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-  body: { fontSize: 15, lineHeight: 22, color: colors.textBody },
-  options: { gap: 8 },
-  option: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  bar: { paddingHorizontal: spacing.sm, paddingTop: spacing.xs },
+  back: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { ...typography.title, color: colors.text, marginTop: -2 },
+  content: { padding: spacing.lg, gap: spacing.md },
+  done: { gap: spacing.md },
+  title: { ...typography.title, fontWeight: '700', color: colors.text },
+  meta: { ...typography.caption, fontWeight: '600', color: colors.textMuted },
+  body: { ...typography.body, color: colors.textBody },
+  options: { gap: spacing.xs },
+  option: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 52, paddingHorizontal: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   optionOn: { borderColor: colors.primary, borderWidth: 2 },
-  dot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.inputBorder, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 22, height: 22, borderRadius: radius.pill, borderWidth: 2, borderColor: colors.inputBorder, alignItems: 'center', justifyContent: 'center' },
   dotOn: { borderColor: colors.primary },
-  dotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  optionText: { flex: 1, fontSize: 15, color: colors.text },
-  label: { fontSize: 14, fontWeight: '700', color: colors.text },
-  input: { minHeight: 100, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, padding: 12, fontSize: 15, color: colors.text, backgroundColor: colors.surface, textAlignVertical: 'top' },
+  dotInner: { width: 10, height: 10, borderRadius: radius.pill, backgroundColor: colors.primary },
+  optionText: { ...typography.caption, flex: 1, color: colors.text },
+  label: { ...typography.caption, fontWeight: '700', color: colors.text },
+  input: { ...typography.caption, minHeight: 100, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: radius.md, padding: spacing.sm, color: colors.text, backgroundColor: colors.surface, textAlignVertical: 'top' },
   error: { color: colors.danger, fontWeight: '600' },
 });

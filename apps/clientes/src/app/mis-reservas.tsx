@@ -1,6 +1,6 @@
 // «Mis reservas»: las solicitudes de la persona por estado. Desde cada una se ve el detalle, se
 // cancela, se pide otro horario o se escribe al restaurante (pantalla /reserva/[id]).
-import { ChoiceChips, ReservationPill, colors, fonts, reservationWhen, useAuth, type Reservation, type ReservationStatus } from '@zipa/shared';
+import { ChoiceChips, ReservationPill, colors, fonts, reservationWhen, useAuth, type Reservation, type ReservationStatus, radius, spacing, typography } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { ChevronRight } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -53,7 +53,7 @@ export default function MisReservas() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <BackButton />
           <Text style={styles.h1}>Mis reservas</Text>
         </View>
@@ -64,13 +64,13 @@ export default function MisReservas() {
         )}
         {list && list.length > 0 && (
           <>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs }}>
               <ChoiceChips label="Estado" wrap={false} options={TABS.map((t) => ({ id: t.id, label: `${t.label} (${count(t)})` }))} value={current.id} onChange={setTab} />
             </ScrollView>
             {!items.length && <Text style={styles.muted}>{current.empty}</Text>}
             {items.map((r) => (
               <Pressable key={r.id} accessibilityRole="button" accessibilityLabel={`Reserva ${r.code} en ${r.businessName}, ${reservationWhen(r.startsAt)}`} onPress={() => router.push({ pathname: '/reserva/[id]', params: { id: r.id } })} style={({ pressed }) => [styles.row, pressed && { opacity: 0.9 }]}>
-                <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ flex: 1, gap: spacing.xxs }}>
                   <View style={styles.rowTop}>
                     <Text style={styles.business} numberOfLines={1}>{r.businessName}</Text>
                     <ReservationPill status={r.status} />
@@ -89,12 +89,12 @@ export default function MisReservas() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 48, gap: 16 },
-  h1: { fontFamily: fonts.display, fontSize: 28, letterSpacing: -0.6, color: colors.text },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  rowTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  business: { flex: 1, fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  when: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
-  muted: { fontFamily: fonts.regular, fontSize: 14.5, lineHeight: 21, color: colors.textMuted },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
+  h1: { ...typography.title, color: colors.text },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  rowTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  business: { ...typography.body, flex: 1, fontFamily: fonts.bold, color: colors.text },
+  when: { ...typography.label, color: colors.text },
+  muted: { ...typography.body, color: colors.textMuted },
+  error: { ...typography.label, color: colors.danger },
 });

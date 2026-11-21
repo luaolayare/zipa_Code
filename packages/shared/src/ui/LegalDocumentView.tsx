@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { LegalDocument } from '../legal';
-import { colors } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 
 const formatFecha = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number);
@@ -41,14 +41,14 @@ export function LegalDocumentView({ doc, onBack }: { doc: LegalDocument; onBack:
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  bar: { paddingHorizontal: 12, paddingTop: 8 },
-  back: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 28, lineHeight: 30, color: colors.text, marginTop: -2 },
-  content: { padding: 20, gap: 14, paddingBottom: 48 },
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.textMuted },
-  draft: { fontSize: 13, lineHeight: 19, color: colors.accentText, backgroundColor: colors.accentSoft, padding: 12, borderRadius: 12, overflow: 'hidden' },
-  section: { gap: 8 },
-  h2: { fontSize: 17, fontWeight: '700', color: colors.text, marginTop: 6 },
-  body: { fontSize: 15, lineHeight: 22, color: colors.textBody },
+  bar: { paddingHorizontal: spacing.sm, paddingTop: spacing.xs },
+  back: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { ...typography.title, color: colors.text, marginTop: -2 },
+  content: { padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xxxl },
+  title: { ...typography.title, fontWeight: '700', color: colors.text },
+  meta: { ...typography.caption, color: colors.textMuted },
+  draft: { ...typography.caption, color: colors.accentText, backgroundColor: colors.accentSoft, padding: spacing.sm, borderRadius: radius.md, overflow: 'hidden' },
+  section: { gap: spacing.xs },
+  h2: { ...typography.subtitle, fontWeight: '700', color: colors.text, marginTop: spacing.xs },
+  body: { ...typography.body, color: colors.textBody },
 });

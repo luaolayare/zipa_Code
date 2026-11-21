@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../theme';
+import { colors, spacing, typography } from '../theme';
 import { Button } from './Button';
 
 /** Después de crear la cuenta: Supabase envió un correo con el enlace para activarla. */
@@ -18,9 +18,9 @@ export function CheckEmailView({ email, onContinue }: { email: string; onContinu
 }
 
 const styles = StyleSheet.create({
-  box: { gap: 14 },
-  title: { fontSize: 26, fontWeight: '700', color: colors.text },
-  body: { fontSize: 15, lineHeight: 22, color: colors.textBody },
+  box: { gap: spacing.md },
+  title: { ...typography.title, fontWeight: '700', color: colors.text },
+  body: { ...typography.body, color: colors.textBody },
   strong: { fontWeight: '700', color: colors.text },
-  hint: { fontSize: 13, lineHeight: 19, color: colors.textMuted },
+  hint: { ...typography.caption, color: colors.textMuted },
 });

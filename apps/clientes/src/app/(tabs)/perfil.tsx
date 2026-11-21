@@ -1,4 +1,4 @@
-import { AboutCard, Button, DeleteAccountButton, ReservationPill, Screen, colors, fonts, reservationWhen, useAuth, type MyReview, type Reservation } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, ReservationPill, Screen, colors, fonts, reservationWhen, useAuth, type MyReview, type Reservation, radius, spacing, typography } from '@zipa/shared';
 import { router, useFocusEffect } from 'expo-router';
 import { User } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -85,7 +85,7 @@ export default function Perfil() {
         <Pressable key={r.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/negocio/[id]', params: { id: r.businessId } })} style={({ pressed }) => [styles.review, pressed && { opacity: 0.88 }]}>
           <View style={styles.reviewTop}>
             <Text style={styles.reviewBusiness} numberOfLines={1}>{r.businessName}</Text>
-            <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>{'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text></Text>
+            <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>{'★'.repeat(r.stars)}<Text style={{ color: colors.inputBorder }}>{'★'.repeat(5 - r.stars)}</Text></Text>
           </View>
           {!!r.text && <Text style={styles.reviewText} numberOfLines={3}>{r.text}</Text>}
           {r.status === 'en_espera' && <Text style={styles.waiting}>En revisión por el equipo</Text>}
@@ -102,26 +102,26 @@ export default function Perfil() {
 }
 
 const styles = StyleSheet.create({
-  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatar: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  avatar: { width: 76, height: 76, borderRadius: radius.pill, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarGuest: { backgroundColor: colors.chipIdle },
-  initial: { fontFamily: fonts.display, fontSize: 34, color: colors.accent },
-  name: { fontFamily: fonts.display, fontSize: 28, letterSpacing: -0.6, color: colors.text },
-  title: { fontFamily: fonts.display, fontSize: 30, letterSpacing: -0.6, color: colors.text },
-  meta: { fontFamily: fonts.regular, fontSize: 15.5, lineHeight: 22, color: colors.textMuted },
-  stats: { flexDirection: 'row', gap: 12 },
-  stat: { flex: 1, padding: 18, gap: 4, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  statNumber: { fontFamily: fonts.display, fontSize: 36, letterSpacing: -1, color: colors.text },
-  statLabel: { fontFamily: fonts.regular, fontSize: 14.5, color: colors.textMuted },
-  h2: { fontFamily: fonts.display, fontSize: 24, letterSpacing: -0.4, color: colors.text, marginTop: 4 },
-  review: { gap: 8, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  reviewBusiness: { flex: 1, fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  stars: { fontSize: 16, letterSpacing: 1, color: colors.starText },
-  reviewText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
-  waiting: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.accentText },
-  replied: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.primary },
-  legal: { marginTop: 4, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.border, gap: 2 },
-  legalTitle: { fontFamily: fonts.bold, fontSize: 13, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
+  initial: { ...typography.display, fontFamily: fonts.display, color: colors.accent },
+  name: { ...typography.title, color: colors.text },
+  title: { ...typography.title, color: colors.text },
+  meta: { ...typography.body, color: colors.textMuted },
+  stats: { flexDirection: 'row', gap: spacing.sm },
+  stat: { flex: 1, padding: spacing.lg, gap: spacing.xxs, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  statNumber: { ...typography.display, fontFamily: fonts.display },
+  statLabel: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted },
+  h2: { ...typography.title, color: colors.text, marginTop: spacing.xxs },
+  review: { gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  reviewBusiness: { ...typography.body, flex: 1, fontFamily: fonts.bold, color: colors.text },
+  stars: { ...typography.body, color: colors.starText },
+  reviewText: { ...typography.body, color: colors.textBody },
+  waiting: { ...typography.caption, fontFamily: fonts.bold, color: colors.accentText },
+  replied: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
+  legal: { marginTop: spacing.xxs, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, gap: spacing.xxs },
+  legalTitle: { ...typography.overline, color: colors.textMuted },
   link: { alignSelf: 'flex-start' },
 });

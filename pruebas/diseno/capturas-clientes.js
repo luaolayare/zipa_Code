@@ -66,16 +66,33 @@ async function sembrar(archivo) {
   const errores = [];
   p.on('pageerror', (e) => errores.push(e.message.slice(0, 160)));
   const vis = (l) => l.filter({ visible: true }).first();
+  if (process.env.CON_RESTO) {
+    // Sin sesión: bienvenida y entrar.
+    for (const [nombre, ruta] of [['6-bienvenida', '/'], ['7-login', '/login']]) {
+      await p.goto(`http://localhost:8083${ruta}`, { waitUntil: 'load', timeout: 300000 }); await p.waitForTimeout(4000);
+      await p.screenshot({ path: `${out}/${nombre}.png`, fullPage: true }); console.log('captura', nombre);
+    }
+  }
   await p.goto('http://localhost:8083/login', { waitUntil: 'load', timeout: 300000 }); await p.waitForTimeout(3500);
   await vis(p.getByLabel('Correo electrónico', { exact: true })).fill(s.cliente);
   await vis(p.getByLabel('Contraseña', { exact: true })).fill(PASS);
   await vis(p.getByText('Entrar', { exact: true })).click(); await p.waitForTimeout(4000);
+  const resto = process.env.CON_RESTO ? [
+    ['8-perfil', '/perfil'],
+    ['9-tienes-negocio', '/negocio'],
+    ['10-categoria', '/categoria/restaurantes'],
+    ['11-mis-reservas', '/mis-reservas'],
+    ['12-calificar', `/calificar/${s.negocio}`],
+    ['13-reportar', `/reportar?tipo=business&id=${s.negocio}&nombre=${encodeURIComponent('Arepas Mamá Inés')}`],
+    ['14-privacidad', '/legal/privacidad'],
+  ] : [];
   const pantallas = [
     ['1-inicio', '/explorar'],
     ['2-negocio', `/negocio/${s.negocio}`],
     ['3-producto', `/producto/${s.producto}`],
     ['4-reservar', `/reservar/${s.negocio}`],
     ['5-mi-reserva', `/reserva/${s.reserva}`],
+    ...resto,
   ];
   for (const [nombre, ruta] of pantallas) {
     await p.goto(`http://localhost:8083${ruta}`, { waitUntil: 'load' }); await p.waitForTimeout(4500);
