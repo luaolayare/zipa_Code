@@ -1,5 +1,5 @@
 // Panel del negocio: estado, cifras, productos, reseñas, QR y cuenta.
-import { AboutCard, Button, DeleteAccountButton, PushPrompt, pushStateLabel, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf } from '@zipa/shared';
+import { AboutCard, Button, DeleteAccountButton, PushPrompt, pushStateLabel, type ReservationSettings, configuredSocial, deliverySummary, type BusinessLinks, businessTypeLabel, categoryLabel, colors, fonts, formatRating, useAuth, type Business, type Product, type Review, productWord, restaurantOf, radius, spacing, typography } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Pencil, Plus } from 'lucide-react-native';
@@ -65,7 +65,7 @@ export default function Panel() {
 
   if (!business) {
     return (
-      <SafeAreaView style={[styles.loading, { padding: 24, gap: 16 }]}>
+      <SafeAreaView style={[styles.loading, { padding: spacing.xl, gap: spacing.md }]}>
         <Text style={type.error}>{error || 'No encontramos tu negocio.'}</Text>
         <Button title="Intentar de nuevo" onPress={() => { setLoading(true); load(); }} />
       </SafeAreaView>
@@ -88,7 +88,7 @@ export default function Panel() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="light" />
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 48 }}
+        contentContainerStyle={{ paddingBottom: spacing.xxxl }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor="#FFFFFF" />}>
         <View style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.headerInner}>
@@ -120,7 +120,7 @@ export default function Panel() {
           )}
           {business.status === 'rechazado' && (
             <Notice tone="danger">
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: spacing.sm }}>
                 <Text style={[styles.noticeText, { color: colors.danger }]}>Revisamos tu negocio y no pudimos publicarlo. Revisa tus datos y la foto de tu local, y envíalo de nuevo.</Text>
                 {!!business.reviewNote && (
                   <View style={styles.note}>
@@ -134,7 +134,7 @@ export default function Panel() {
           )}
           {business.status === 'borrador' && (
             <Notice tone="warn">
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: spacing.sm }}>
                 <Text style={[styles.noticeText, { color: colors.accentText }]}>Tu registro quedó sin terminar. Completa la verificación para que podamos revisarlo.</Text>
                 <Button title="Terminar mi registro" variant="accent" onPress={resume} />
               </View>
@@ -159,9 +159,12 @@ export default function Panel() {
           {products.length === 0 ? (
             <Text style={type.body}>Aún no tienes {word}s. Agrega el primero con su foto y, si quieres, un video corto.</Text>
           ) : (
-            products.map((p) => (
+            <View style={styles.productList}>
+            {products.map((p, i) => (
               <ProductRow
                 key={p.id}
+                grouped
+                first={i === 0}
                 product={p}
                 business={business}
                 onPress={() => router.push({ pathname: '/producto/[id]', params: { id: p.id } })}
@@ -171,16 +174,17 @@ export default function Panel() {
                   try { await api.setProductAvailable(p.id, !p.available); } catch { setProducts((list) => list.map((x) => (x.id === p.id ? { ...x, available: p.available } : x))); }
                 }}
               />
-            ))
+            ))}
+            </View>
           )}
           {videosRechazados > 0 && (
             <Notice tone="danger">{videosRechazados === 1 ? 'Hay un video que no aprobamos.' : `Hay ${videosRechazados} videos que no aprobamos.`} Toca el producto para ver el motivo y grabar uno nuevo.</Notice>
           )}
           {products.some((p) => p.videoStatus === 'pendiente') && (
-            <Text style={type.small}>Los videos «en revisión» se muestran a los clientes cuando el equipo los aprueba. Mientras tanto se ve la foto.</Text>
+            <Text style={type.help}>Los videos «en revisión» se muestran a los clientes cuando el equipo los aprueba. Mientras tanto se ve la foto.</Text>
           )}
 
-          <SectionTitle title="Reseñas de clientes" style={{ marginTop: 10 }} />
+          <SectionTitle title="Reseñas de clientes" style={{ marginTop: spacing.sm }} />
           {reviews.length === 0 ? (
             <Text style={type.body}>Todavía no tienes reseñas. Cuando un cliente califique tu negocio la verás aquí y podrás responderle.</Text>
           ) : (
@@ -191,15 +195,15 @@ export default function Panel() {
 
           <Pressable accessibilityRole="button" accessibilityLabel="Ver e imprimir tu QR" onPress={() => router.push('/qr')} style={({ pressed }) => [styles.qrCard, pressed && { opacity: 0.9 }]}>
             <View style={styles.qrBox}><QrMini businessId={business.id} token={qrToken} /></View>
-            <View style={{ flex: 1, gap: 6 }}>
-              <Text style={type.h3}>Tu QR para mesas y mostrador</Text>
-              <Text style={type.small}>Lleva directo a tu vitrina y a dejar reseña. Toca para verlo grande y compartirlo.</Text>
+            <View style={{ flex: 1, gap: spacing.xs }}>
+              <Text style={type.subtitle}>Tu QR para mesas y mostrador</Text>
+              <Text style={type.help}>Lleva directo a tu vitrina y a dejar reseña. Toca para verlo grande y compartirlo.</Text>
             </View>
           </Pressable>
 
           {comer && reservas && (
             <>
-              <SectionTitle title="Reservas" style={{ marginTop: 10 }} />
+              <SectionTitle title="Reservas" style={{ marginTop: spacing.sm }} />
               <Pressable accessibilityRole="button" accessibilityLabel={`Solicitudes de reserva: ${reservas.pending} pendientes`} onPress={() => router.push('/reservas')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
                 <DataRow label="Estado" value={reservas.settings?.enabled ? 'Recibiendo solicitudes' : 'Apagadas'} />
                 <DataRow label="Pendientes" value={reservas.pending ? `${reservas.pending} por responder` : 'Ninguna'} />
@@ -214,7 +218,7 @@ export default function Panel() {
             </>
           )}
 
-          <SectionTitle title="Datos del negocio" style={{ marginTop: 10 }} />
+          <SectionTitle title="Datos del negocio" style={{ marginTop: spacing.sm }} />
           <Pressable accessibilityRole="button" accessibilityLabel="Editar los datos del negocio" onPress={() => router.push('/negocio/editar')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
             <DataRow label="Tipo" value={`${businessTypeLabel(business.type)} · ${business.subcategoryName ?? categoryLabel(business.category)}`} />
             <DataRow label="Dirección" value={business.address} />
@@ -227,7 +231,7 @@ export default function Panel() {
             </View>
           </Pressable>
 
-          <SectionTitle title="Contacto y entregas" style={{ marginTop: 10 }} />
+          <SectionTitle title="Contacto y entregas" style={{ marginTop: spacing.sm }} />
           <Pressable accessibilityRole="button" accessibilityLabel="Editar contacto y entregas" onPress={() => router.push('/negocio/contacto')} style={({ pressed }) => [styles.data, pressed && { opacity: 0.9 }]}>
             <DataRow label="Redes" value={configuredSocial(links).map((n) => n.label).join(', ') || 'Sin redes'} />
             <DataRow label="Entregas" value={deliverySummary(links?.deliveryModes ?? []) || 'Sin indicar'} />
@@ -240,7 +244,7 @@ export default function Panel() {
 
           <View style={styles.account}>
             <Text style={type.overline}>Tu cuenta</Text>
-            <Text style={type.small}>{user?.email}</Text>
+            <Text style={type.caption}>{user?.email}</Text>
             <Button title="Cerrar sesión" variant="outline" onPress={async () => { await signOut(); reset(); router.replace('/'); }} />
             <View style={styles.legalLinks}>
               <Button variant="link" title="Términos y condiciones" onPress={() => router.push('/legal/terminos')} />
@@ -270,29 +274,30 @@ function DataRow({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   header: { backgroundColor: colors.dark, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-  headerInner: { paddingHorizontal: 24, paddingTop: 18, paddingBottom: 28, gap: 12 },
-  kicker: { fontFamily: fonts.semibold, fontSize: 15, color: '#AFC2BE' },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  headerLogo: { width: 64, height: 64, borderRadius: 18, backgroundColor: colors.surface },
-  headerLogoEmpty: { width: 64, height: 64, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
-  headerLogoText: { fontFamily: fonts.bold, fontSize: 13, color: '#FFFFFF' },
-  name: { fontFamily: fonts.hero, fontSize: 36, lineHeight: 39, letterSpacing: -1, color: '#FFFFFF' },
-  body: { padding: 20, gap: 16 },
-  noticeText: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 22 },
-  note: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 12, gap: 4 },
-  noteLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.6, textTransform: 'uppercase', color: colors.danger },
-  noteText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
-  stats: { flexDirection: 'row', gap: 10 },
-  add: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 46, paddingHorizontal: 18, borderRadius: 16, borderWidth: 1.5, borderColor: colors.text },
-  addText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
-  qrCard: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16, marginTop: 10, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  qrBox: { padding: 6, borderRadius: 12, backgroundColor: '#FFFFFF' },
-  data: { borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 18, paddingTop: 4 },
-  dataRow: { flexDirection: 'row', gap: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-  dataLabel: { width: 84, fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted },
-  dataValue: { flex: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
-  edit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
-  editText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary },
-  account: { marginTop: 16, paddingTop: 20, borderTopWidth: 1, borderTopColor: colors.border, gap: 12 },
+  headerInner: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
+  kicker: { ...typography.label, color: '#AFC2BE' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  headerLogo: { width: 64, height: 64, borderRadius: radius.lg, backgroundColor: colors.surface },
+  headerLogoEmpty: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },
+  headerLogoText: { ...typography.caption, fontFamily: fonts.bold, color: '#FFFFFF' },
+  name: { ...typography.title, color: '#FFFFFF' },
+  body: { padding: spacing.lg, gap: spacing.md },
+  noticeText: { ...typography.body, fontFamily: fonts.medium },
+  note: { backgroundColor: '#FFFFFF', borderRadius: radius.md, padding: spacing.sm, gap: spacing.xxs },
+  noteLabel: { ...typography.overline, color: colors.danger },
+  noteText: { ...typography.body, color: colors.textBody },
+  stats: { flexDirection: 'row', gap: spacing.sm },
+  productList: { paddingHorizontal: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  add: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: 46, paddingHorizontal: spacing.lg, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.text },
+  addText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  qrCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, marginTop: spacing.sm, borderRadius: radius.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  qrBox: { padding: spacing.xs, borderRadius: radius.md, backgroundColor: '#FFFFFF' },
+  data: { borderRadius: radius.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.lg, paddingTop: spacing.xxs },
+  dataRow: { flexDirection: 'row', gap: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  dataLabel: { ...typography.caption, width: 84, fontFamily: fonts.regular, color: colors.textMuted },
+  dataValue: { ...typography.label, flex: 1, color: colors.text },
+  edit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.md },
+  editText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
+  account: { marginTop: spacing.md, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, gap: spacing.sm },
   legalLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' },
 });

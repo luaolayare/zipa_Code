@@ -1,5 +1,5 @@
 // Piezas del panel: estadísticas, fila de producto y reseña con respuesta.
-import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Product, type Review, PlateArt, availabilityLabels, type Classified } from '@zipa/shared';
+import { Button, OffensiveTextError, TextField, colors, fonts, formatCop, productVideoState, useAuth, type Product, type Review, PlateArt, availabilityLabels, type Classified, radius, spacing, typography } from '@zipa/shared';
 import { BadgeCheck, ChevronRight } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -9,7 +9,7 @@ import { type } from './kit';
 export function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View style={styles.stat} accessible accessibilityLabel={`${label}: ${value}`}>
-      <Text style={type.number}>{value}</Text>
+      <Text style={type.display}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -22,16 +22,16 @@ const STATE = {
   sin_video: { label: 'Solo foto', color: colors.textMuted },
 };
 
-export function ProductRow({ product, business, onPress, onToggleAvailable }: { product: Product; business: Classified; onPress: () => void; onToggleAvailable?: () => void }) {
+export function ProductRow({ product, business, onPress, onToggleAvailable, grouped, first }: { product: Product; business: Classified; onPress: () => void; onToggleAvailable?: () => void; grouped?: boolean; first?: boolean }) {
   const labels = availabilityLabels(business);
   const s = STATE[productVideoState(product)];
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, pressed && { opacity: 0.85 }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, grouped && styles.rowGrouped, grouped && !first && styles.rowLine, pressed && { opacity: 0.85 }]}>
       <View style={styles.thumb}>
         {product.photoUrl ? <Image source={{ uri: product.photoUrl }} style={styles.thumbImg} /> : <PlateArt of={business} size={64} />}
       </View>
-      <View style={{ flex: 1, gap: 3 }}>
-        <Text style={type.h3} numberOfLines={2}>{product.name}</Text>
+      <View style={{ flex: 1, gap: spacing.xxs }}>
+        <Text style={type.subtitle} numberOfLines={2}>{product.name}</Text>
         <Text style={styles.price}>{formatCop(product.priceCop)}{product.section ? ` · ${product.section}` : ''}</Text>
         {onToggleAvailable && (
           <Pressable
@@ -57,7 +57,7 @@ export function ProductRow({ product, business, onPress, onToggleAvailable }: { 
 }
 
 const Stars = ({ n }: { n: number }) => (
-  <Text style={styles.stars} accessibilityLabel={`${n} de 5 estrellas`}>{'★'.repeat(n)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - n)}</Text></Text>
+  <Text style={styles.stars} accessibilityLabel={`${n} de 5 estrellas`}>{'★'.repeat(n)}<Text style={{ color: colors.inputBorder }}>{'★'.repeat(5 - n)}</Text></Text>
 );
 
 export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (reply: string | null) => void }) {
@@ -87,7 +87,7 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
   return (
     <View style={styles.review}>
       <View style={styles.reviewTop}>
-        <Text style={[type.h3, { flex: 1 }]} numberOfLines={1}>{review.authorName}</Text>
+        <Text style={[type.subtitle, { flex: 1 }]} numberOfLines={1}>{review.authorName}</Text>
         <Stars n={review.stars} />
       </View>
       {review.visited && (
@@ -95,7 +95,7 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
       )}
       <Text style={styles.reviewText}>{review.text}</Text>
       {!!review.photoUrl && <Image source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${review.authorName}`} />}
-      <Text style={type.small}>{date}</Text>
+      <Text style={type.caption}>{date}</Text>
 
       {review.reply && !editing ? (
         <View style={styles.reply}>
@@ -106,7 +106,7 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
           </Pressable>
         </View>
       ) : editing ? (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: spacing.sm }}>
           <TextField label="Tu respuesta" value={text} onChangeText={setText} multiline maxLength={500} placeholder="Gracias por tu visita…" autoFocus />
           {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
           <Button title="Publicar respuesta" onPress={save} loading={saving} />
@@ -122,30 +122,32 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
 }
 
 const styles = StyleSheet.create({
-  stat: { flex: 1, padding: 16, gap: 4, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  statLabel: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 18, color: colors.textMuted },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 12, borderRadius: 22, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  thumb: { width: 70, height: 70, borderRadius: 16, backgroundColor: colors.stage3d, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  stat: { flex: 1, padding: spacing.md, gap: spacing.xxs, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  statLabel: { ...typography.caption, fontFamily: fonts.regular },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.sm, borderRadius: radius.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  rowGrouped: { paddingHorizontal: 0, paddingVertical: spacing.md, borderWidth: 0, borderRadius: 0, backgroundColor: 'transparent' }, // dentro de una tarjeta
+  rowLine: { borderTopWidth: 1, borderTopColor: colors.border },
+  thumb: { width: 70, height: 70, borderRadius: radius.lg, backgroundColor: colors.stage3d, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   thumbImg: { width: '100%', height: '100%' },
-  price: { fontFamily: fonts.semibold, fontSize: 15, color: colors.textMuted },
-  stateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stateDot: { width: 7, height: 7, borderRadius: 4 },
-  state: { fontFamily: fonts.bold, fontSize: 13.5 },
-  review: { padding: 18, gap: 10, borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stars: { fontSize: 18, color: colors.starText, letterSpacing: 1 },
-  visited: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  visitedText: { fontFamily: fonts.bold, fontSize: 13, color: colors.success },
-  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: 14, backgroundColor: colors.stage3d },
-  reviewText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: colors.textBody },
-  reply: { gap: 6, padding: 14, borderRadius: 16, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
-  replyLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.8, textTransform: 'uppercase', color: colors.primary },
-  replyText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
-  link: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.primary, textDecorationLine: 'underline' },
-  replyButton: { alignSelf: 'flex-start', minHeight: 46, paddingHorizontal: 22, justifyContent: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: colors.border },
-  replyButtonText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
-  avail: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999, borderWidth: 1.5 },
-  availOn: { borderColor: colors.success, backgroundColor: '#DCEFE2' },
-  availOff: { borderColor: colors.danger, backgroundColor: '#F9DED6' },
-  availText: { fontFamily: fonts.bold, fontSize: 13 },
+  price: { ...typography.label, color: colors.textMuted },
+  stateRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  stateDot: { width: 7, height: 7, borderRadius: radius.pill },
+  state: { ...typography.caption, fontFamily: fonts.bold },
+  review: { padding: spacing.lg, gap: spacing.sm, borderRadius: radius.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  stars: { ...typography.subtitle, color: colors.starText },
+  visited: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
+  visitedText: { ...typography.caption, fontFamily: fonts.bold, color: colors.success },
+  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.stage3d },
+  reviewText: { ...typography.body, color: colors.textBody },
+  reply: { gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
+  replyLabel: { ...typography.overline, color: colors.primary },
+  replyText: { ...typography.body, color: colors.textBody },
+  link: { ...typography.label, fontFamily: fonts.bold, color: colors.primary, textDecorationLine: 'underline' },
+  replyButton: { alignSelf: 'flex-start', minHeight: 46, paddingHorizontal: spacing.xl, justifyContent: 'center', borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border },
+  replyButtonText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  avail: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radius.pill, borderWidth: 1.5 },
+  availOn: { borderColor: colors.success, backgroundColor: colors.successSoft },
+  availOff: { borderColor: colors.danger, backgroundColor: colors.dangerSoft },
+  availText: { ...typography.caption, fontFamily: fonts.bold },
 });
