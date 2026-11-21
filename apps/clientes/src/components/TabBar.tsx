@@ -37,6 +37,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs, paddingVertical: spacing.xs },
-  label: { ...typography.caption, fontFamily: fonts.bold },
+  // Arriba (no centrado): con letra grande «¿Tienes negocio?» ocupa dos líneas y los íconos siguen alineados.
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', gap: spacing.xxs, paddingTop: spacing.sm, paddingBottom: spacing.xs, paddingHorizontal: spacing.xxs },
+  label: { ...typography.caption, fontFamily: fonts.bold, textAlign: 'center' },
 });
