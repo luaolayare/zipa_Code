@@ -1,5 +1,5 @@
 // Bienvenida de la app de negocios.
-import { BRAND, Button, colors, fonts, useAuth, PlateArt } from '@zipa/shared';
+import { BRAND, Button, colors, fonts, useAuth, PlateArt, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Check } from 'lucide-react-native';
@@ -19,7 +19,7 @@ export default function Inicio() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }} bounces={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: spacing.xxl }} bounces={false}>
         <View style={styles.hero}>
           <SafeAreaView edges={['top']} style={styles.heroInner}>
             {/* Decoración: anillo y plato ilustrado asomando por la derecha. */}
@@ -59,16 +59,16 @@ export default function Inicio() {
 
 const styles = StyleSheet.create({
   hero: { backgroundColor: colors.dark, overflow: 'hidden', borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-  heroInner: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 34, gap: 22 },
-  ring: { position: 'absolute', right: -110, top: -30, width: 290, height: 290, borderRadius: 145, borderWidth: 38, borderColor: '#1E3431' },
+  heroInner: { paddingHorizontal: spacing.lg, paddingTop: spacing.md, paddingBottom: spacing.xxl, gap: spacing.xl },
+  ring: { position: 'absolute', right: -110, top: -30, width: 290, height: 290, borderRadius: radius.pill, borderWidth: 38, borderColor: '#1E3431' },
   plate: { position: 'absolute', right: -18, top: 74, transform: [{ rotate: '-9deg' }] },
-  title: { fontFamily: fonts.hero, fontSize: 44, lineHeight: 46, letterSpacing: -1.5, color: '#FFFFFF', marginTop: 128, maxWidth: 340 },
-  lead: { fontFamily: fonts.regular, fontSize: 17, lineHeight: 26, color: '#C9D6D3', maxWidth: 360 },
-  body: { padding: 24, gap: 18 },
-  benefit: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
-  check: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
-  benefitText: { flex: 1, fontFamily: fonts.regular, fontSize: 17, lineHeight: 25, color: colors.textBody },
+  title: { ...typography.display, color: '#FFFFFF', marginTop: 128, maxWidth: 340 }, // 128: deja ver la ilustración encima (posición, no ritmo)
+  lead: { ...typography.subtitle, fontFamily: fonts.regular, color: colors.onPrimaryMuted, maxWidth: 360 },
+  body: { padding: spacing.lg, gap: spacing.lg },
+  benefit: { flexDirection: 'row', gap: spacing.md, alignItems: 'flex-start' },
+  check: { width: 40, height: 40, borderRadius: radius.pill, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xxs },
+  benefitText: { ...typography.subtitle, flex: 1, fontFamily: fonts.regular, color: colors.textBody },
   benefitBold: { fontFamily: fonts.bold, color: colors.text },
-  info: { padding: 18, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  infoText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 23, color: colors.textBody },
+  info: { padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  infoText: { ...typography.body, color: colors.textBody },
 });
