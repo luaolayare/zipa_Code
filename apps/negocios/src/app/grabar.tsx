@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   tip: { ...typography.body, fontFamily: fonts.medium, color: '#FFFFFF', textAlign: 'center', backgroundColor: 'rgba(20,33,31,0.75)', padding: spacing.md, borderRadius: radius.lg, overflow: 'hidden', alignSelf: 'stretch' },
   track: { alignSelf: 'stretch', height: 8, borderRadius: radius.pill, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' },
   fill: { height: 8, backgroundColor: colors.accent },
-  error: { fontFamily: fonts.semibold, color: '#FFB4A2' },
+  error: { fontFamily: fonts.semibold, color: colors.dangerOnDark },
   shutter: { width: 84, height: 84, borderRadius: radius.pill, borderWidth: 5, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   recIcon: { width: 62, height: 62, borderRadius: radius.pill, backgroundColor: colors.price },
   stopIcon: { width: 30, height: 30, borderRadius: radius.sm, backgroundColor: colors.price },

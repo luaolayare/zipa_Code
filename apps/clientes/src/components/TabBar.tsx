@@ -29,7 +29,7 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
   });
 
   return (
-    <View accessibilityRole="tablist" style={[styles.bar, { height: 72 + insets.bottom, paddingBottom: insets.bottom }]}>
+    <View accessibilityRole="tablist" style={[styles.bar, { minHeight: 72 + insets.bottom, paddingBottom: insets.bottom }]}>
       {tabs}
     </View>
   );
@@ -37,6 +37,6 @@ export function TabBar({ state, navigateToTab, insets }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   bar: { flexDirection: 'row', backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.xxs, paddingVertical: spacing.xs },
   label: { ...typography.caption, fontFamily: fonts.bold },
 });

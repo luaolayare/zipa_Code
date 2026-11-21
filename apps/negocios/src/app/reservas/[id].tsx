@@ -12,7 +12,6 @@ import {
   WhatsAppIcon,
   colors,
   confirmAsync,
-  fonts,
   formatCop,
   rejectReasonLabel,
   reservationWhen,
@@ -105,8 +104,8 @@ export default function SolicitudDetalle() {
         <ReservationPill status={r.status} />
       </View>
 
-      <View style={styles.card}>
-        <Row label="Fecha y hora" value={reservationWhen(r.startsAt, new Date())} />
+      <View style={[styles.card, styles.rows]}>
+        <Row label="Fecha y hora" value={reservationWhen(r.startsAt, new Date())} first />
         <Row label="Personas" value={String(r.partySize)} />
         <Row label="Nombre" value={r.contactName} />
         <Row label="WhatsApp" value={`+${r.contactWhatsapp}`} />
@@ -212,9 +211,9 @@ export default function SolicitudDetalle() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, first }: { label: string; value: string; first?: boolean }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, !first && styles.rowLine]}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value}>{value}</Text>
     </View>
@@ -224,8 +223,10 @@ function Row({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   code: { ...typography.title, color: colors.text },
   card: { gap: spacing.sm, padding: spacing.lg, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  row: { gap: spacing.xxs },
-  label: { ...typography.caption, fontFamily: fonts.semibold, color: colors.textMuted },
-  value: { ...typography.body, fontFamily: fonts.semibold, color: colors.text },
+  rows: { gap: 0, paddingVertical: spacing.xxs },
+  row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingVertical: spacing.sm },
+  rowLine: { borderTopWidth: 1, borderTopColor: colors.border },
+  label: { ...typography.body, color: colors.textMuted, flex: 1 },
+  value: { ...typography.label, lineHeight: 24, maxWidth: '58%', textAlign: 'right' },
   item: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

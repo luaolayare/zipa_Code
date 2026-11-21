@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   header: { backgroundColor: colors.dark, borderBottomLeftRadius: radius.xl, borderBottomRightRadius: radius.xl },
   headerInner: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.sm },
-  kicker: { ...typography.label, color: '#AFC2BE' },
+  kicker: { ...typography.label, color: colors.onPrimaryMuted },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   headerLogo: { width: 64, height: 64, borderRadius: radius.lg, backgroundColor: colors.surface },
   headerLogoEmpty: { width: 64, height: 64, borderRadius: radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.6)', alignItems: 'center', justifyContent: 'center' },

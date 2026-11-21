@@ -76,7 +76,7 @@ export default function Calificar() {
           const on = n <= stars;
           return (
             <Pressable key={n} accessibilityRole="radio" accessibilityLabel={`${n} ${n === 1 ? 'estrella' : 'estrellas'}`} accessibilityState={{ checked: stars === n }} onPress={() => { setStars(n); setError(''); }} style={({ pressed }) => [styles.star, on && styles.starOn, pressed && { transform: [{ scale: 0.94 }] }]}>
-              <Star size={30} color={on ? colors.star : '#CFC8BB'} fill={on ? colors.star : 'transparent'} strokeWidth={1.8} />
+              <Star size={30} color={on ? colors.star : colors.inputBorder} fill={on ? colors.star : 'transparent'} strokeWidth={1.8} />
             </Pressable>
           );
         })}

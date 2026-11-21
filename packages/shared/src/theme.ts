@@ -31,6 +31,7 @@ export const colors = {
   dangerSoft: '#F9DED6', // Rechazada, plazos, errores · texto: danger
   infoSoft: '#DDEBEA', // avisos, «Clásico de la zona» · texto: primary
   neutralSoft: '#ECE7DE', // Cancelada, Vencida · texto: textMuted
+  dangerOnDark: '#FFB4A2', // error sobre fondo oscuro (cámara)
 } as const;
 
 /**

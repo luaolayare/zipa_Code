@@ -1,5 +1,5 @@
 // Agregar o editar un producto desde el panel. id = "nuevo" para uno nuevo.
-import { Button, confirmAsync, useAuth, type Business, type Product, productWord, spacing } from '@zipa/shared';
+import { Button, colors, confirmAsync, useAuth, type Business, type Product, productWord, spacing } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
@@ -91,7 +91,7 @@ export default function ProductoScreen() {
       {saved?.videoPath && !form.video && saved.videoStatus === 'rechazado' && (
         <Notice tone="danger">
           <View style={{ gap: spacing.xs }}>
-            <Text style={[type.label, { color: '#A12E15' }]}>No aprobamos este video.</Text>
+            <Text style={[type.label, { color: colors.danger }]}>No aprobamos este video.</Text>
             {!!saved.videoNote && <Text style={type.body}>Motivo: {saved.videoNote}</Text>}
             <Text style={type.help}>Graba uno nuevo y toca «Guardar cambios».</Text>
           </View>
