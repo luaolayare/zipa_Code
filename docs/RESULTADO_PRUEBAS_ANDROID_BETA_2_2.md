@@ -1,6 +1,6 @@
 # Resultado de las pruebas en Android — Beta 2.2
 
-Fecha: 21 de noviembre de 2026 · Rama: `feature/tipografia-espacios` (commits locales, sin push).
+Fecha: 21 de noviembre de 2026 · Rama: `feature/tipografia-espacios`, fusionada en `main`. El resultado final está en la sección F.
 
 Estados usados: **Aprobada**, **Fallida**, **Bloqueada** (no se puede probar en este entorno) y **No ejecutada**.
 
@@ -17,7 +17,7 @@ Estados usados: **Aprobada**, **Fallida**, **Bloqueada** (no se puede probar en 
 | Datos ficticios | Aprobada | Todo usa el dominio `@pruebas.zipa.test`: 1 administrador, 3 dueñas (una con su negocio en revisión), 4 clientes, 3 negocios, productos, reseñas, un destacado y reservas. No se copió ningún dato real. |
 | Verificación del entorno (`pruebas/entorno/verificar-entorno.js`) | Aprobada | 14/14 |
 | Desarrollo local y EAS `preview`/`development` → pruebas | Aprobada | Los `.env` de las tres apps apuntan a pruebas. El candado también bloquea producción en desarrollo local, sin excepción (commit `97f27ac`). |
-| EAS `production` sin cambios | Aprobada | No se tocó. **Aviso:** ese ambiente no tiene las variables de Supabase, así que un build de producción hoy se detendría en el candado. Hay que agregarlas antes del primer build de producción. |
+| EAS `production` | Aprobada | Al principio no tenía las variables de Supabase. Ya las tiene (ver «Actualización»). |
 | `ZIPA_PERMITIR_PRODUCCION_EN_PRUEBAS` | Aprobada | No se usó. |
 
 **Credenciales**
@@ -39,8 +39,8 @@ Estados usados: **Aprobada**, **Fallida**, **Bloqueada** (no se puede probar en 
 | Aislamiento entre negocios (proyecto de pruebas, sesiones reales) | Aprobada | 12/12. Marta no puede ver ni cambiar las reservas, los productos, los datos ni las respuestas de Inés. Nadie se vuelve administrador. Los controles confirman que la propia Inés sí ve sus datos. |
 | Permisos RLS (verificación del entorno) | Aprobada | 14/14 |
 | Panel del equipo (Next.js contra pruebas) | Aprobada | 10/10, detallado en la sección C |
-| Prueba integral de punta a punta con avisos push | Bloqueada | Expo Go en Android no entrega avisos push remotos (desde SDK 53). Requiere un build nativo. |
-| Enlaces universales (QR que abre la app instalada) | Bloqueada | Requiere un build nativo. En Expo Go se probó con un enlace `exp://`. |
+| Prueba integral de punta a punta con avisos push | Aprobada en el servidor; falta el teléfono | Ver «Actualización» y la sección F |
+| QR que abre la app instalada | Aprobada | Con el APK `preview` (ver «Actualización») |
 
 ## C. Android (emulador `zipa_android14`, Expo Go 58.0.5, Logcat activo)
 
@@ -153,9 +153,50 @@ Falta solo el último tramo: que Expo entregue el aviso a un teléfono real a tr
 
 ## E. Próximo paso
 
-1. Probar los avisos push con un teléfono Android físico (USB) usando los APK `preview` ya generados.
+1. Probar los avisos push con un teléfono Android físico usando los APK `preview` ya generados (procedimiento en la sección F).
 2. Listo: variables de Supabase en el ambiente `production` de EAS.
 3. Guardar `ZIPA_CLAVE_PRUEBAS` en el gestor de contraseñas y borrar la variable de Windows.
 4. Listo: rama subida y `main` actualizado.
 
 Las capturas y los resultados en JSON quedaron en la carpeta temporal de la sesión (no van al repositorio).
+
+## F. Cierre de Beta 2.2
+
+### Verificación final
+
+| Elemento | Estado | Detalle |
+|---|---|---|
+| Git | Aprobada | `d2b210f` solo modifica este informe, sin secretos ni datos personales. Se subió con fast-forward a la rama y a `main`, sin force push. |
+| Credencial de Firebase (FCM V1) | Aprobada | `vitrina-local` (`co.zipa.vitrinalocal`) y `vitrina-negocios` (`co.zipa.vitrinanegocios`) tienen cada una su llave del proyecto de Firebase `zipa-lo-tiene-23578`, cargada el 19 de noviembre (consultado en la API de Expo). Los APK incluyen `google-services.json` con los dos paquetes; si no, el build habría fallado. |
+| Ambientes de EAS | Aprobada | `development` y `preview` apuntan a pruebas (`ayvugzpidvafjiqzlqwc`); `production` apunta a producción (`auilsjqprobmhusvxmmz`). Igual en las dos apps. |
+| Carpeta de pruebas (`.env` de clientes, negocios y panel) | Aprobada | Las tres apps apuntan a pruebas y no hay claves de servicio. |
+| Carpeta principal `c:app_busqueda` | **Atención** | Sus tres `.env` apuntan a **producción**. Las apps no arrancan porque el candado las detiene. **El panel no tiene candado:** si se inicia desde esa carpeta, se conecta a producción. No se cambió nada; falta decidir (ver abajo). |
+| Producción intacta | Aprobada | Las funciones de producción tienen su última actualización el 20 de noviembre, antes de estas pruebas. En esta etapa solo se leyó su clave pública `anon` para EAS. Solo existen dos proyectos: producción y pruebas. |
+
+### Prueba de avisos push en un teléfono Android físico
+
+Sirven los APK `preview` actuales: apuntan a pruebas y tienen Firebase. No hace falta generar otros. Las dos apps pueden ir en el mismo teléfono.
+
+1. **Instalar.** En el teléfono, abre expo.dev → proyecto `vitrina-negocios` → Builds → build `7de51eb5` → «Install», y luego `vitrina-local` → build `4a6160a7`. Android pedirá permitir instalar apps de esta fuente: acéptalo.
+2. **Negocios.** Abre «Zipa lo tiene Negocios» → «Ya tengo cuenta» → `duena-restaurante@pruebas.zipa.test` (contraseña de `ZIPA_CLAVE_PRUEBAS`). En el panel, abre «Solicitudes de reserva» → «Activar notificaciones» → «Permitir».
+3. **Cierra la app de negocios** (o bloquea la pantalla).
+4. **Clientes.** Abre «Zipa lo tiene» → inicia sesión con `cliente1@pruebas.zipa.test` → Arepas Mamá Inés (prueba) → «Solicitar reserva» → envía. En la pantalla de la reserva, toca «Activar notificaciones» → «Permitir».
+5. **Debe llegar** en segundos: «Tienes una nueva solicitud de reserva». Al tocarla, abre la solicitud en la app de negocios.
+6. **Confirma** la solicitud en negocios y cierra la app de clientes. Debe llegar el aviso de reserva confirmada.
+7. Anota la hora y avísame: reviso en pruebas el envío, el ticket y el recibo de Expo.
+
+Si no llega, comprueba en Ajustes → Apps → cada app → Notificaciones que estén permitidas, y que el teléfono tenga Google Play.
+
+### Qué falta para el piloto con negocios reales
+
+**Bloquea el piloto:**
+1. **Avisos push en un teléfono real.** El procedimiento de arriba, unos 20 minutos.
+2. **El QR solo funciona si el turista ya tiene la app.** Usa `vitrinalocal://` (provisional, en `QrPoster.tsx`). Si el turista no tiene la app, escanearlo no lleva a ningún lado. Para el piloto hay dos opciones: (a) asumirlo y pedir que instalen la app antes; (b) un dominio propio con enlace `https://` que lleve a la tienda. La opción (b) es un cambio fuera de esta etapa y necesita autorización.
+3. **Cómo se instala la app.** El perfil `production` genera un AAB para Google Play. Hay dos caminos: (a) una cuenta de Google Play Console (pago único de 25 USD) y la prueba interna o cerrada; (b) un APK de producción repartido a mano. Es decisión tuya, y los dos necesitan autorización.
+
+**Necesario antes de empezar:**
+4. **El panel de la carpeta principal apunta a producción y no tiene candado.** Opciones: cambiar esos `.env` por los de pruebas (guardando copia de los actuales) o agregar el candado al panel. Necesita autorización.
+5. **El primer build de producción.** Requiere autorización. Las variables y el candado ya están listos.
+6. **Cuenta del equipo en el panel de producción** con su segundo factor, y revisión de que el esquema de producción esté en 0022. Según el registro del despliegue (`39ff45e`) ya lo está; en esta etapa no se volvió a verificar.
+
+**No bloquea el piloto:** grabar video con la cámara en un teléfono real; reinicio al cambiar el tamaño de letra (comprobar en el build nativo); «Solo foto» en un producto sin foto (solo pasa con datos sembrados).
