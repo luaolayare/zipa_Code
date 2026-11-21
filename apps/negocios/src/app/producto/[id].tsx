@@ -1,7 +1,7 @@
 // Agregar o editar un producto desde el panel. id = "nuevo" para uno nuevo.
 import { Button, colors, confirmAsync, useAuth, type Business, type Product, productWord, spacing } from '@zipa/shared';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useLocalSearchParams, useNavigation, usePreventRemove } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 import { Notice, type } from '@/components/kit';
@@ -19,6 +19,25 @@ export default function ProductoScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState('');
   const [error, setError] = useState('');
+  // Salir con cambios sin guardar (flecha, botón o gesto de «atrás») pide confirmación.
+  const navigation = useNavigation();
+  const [initial, setInitial] = useState(() => JSON.stringify(emptyProductForm));
+  const [leaving, setLeaving] = useState(false); // guardó, borró o aceptó descartar
+  const blocked = useRef<Parameters<typeof navigation.dispatch>[0] | null>(null);
+  usePreventRemove(!leaving && JSON.stringify(form) !== initial, ({ data }) => {
+    if (saving) return; // mientras guarda no se sale
+    confirmAsync('¿Salir sin guardar?', 'Los cambios que hiciste se perderán.', 'Salir sin guardar', true).then((ok) => {
+      if (!ok) return;
+      blocked.current = data.action;
+      setLeaving(true);
+    });
+  });
+  // Ya sin la confirmación activa: retoma la salida que se detuvo o vuelve atrás tras guardar o borrar.
+  useEffect(() => {
+    if (!leaving) return;
+    if (blocked.current) navigation.dispatch(blocked.current);
+    else router.back();
+  }, [leaving, navigation]);
 
   useEffect(() => {
     if (!user) return void router.replace('/');
@@ -30,7 +49,9 @@ export default function ProductoScreen() {
         if (!isNew) {
           const p = (await api.myProducts(b.id)).find((x) => x.id === id);
           if (!p) return router.back();
-          setForm({ name: p.name, price: p.priceCop ? String(p.priceCop) : '', description: p.description ?? '', photo: null, photoUrl: p.photoUrl, video: null, hasSavedVideo: !!p.videoPath, available: p.available, section: p.section ?? '', photoLabel: p.photoLabel ?? '', extras: extrasFrom(p.photos) });
+          const loaded: ProductForm = { name: p.name, price: p.priceCop ? String(p.priceCop) : '', description: p.description ?? '', photo: null, photoUrl: p.photoUrl, video: null, hasSavedVideo: !!p.videoPath, available: p.available, section: p.section ?? '', photoLabel: p.photoLabel ?? '', extras: extrasFrom(p.photos) };
+          setForm(loaded);
+          setInitial(JSON.stringify(loaded));
           setSaved(p);
         }
       } catch {
@@ -54,7 +75,7 @@ export default function ProductoScreen() {
     setSaving(form.video ? 'Subiendo el video…' : form.photo ? 'Subiendo la foto…' : 'Guardando…');
     try {
       await api.saveProduct(user.id, business.id, { name: form.name, priceCop: priceFrom(form.price), description: form.description, photo: form.photo, video: form.video, available: form.available, section: form.section, ...productInputFrom(form) }, isNew ? undefined : id);
-      router.back();
+      setLeaving(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No pudimos guardar. Intenta de nuevo.');
     } finally {
@@ -69,7 +90,7 @@ export default function ProductoScreen() {
     try {
       const p = (await api.myProducts(business.id)).find((x) => x.id === id);
       if (p) await api.deleteProduct(p);
-      router.back();
+      setLeaving(true);
     } catch {
       setError('No pudimos borrarlo. Intenta de nuevo.');
       setSaving('');
