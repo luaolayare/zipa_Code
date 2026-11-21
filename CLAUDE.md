@@ -1,7 +1,7 @@
 # LocalmenteTuyo (zipa_Code)
 
 > Antes se llamaba «Zipa lo tiene» y, antes, Vitrina Local. La marca y el eslogan están en `packages/shared/src/brand.ts`.
-> Los identificadores internos (slug, scheme, bundle ID, proyectos de EAS, Firebase y Supabase) todavía dicen "vitrina"/"zipa": no cambiarlos sin autorización.
+> Paquetes Android definitivos: `com.localmentetuyo.app` y `com.localmentetuyo.negocios`. Los slugs y proyectos de EAS, Firebase y Supabase y los esquemas antiguos (`vitrinalocal://`, para QR impresos) siguen con el nombre anterior: no cambiarlos sin autorización.
 > Las ciudades se activan desde el panel (tabla `cobertura_municipios`, migración 0024); hoy solo Zipaquirá está activa.
 
 Lee también `AGENTS.md` (reglas de Expo: usar `npx expo install`, no confiar en APIs de memoria).

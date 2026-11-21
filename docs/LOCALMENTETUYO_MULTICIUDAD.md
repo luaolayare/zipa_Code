@@ -31,7 +31,10 @@ El registro y la edición guardan el municipio y, si la persona está en su loca
 
 **Regla pública:** un negocio se ve solo si está **publicado** y su **ciudad está activa**. Se aplica en RLS de `businesses` y `products`, la vista `businesses_public`, `buscar_negocios`, `negocios_destacados` y los videos; reservas, reseñas nuevas y visitas por QR se rechazan en negocios que no son públicos (disparador `exigir_negocio_publico`). Cambiar el estado de una ciudad **no** aprueba ni borra negocios.
 
-### Procedimiento futuro para producción (NO ejecutado; requiere autorización)
+### Producción
+**Aplicado el 21 de noviembre de 2026**, con autorización, tras un respaldo verificado (27 tablas, usuarios y archivos; en `Documents/respaldos-localmentetuyo`). Los 6 negocios existentes quedaron en Zipaquirá por decisión del responsable (uno indica Guayatá, Boyacá: corregir desde la app o el panel). Verificación posterior 11/11: mismas filas, mismos negocios visibles, solo Zipaquirá activa y RLS intacto.
+
+Procedimiento seguido:
 1. Respaldo de la base de producción.
 2. Desde una carpeta vinculada a producción: `npx supabase db push --remote --dry-run` (deben salir solo 0023 y 0024) y luego `npx supabase db push --remote`.
 3. Verificar en solo lectura: 1.122 municipios, una ciudad activa (25899) y que la app actual sigue mostrando los mismos negocios (todos quedan en Zipaquirá).
@@ -52,8 +55,8 @@ El registro y la edición guardan el municipio y, si la persona está en su loca
 
 Errores encontrados y corregidos en las pruebas: «Usar mi ubicación» reutilizaba una posición de hasta 10 minutos; el editor dejaba elegir una ciudad cerrada y fallaba con un aviso genérico.
 
-## Identificadores técnicos que siguen con el nombre anterior (revisar antes de publicar)
-Paquetes Android `co.zipa.vitrinalocal` / `co.zipa.vitrinanegocios` (permanentes al subir a Play), slugs `vitrina-local` / `vitrina-negocios`, esquema `vitrinalocal://` (lo usan los QR impresos), proyectos de EAS y de Firebase, `@zipa/shared`, nombre del proyecto de Supabase y la clave de almacenamiento del registro (`zipa:registro-negocio:v1`).
+## Identificadores
+Definitivos desde la versión 1.0.0: `com.localmentetuyo.app` y `com.localmentetuyo.negocios` (registrados en el mismo proyecto de Firebase; llaves de firma y FCM V1 en EAS). Esquemas `localmentetuyo://` y `localmentetuyonegocios://`; se conservan `vitrinalocal://` y `vitrinanegocios://` para los QR ya impresos. Siguen con el nombre anterior, sin efecto para el usuario: slugs y proyectos de EAS (`vitrina-local`, `vitrina-negocios`), proyecto de Firebase y de Supabase, `@zipa/shared`.
 
 ## Pendiente antes del piloto real
 1. Repetir en un Android (emulador tras reiniciar el computador, o teléfono) lo probado en la vista web, más la letra grande y los diálogos de permiso de Android.
