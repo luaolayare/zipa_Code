@@ -9,9 +9,14 @@ beta-2-2-reservas-concurrencia: 8/8
 auditoria-2-2-repro-proyectos-expo (P1): no se reproduce
 beta-2-2-integral: 9/9
 beta-2-2-entrega-a: 12/12
-beta-2-2-entrega-b: 14/15
+beta-2-2-entrega-b: 15/15 (B-7 ahora revisa la pestaña por su nombre accesible «Pendientes (2)»: el conteo va en burbuja)
 beta-2-2-entrega-c: 6/6
 correcciones-beta-2-1: 12/12
 beta-2-2-correcciones (P4, bandeja con 324 solicitudes): 7/7
 auditoria-funcional: 48 pruebas · 46 OK · 0 FALLA · 2 NO_PROBADO
 auditoria-funcional: errores de consola: 0
+
+Nota: las pruebas de interfaz se corrieron con el diseño ya aplicado. Después solo cambiaron
+márgenes laterales (24 -> 20) y esquinas de cabeceras (32 -> 28) en la bienvenida y «¿Tienes negocio?»
+de clientes y en la bienvenida y el panel de negocios; tras ese cambio se volvieron a correr typecheck,
+lint, Jest y las capturas (sin errores de página).
