@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { VIDEO_SECONDS, finishRecording } from '@/components/media';
+import { VIDEO_BITRATE, VIDEO_CODEC, VIDEO_SECONDS, finishRecording } from '@/components/media';
 
 const TIPS = ['Pon el producto en el centro, sobre una mesa despejada.', 'Camina despacio a su alrededor, sin acercarte ni alejarte.', 'Mejor con luz de día y sin reflejos fuertes.'];
 
@@ -42,7 +42,7 @@ export default function Grabar() {
     setElapsed(0);
     setRecording(true);
     try {
-      const video = await camera.current.recordAsync({ maxDuration: VIDEO_SECONDS });
+      const video = await camera.current.recordAsync({ maxDuration: VIDEO_SECONDS, codec: VIDEO_CODEC });
       setRecording(false);
       if (video?.uri) close({ uri: video.uri, mimeType: video.uri.endsWith('.mov') ? 'video/quicktime' : 'video/mp4' });
     } catch {
@@ -75,7 +75,7 @@ export default function Grabar() {
 
   return (
     <View style={styles.dark}>
-      <CameraView ref={camera} style={StyleSheet.absoluteFill} mode="video" mute videoQuality="720p" onCameraReady={() => setReady(true)} />
+      <CameraView ref={camera} style={StyleSheet.absoluteFill} mode="video" mute videoQuality="720p" videoBitrate={VIDEO_BITRATE} onCameraReady={() => setReady(true)} />
       <SafeAreaView style={styles.overlay} edges={['top', 'bottom']}>
         <View style={styles.top}>
           <View style={styles.badge}><Text style={styles.badgeText}>{recording ? `Grabando · ${remaining} s` : 'Video del producto · sin sonido'}</Text></View>

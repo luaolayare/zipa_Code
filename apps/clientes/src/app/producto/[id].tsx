@@ -104,7 +104,7 @@ export default function ProductoScreen() {
               {slides.map((s, i) => (
                 <View key={s.key} style={{ width: slideWidth || 1, height: '100%' }}>
                   {s.kind === 'video'
-                    ? <ProductVideo url={s.url} label={`Video de ${product.name}`} />
+                    ? <ProductVideo url={s.url} label={`Video de ${product.name}`} active={slide === i} />
                     : (
                       <Pressable accessibilityRole="button" accessibilityLabel={`${s.label ?? `Foto ${i + 1} de ${product.name}`}. Toca para ampliar.`} onPress={() => openPhoto(s.url)} style={{ flex: 1 }}>
                         <Image source={{ uri: s.url }} style={styles.photo} />

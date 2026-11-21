@@ -9,6 +9,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 
 export const VIDEO_SECONDS = 20;
+// Video liviano y compatible: H.264 (se reproduce en cualquier celular; el HEVC que el iPhone graba
+// por defecto se traba en muchos Android) a unos 2,5 Mbps en 720p: ~6 MB por 20 s, que alcanza con
+// datos móviles. El códec solo aplica en iPhone; Android ya graba en H.264.
+export const VIDEO_CODEC = 'avc1' as const;
+export const VIDEO_BITRATE = 2_500_000;
+export const VIDEO_MAX_BYTES = 25 * 1024 * 1024; // videos de la galería (que en Android no se convierten)
 
 export type MediaResult = { file: LocalFile } | { error: string } | null; // null = canceló
 
@@ -60,10 +66,15 @@ export async function pickPhoto(kind: PhotoKind = 'producto'): Promise<MediaResu
 export async function pickVideo(): Promise<MediaResult> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) return { error: 'Para elegir el video, permite el acceso a tus fotos y videos en los ajustes del celular.' };
-  const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], videoMaxDuration: 30, quality: 0.7 });
+  // En iPhone se convierte a 720p H.264 al elegirlo. En Android el selector no convierte: se sube tal cual.
+  const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], videoMaxDuration: 30, quality: 0.7, videoExportPreset: ImagePicker.VideoExportPreset.H264_1280x720 });
   const res = fromPicker(r, 'video/mp4');
   if (res && 'file' in res && r.assets?.[0]?.duration && r.assets[0].duration > 31_000) {
     return { error: 'Ese video dura más de 30 segundos. Graba uno nuevo de unos 20 segundos.' };
+  }
+  // Un video muy pesado se traba al verlo con datos móviles: mejor grabarlo desde la app (sale liviano).
+  if (res && 'file' in res && (r.assets?.[0]?.fileSize ?? 0) > VIDEO_MAX_BYTES) {
+    return { error: 'Ese video pesa mucho y se vería entrecortado. Grábalo con el botón «Grabar video», que lo deja liviano.' };
   }
   return res;
 }
