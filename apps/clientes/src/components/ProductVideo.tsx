@@ -10,7 +10,7 @@ import { colors, radius, spacing, typography } from '@zipa/shared';
 import { useEvent } from 'expo';
 import { useFocusEffect } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 export function ProductVideo({ url, label, active = true }: { url: string; label: string; active?: boolean }) {
@@ -25,12 +25,17 @@ export function ProductVideo({ url, label, active = true }: { url: string; label
   });
   const { status } = useEvent(player, 'statusChange', { status: player.status });
 
-  // Solo se reproduce cuando está a la vista (slide activo) y la pantalla está enfocada.
+  // Solo se reproduce cuando está a la vista (slide activo), la pantalla está enfocada y el video ya
+  // cargó: pedir play() antes de tiempo deja un error sin atrapar si el video no se puede leer.
+  const [focused, setFocused] = useState(false);
   useFocusEffect(useCallback(() => {
-    if (active) player.play();
-    return () => player.pause();
-  }, [player, active]));
-  useEffect(() => { if (!active) player.pause(); }, [player, active]);
+    setFocused(true);
+    return () => { setFocused(false); player.pause(); };
+  }, [player]));
+  useEffect(() => {
+    if (!active || !focused) player.pause();
+    else if (status === 'readyToPlay') player.play();
+  }, [player, active, focused, status]);
 
   return (
     <View style={styles.video}>
