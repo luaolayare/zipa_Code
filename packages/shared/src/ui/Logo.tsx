@@ -5,9 +5,8 @@ import { BRAND, LOGO_IMAGE } from '../brand';
 import { colors, fonts } from '../theme';
 
 /**
- * Logo de LocalmenteTuyo. Cuando exista el logo definitivo, se pone su imagen en LOGO_IMAGE
- * (brand.ts) y todas las pantallas lo usan sin más cambios. Mientras tanto se dibuja el actual:
- * cuadro mostaza con una tienda.
+ * Logo de LocalmenteTuyo: el símbolo (LOGO_IMAGE en brand.ts) y el nombre. Si LOGO_IMAGE es null se
+ * dibuja el cuadro mostaza con una tienda.
  *
  * - tone 'light': para fondos oscuros (texto blanco).
  * - suffix: segunda palabra en mostaza, ej. "Negocios".

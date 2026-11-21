@@ -23,8 +23,10 @@ export const CREDITS = {
 } as const;
 
 /**
- * Logo definitivo. Mientras sea null, <Logo /> dibuja el actual (cuadro mostaza con una tienda).
- * Para cambiarlo: guardar la imagen en packages/shared/assets/ y poner aquí
- *   export const LOGO_IMAGE: ImageSourcePropType | null = require('../assets/logo.png');
+ * Símbolo del logo (corazón con el pin), recortado de assets/logo.png. Lo usa <Logo /> en todas las
+ * pantallas. Con null, <Logo /> vuelve a dibujar el cuadro mostaza con una tienda.
  */
-export const LOGO_IMAGE: ImageSourcePropType | null = null;
+export const LOGO_IMAGE: ImageSourcePropType | null = require('../assets/logo-simbolo.png');
+
+/** Logo completo (símbolo, nombre y eslogan) para la ficha de la tienda y materiales de marca. Original: assets/logo.png. */
+export const LOGO_COMPLETO: ImageSourcePropType = require('../assets/logo.png');
