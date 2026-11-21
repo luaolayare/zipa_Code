@@ -2,7 +2,8 @@
 // aviso. Las reglas (rutas permitidas, textos, cierre de sesión) están en @zipa/shared (push.ts).
 // La app nunca envía avisos: solo registra su token; los envía el servidor (migración 0020).
 // La app de negocios tiene un archivo igual con APP = 'negocios'.
-import { isExpoPushToken, notificationRoute, onBeforeSignOut, type Api, type PushApp, type PushState } from '@zipa/shared';
+import { isExpoPushToken, notificationRoute, onBeforeSignOut, remotePushAvailable, type Api, type PushApp, type PushState } from '@zipa/shared';
+import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -13,6 +14,8 @@ import { AppState, Platform } from 'react-native';
 
 const APP: PushApp = 'clientes';
 const native = Platform.OS === 'android' || Platform.OS === 'ios';
+// Avisos remotos: solo en un celular real y fuera de Expo Go (en los APK sí; ver remotePushAvailable).
+const remote = () => remotePushAvailable({ os: Platform.OS, isDevice: Device.isDevice, expoGo: isRunningInExpoGo() });
 let currentToken: string | null = null;
 // IosAuthorizationStatus.PROVISIONAL (avisos silenciosos de prueba en iOS); el valor está fijado por la librería.
 const IOS_PROVISIONAL = 3;
@@ -35,7 +38,7 @@ async function ensureChannel() {
 }
 
 export async function pushState(): Promise<PushState> {
-  if (!native || !Device.isDevice) return 'no_disponible';
+  if (!remote()) return 'no_disponible';
   const p = await Notifications.getPermissionsAsync();
   if (p.granted || p.ios?.status === IOS_PROVISIONAL) return 'activadas';
   return p.canAskAgain ? 'sin_preguntar' : 'bloqueadas';
@@ -43,6 +46,7 @@ export async function pushState(): Promise<PushState> {
 
 /** Pide el token a Expo y lo registra para la sesión actual. false si el dispositivo no lo entrega. */
 async function register(api: Api): Promise<boolean> {
+  if (!remote()) return false;
   try {
     await ensureChannel();
     const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
@@ -60,7 +64,7 @@ async function register(api: Api): Promise<boolean> {
 
 /** Pide el permiso (lo llama la persona con el botón) y registra el dispositivo. */
 export async function enablePush(api: Api): Promise<PushState | 'error'> {
-  if (!native || !Device.isDevice) return 'no_disponible';
+  if (!remote()) return 'no_disponible';
   await ensureChannel();
   const p = await Notifications.requestPermissionsAsync();
   if (!p.granted) return p.canAskAgain ? 'sin_preguntar' : 'bloqueadas';
@@ -87,7 +91,8 @@ export function usePushSetup(api: Api, userId: string | null) {
   }, []);
 
   useEffect(() => {
-    if (!native || !userId) return;
+    // En Expo Go no se consulta el permiso, no se pide el token ni se escuchan cambios de token.
+    if (!remote() || !userId) return;
     pushState().then((s) => s === 'activadas' && register(api)).catch(() => {});
     const tokenSub = Notifications.addPushTokenListener(() => { register(api).catch(() => {}); });
     const off = onBeforeSignOut(async () => {

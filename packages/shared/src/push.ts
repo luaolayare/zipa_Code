@@ -7,6 +7,17 @@ export type PushApp = 'clientes' | 'negocios';
 /** Estado de los avisos en este dispositivo. */
 export type PushState = 'activadas' | 'sin_preguntar' | 'bloqueadas' | 'no_disponible';
 
+/**
+ * ¿Puede este entorno recibir avisos push remotos? Solo en un celular real (Android o iOS) y fuera
+ * de Expo Go: Expo Go en Android ya no trae notificaciones remotas (SDK 53+) y, en desarrollo, no
+ * queremos registrar tokens de Expo Go en la base. En los APK (y en un development build) sí.
+ * `expoGo` debe venir de `isRunningInExpoGo()` del paquete `expo` (no de executionEnvironment, que
+ * también marca "storeClient" a los development builds).
+ */
+export function remotePushAvailable(env: { os: string; isDevice: boolean; expoGo: boolean }): boolean {
+  return (env.os === 'android' || env.os === 'ios') && env.isDevice && !env.expoGo;
+}
+
 /** Mismo formato que exige la base (registrar_token_push). */
 export const isExpoPushToken = (t: unknown): t is string =>
   typeof t === 'string' && /^Expo(nent)?PushToken\[[A-Za-z0-9_-]{8,200}\]$/.test(t);
