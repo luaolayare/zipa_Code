@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Zipa lo tiene",
+    "name": "LocalmenteTuyo",
     "slug": "vitrina-local",
     "scheme": "vitrinalocal",
     "version": "0.1.0",
@@ -22,12 +22,12 @@
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
         "android.permission.CAMERA",
-        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
       ]
     },
     "web": {
@@ -56,13 +56,22 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Zipa lo tiene accede a tus fotos solo cuando eliges una foto para agregar a tu reseña.",
+          "photosPermission": "LocalmenteTuyo accede a tus fotos solo cuando eliges una foto para agregar a tu reseña.",
           "cameraPermission": false,
           "microphonePermission": false
         }
       ],
       "expo-status-bar",
-      "expo-video"
+      "expo-video",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LocalmenteTuyo usa tu ubicación aproximada, solo cuando tú lo pides, para sugerirte la ciudad donde estás. No la guardamos.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Zipa lo tiene Negocios",
+    "name": "LocalmenteTuyo Negocios",
     "slug": "vitrina-negocios",
     "scheme": "vitrinanegocios",
     "version": "0.1.0",
@@ -25,7 +25,8 @@
       ],
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
       ]
     },
     "web": {
@@ -36,15 +37,15 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Zipa lo tiene Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y las fotos y los videos sin sonido de tus productos que verán tus clientes.",
-          "photosPermission": "Zipa lo tiene Negocios accede a tus fotos solo cuando eliges una foto de tu local o un video de un producto que ya tienes guardado.",
+          "cameraPermission": "LocalmenteTuyo Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y las fotos y los videos sin sonido de tus productos que verán tus clientes.",
+          "photosPermission": "LocalmenteTuyo Negocios accede a tus fotos solo cuando eliges una foto de tu local o un video de un producto que ya tienes guardado.",
           "microphonePermission": false
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Zipa lo tiene Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y las fotos y los videos sin sonido de tus productos que verán tus clientes.",
+          "cameraPermission": "LocalmenteTuyo Negocios usa la cámara para que tomes la foto de tu local, que revisamos para verificar el negocio, y las fotos y los videos sin sonido de tus productos que verán tus clientes.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": false
@@ -69,7 +70,16 @@
           "backgroundColor": "#F2B134"
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "LocalmenteTuyo Negocios usa tu ubicación solo cuando tú lo pides, para confirmar el punto de tu local en el mapa.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

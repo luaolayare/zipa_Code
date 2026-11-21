@@ -1,4 +1,4 @@
-import { BRAND, Button, colors, fonts, useAuth, catalogTitle, radius, spacing, typography } from '@zipa/shared';
+import { BRAND, Button, colors, fonts, municipio, useAuth, catalogTitle, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -29,6 +29,9 @@ export default function VistaPrevia() {
         type: draft.type,
         subcategoryId: draft.subcategoryId,
         address: draft.address.trim(),
+        municipioCodigo: draft.municipioCodigo,
+        latitud: draft.latitud,
+        longitud: draft.longitud,
         hours: draft.hours.trim() || undefined,
         whatsapp: draft.whatsapp.trim() || undefined,
       };
@@ -97,7 +100,7 @@ export default function VistaPrevia() {
     <Page>
       <StepHeader step={5} title="Vista previa" />
       <Text style={type.body}>Así verán tu negocio los clientes en la app.</Text>
-      <BusinessPreview logoUri={draft.logo?.uri ?? draft.logoUrl} name={draft.name} of={draft} type={draft.type} address={draft.address} productCount={draft.products.length} />
+      <BusinessPreview logoUri={draft.logo?.uri ?? draft.logoUrl} name={draft.name} of={draft} type={draft.type} address={[draft.address.trim(), municipio(draft.municipioCodigo)?.nombre].filter(Boolean).join(', ')} productCount={draft.products.length} />
 
       <View style={styles.summary}>
         <Row label="Horario" value={draft.hours.trim() || 'Sin horario'} />

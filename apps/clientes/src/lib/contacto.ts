@@ -1,4 +1,4 @@
-import { BRAND } from '@zipa/shared';
+import type { Business } from '@zipa/shared';
 
 /** Enlace de WhatsApp para un número colombiano escrito como sea ("300 123 4567", "+57 300…"). */
 export function whatsappUrl(raw: string | null): string | null {
@@ -9,9 +9,14 @@ export function whatsappUrl(raw: string | null): string | null {
   return `https://wa.me/${digits}`;
 }
 
-/** Búsqueda de la dirección en Google Maps (abre la app de mapas si está instalada). */
-export const mapsUrl = (address: string) =>
-  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address}, ${BRAND.city}, Colombia`)}`;
+/**
+ * «Cómo llegar» en Google Maps (abre la app de mapas si está instalada): el punto que confirmó el negocio
+ * o, si no lo tiene, su dirección con el municipio y el departamento reales.
+ */
+export const mapsUrl = (b: Pick<Business, 'address' | 'municipio' | 'departamento' | 'latitud' | 'longitud'>) =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    b.latitud != null && b.longitud != null ? `${b.latitud},${b.longitud}` : [b.address, b.municipio, b.departamento, 'Colombia'].filter(Boolean).join(', '),
+  )}`;
 
 // Aviso después de publicar una reseña (lo lee la pantalla del negocio): publicada o en revisión.
 let reviewed: { businessId: string; status: string } | null = null;

@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { CiudadProvider } from '@/lib/ciudad';
 import { usePushSetup } from '@/lib/notificaciones';
 import { supabase } from '@/lib/supabase';
 
@@ -22,10 +23,14 @@ export default function RootLayout() {
 
   return (
     <AuthProvider client={supabase} storage={deviceStore} app="clientes">
-      <AppOpen />
-      <PushSetup />
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+      <CiudadProvider>
+        <AppOpen />
+        <PushSetup />
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+          <Stack.Screen name="ciudad" options={{ presentation: 'modal' }} />
+        </Stack>
+      </CiudadProvider>
     </AuthProvider>
   );
 }

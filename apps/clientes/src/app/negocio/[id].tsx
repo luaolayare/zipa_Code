@@ -219,7 +219,7 @@ export default function NegocioDetalle() {
               onPress={() => (user ? router.push({ pathname: '/reservar/[id]', params: { id: business.id } }) : router.push({ pathname: '/login', params: { desde: 'reservar', negocio: business.id } }))}
             />
           )}
-          <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={business.address} onPress={() => { api.track('maps_click', { businessId: business.id }); Linking.openURL(mapsUrl(business.address)); }} />
+          <ContactButton icon={<MapPin size={20} color={colors.primary} />} label="Cómo llegar" sub={[business.address, business.municipio, business.departamento !== business.municipio ? business.departamento : null].filter(Boolean).join(", ")} onPress={() => { api.track('maps_click', { businessId: business.id }); Linking.openURL(mapsUrl(business)); }} />
           {wa && <ContactButton icon={<WhatsAppIcon size={22} />} label="WhatsApp" sub="Escribir al negocio" onPress={() => { api.track('whatsapp_click', { businessId: business.id }); Linking.openURL(wa); }} />}
           {social.length > 0 && (
             <View style={styles.socialRow} accessibilityLabel="Redes sociales del negocio">

@@ -1,5 +1,5 @@
 // Bienvenida de la app de negocios.
-import { BRAND, Button, colors, fonts, useAuth, PlateArt, radius, spacing, typography } from '@zipa/shared';
+import { Button, colors, fonts, useAuth, PlateArt, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Check } from 'lucide-react-native';
@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Logo } from '@/components/Logo';
 
 const BENEFICIOS: [string, string][] = [
-  ['Aparece ante turistas', ` que buscan dónde comer y qué comprar en ${BRAND.city}.`],
+  ['Aparece ante turistas', ' que buscan dónde comer y qué comprar cerca de ti.'],
   ['Muestra tus productos en video', ', grabado con tu celular en 20 segundos.'],
   ['Recibe y responde reseñas', ' para ganar la confianza de nuevos clientes.'],
 ];
@@ -47,7 +47,7 @@ export default function Inicio() {
             <Button title="Ir a mi panel" variant="accent" onPress={() => router.push('/panel')} />
           ) : (
             <>
-              <Button title="Registrar mi negocio" variant="accent" onPress={() => router.push('/registro/cuenta')} />
+              <Button title="Registrar mi negocio" variant="accent" onPress={() => router.push('/registro/ciudad')} />
               <Button title="Ya tengo cuenta" variant="outline" onPress={() => router.push({ pathname: '/registro/cuenta', params: { entrar: '1' } })} />
             </>
           )}

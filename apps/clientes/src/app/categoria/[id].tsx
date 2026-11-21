@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/BackButton';
 import { BusinessRow } from '@/components/BusinessRow';
+import { useCiudad } from '@/lib/ciudad';
 
 const PAGE = 20;
 
@@ -21,7 +22,8 @@ export default function Categoria() {
   const [order, setOrder] = useState<SearchOrder>('relevancia');
   // Resultado de la última consulta, marcado con su filtro (key) y su intento: si no coincide con
   // el filtro actual, la pantalla está cargando. Así las respuestas viejas nunca tapan las nuevas.
-  const key = `${main.id}|${subcategory ?? ''}|${order}`;
+  const { codigo: municipio, municipio: ciudad } = useCiudad();
+  const key = `${municipio}|${main.id}|${subcategory ?? ''}|${order}`;
   const [attempt, setAttempt] = useState(0);
   const [page, setPage] = useState<{ key: string; attempt: number; list: Business[]; more: boolean; error: boolean } | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -37,11 +39,11 @@ export default function Categoria() {
   // Primera página de cada filtro.
   useEffect(() => {
     let stale = false;
-    api.searchBusinesses({ main: main.id, subcategory, order, limit: PAGE })
+    api.searchBusinesses({ main: main.id, subcategory, order, limit: PAGE, municipio })
       .then((list) => { if (!stale) setPage({ key, attempt, list, more: list.length === PAGE, error: false }); })
       .catch(() => { if (!stale) setPage({ key, attempt, list: [], more: false, error: true }); });
     return () => { stale = true; };
-  }, [api, main.id, subcategory, order, key, attempt]);
+  }, [api, main.id, subcategory, order, key, attempt, municipio]);
 
   const ready = page?.key === key && page.attempt === attempt;
   const list = ready ? page.list : [];
@@ -54,13 +56,13 @@ export default function Categoria() {
     const forKey = key;
     setLoadingMore(true);
     setMoreError(false);
-    api.searchBusinesses({ main: main.id, subcategory, order, limit: PAGE, offset: page.list.length })
+    api.searchBusinesses({ main: main.id, subcategory, order, limit: PAGE, offset: page.list.length, municipio })
       .then((next) => {
         setPage((p) => (!p || p.key !== forKey) ? p : { ...p, list: [...p.list, ...next.filter((b) => !p.list.some((x) => x.id === b.id))], more: next.length === PAGE });
       })
       .catch(() => setMoreError(true))
       .finally(() => setLoadingMore(false));
-  }, [api, page, key, main.id, subcategory, order]);
+  }, [api, page, key, main.id, subcategory, order, municipio]);
 
   // Ordenar por calificación solo tiene sentido si hay negocios con reseñas suficientes.
   const canRank = list.some((b) => b.reviewCount >= MIN_REVIEWS_FOR_RANKING) || order === 'calificacion';
@@ -73,7 +75,7 @@ export default function Categoria() {
           <BackButton />
           <View style={{ flex: 1, gap: spacing.xxs }}>
             <Text style={styles.title} accessibilityRole="header">{main.name}</Text>
-            <Text style={styles.sub} numberOfLines={2}>{main.description}</Text>
+            <Text style={styles.sub} numberOfLines={2}>En {ciudad.nombre} · {main.description}</Text>
           </View>
         </View>
 
@@ -105,8 +107,8 @@ export default function Categoria() {
           <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.xxxl }} accessibilityLabel="Cargando negocios" />
         ) : status === 'error' ? (
           <View style={styles.empty} accessibilityRole="alert">
-            <Text style={styles.emptyTitle}>No pudimos cargar los negocios</Text>
-            <Text style={styles.emptyText}>Revisa tu conexión a internet.</Text>
+            <Text style={styles.emptyTitle}>No pudimos cargar la información</Text>
+            <Text style={styles.emptyText}>Revisa tu conexión e inténtalo de nuevo.</Text>
             <Pressable accessibilityRole="button" onPress={() => setAttempt((n) => n + 1)} style={styles.button}>
               <Text style={styles.buttonText}>Intentar de nuevo</Text>
             </Pressable>
@@ -114,7 +116,7 @@ export default function Categoria() {
         ) : list.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>{subName ? `Aún no hay negocios en ${subName}` : `Aún no hay ${main.name.toLowerCase()}`}</Text>
-            <Text style={styles.emptyText}>Estamos sumando lugares de la zona. Mira otra subcategoría o vuelve pronto.</Text>
+            <Text style={styles.emptyText}>Estamos sumando lugares en {ciudad.nombre}. Mira otra subcategoría o vuelve pronto.</Text>
           </View>
         ) : (
           <View style={styles.list} accessibilityLiveRegion="polite">

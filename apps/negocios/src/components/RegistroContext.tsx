@@ -16,6 +16,9 @@ export interface RegistroDraft {
   subcategoryId: string; // '' mientras no elija
   tags: string[]; // etiquetas secundarias, hasta 3
   category: Category; // vieja: se deriva de la subcategoría (colores y textos)
+  municipioCodigo: string; // código DANE del municipio del local ('' mientras no elija)
+  latitud: number | null; // punto del local, solo si lo confirmó estando ahí
+  longitud: number | null;
   address: string;
   hours: string;
   whatsapp: string;
@@ -36,6 +39,9 @@ const empty: RegistroDraft = {
   subcategoryId: '',
   tags: [],
   category: 'comer',
+  municipioCodigo: '',
+  latitud: null,
+  longitud: null,
   address: '',
   hours: '',
   whatsapp: '',
@@ -57,6 +63,9 @@ export const draftFromBusiness = (b: Business): Partial<RegistroDraft> => ({
   subcategoryId: b.subcategoryId ?? '',
   tags: b.tags,
   category: b.category,
+  municipioCodigo: b.municipioCodigo,
+  latitud: b.latitud,
+  longitud: b.longitud,
   address: b.address,
   hours: b.hours ?? '',
   whatsapp: b.whatsapp ?? '',

@@ -10,13 +10,14 @@ export const SEARCH_PAGE = 20;
  * Búsqueda en el servidor mientras la persona escribe, con «Ver más»:
  * - espera 300 ms sin teclear y pide la primera página (20);
  * - «Ver más» pide la siguiente con offset, sin duplicar resultados ni pedir dos veces a la vez;
- * - cambiar el texto reinicia la paginación y descarta respuestas viejas (createPager).
+ * - cambiar el texto reinicia la paginación y descarta respuestas viejas (createPager);
+ * - solo busca en la ciudad que se explora: cambiar de ciudad reinicia la búsqueda.
  */
-export function useSearch(query: string) {
+export function useSearch(query: string, municipio: string) {
   const { api } = useAuth();
   const pager = useMemo(
-    () => createPager<Business>((text, offset, limit) => api.searchBusinesses({ text, offset, limit }), SEARCH_PAGE),
-    [api],
+    () => createPager<Business>((text, offset, limit) => api.searchBusinesses({ text, offset, limit, municipio }), SEARCH_PAGE),
+    [api, municipio],
   );
   const state = useSyncExternalStore(pager.subscribe, pager.getState, pager.getState);
   const [attempt, setAttempt] = useState(0);

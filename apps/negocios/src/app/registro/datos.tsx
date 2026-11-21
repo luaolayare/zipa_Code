@@ -1,4 +1,4 @@
-import { Button, TextField, colors, type BusinessType, spacing } from '@zipa/shared';
+import { Button, TextField, colors, etiquetaMunicipio, municipio, type BusinessType, spacing } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
@@ -10,13 +10,17 @@ import { OptionCards } from '@/components/OptionChips';
 import { Page } from '@/components/Page';
 import { useRegistro } from '@/components/RegistroContext';
 import { StepHeader } from '@/components/StepHeader';
+import { PuntoDelLocal } from '@/components/Ubicacion';
 
 // Paso 2: datos del negocio.
 export default function Datos() {
   const { draft, update, reset, restored } = useRegistro();
   const [error, setError] = useState('');
 
+  const muni = municipio(draft.municipioCodigo);
+
   const next = () => {
+    if (!muni) return setError('Elige el municipio de tu negocio.');
     if (draft.name.trim().length < 2) return setError('Escribe el nombre del negocio.');
     if (!draft.subcategoryId) return setError('Elige qué ofreces principalmente, para que los clientes te encuentren por categoría.');
     if (!draft.address.trim()) return setError('Escribe la dirección para que los clientes te encuentren.');
@@ -38,7 +42,12 @@ export default function Datos() {
       <LogoPicker name={draft.name} uri={draft.logo?.uri ?? draft.logoUrl} onPick={(logo) => update({ logo })} onRemove={() => update({ logo: null, logoUrl: null })} />
       <CategoryPicker value={draft} onChange={(patch) => { update(patch); setError(''); }} />
       <OptionCards<BusinessType> label="¿Cómo se describe?" options={BUSINESS_TYPES} value={draft.type} onChange={(t) => update({ type: t })} />
+      <Notice tone="info">
+        <Text style={type.label}>Municipio: {muni ? etiquetaMunicipio(muni) : 'sin elegir'}</Text>
+        <Text style={[type.label, { color: colors.primary, textDecorationLine: 'underline' }]} accessibilityRole="button" onPress={() => router.push({ pathname: '/registro/ciudad', params: { cambiar: '1' } })}>{muni ? 'Cambiar municipio' : 'Elegir municipio'}</Text>
+      </Notice>
       <TextField label="Dirección" value={draft.address} onChangeText={(address) => update({ address })} placeholder="Ej: Calle 4 # 8-12, Centro" />
+      {muni && <PuntoDelLocal municipioCodigo={muni.codigo} latitud={draft.latitud} longitud={draft.longitud} onChange={(p) => update(p)} />}
       <TextField label="Horario" value={draft.hours} onChangeText={(hours) => update({ hours })} placeholder="Ej: Lun a sáb, 7:00 a. m. a 9:00 p. m." />
       <TextField label="WhatsApp del negocio" value={draft.whatsapp} onChangeText={(whatsapp) => update({ whatsapp })} keyboardType="phone-pad" placeholder="Ej: 300 123 4567" />
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
