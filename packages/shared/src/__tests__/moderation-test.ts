@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { OFFENSIVE_MESSAGE, OFFENSIVE_WORDS, OffensiveTextError, findOffensiveWords } from '../moderation';
+import { OFFENSIVE_MESSAGE, OFFENSIVE_WORDS, OffensiveTextError, findOffensiveWords, reviewAllowedFrom } from '../moderation';
 
 describe('findOffensiveWords', () => {
   it('detecta insultos sin importar mayúsculas ni tildes', () => {
@@ -37,5 +37,19 @@ describe('OffensiveTextError', () => {
     const e = new OffensiveTextError();
     expect(e).toBeInstanceOf(Error);
     expect(e.message).toBe(OFFENSIVE_MESSAGE);
+  });
+});
+
+describe('reviewAllowedFrom (aviso de cuenta nueva antes de calificar)', () => {
+  const now = new Date('2026-11-21T15:00:00Z');
+  it('cuenta de hace 2 horas: avisa desde cuándo podrá calificar', () => {
+    expect(reviewAllowedFrom('2026-11-21T13:00:00Z', now)).toBe('2026-11-22T13:00:00.000Z');
+  });
+  it('cuenta de más de 24 horas: sin aviso', () => {
+    expect(reviewAllowedFrom('2026-11-20T14:59:00Z', now)).toBeNull();
+  });
+  it('sin fecha (datos de ejemplo) o fecha inválida: sin aviso', () => {
+    expect(reviewAllowedFrom(undefined, now)).toBeNull();
+    expect(reviewAllowedFrom('no es fecha', now)).toBeNull();
   });
 });

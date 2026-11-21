@@ -11,6 +11,8 @@ export interface AppUser {
   id: string;
   email: string;
   name: string;
+  /** Cuándo se creó la cuenta (ISO). Sirve para avisar de la espera de 24 h antes de calificar. */
+  createdAt?: string;
 }
 
 interface AuthValue {
@@ -52,6 +54,7 @@ const toUser = (s: Session | null): AppUser | null =>
         id: s.user.id,
         email: s.user.email ?? '',
         name: (s.user.user_metadata?.full_name as string | undefined) ?? nameFromEmail(s.user.email ?? ''),
+        createdAt: s.user.created_at,
       }
     : null;
 

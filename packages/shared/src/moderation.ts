@@ -35,3 +35,17 @@ export class OffensiveTextError extends Error {
     this.name = 'OffensiveTextError';
   }
 }
+
+/** Las cuentas nuevas califican 24 horas después de crearse (misma regla que la migración 0012). */
+export const NEW_ACCOUNT_REVIEW_WAIT_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Si la cuenta todavía no puede publicar su primera reseña en un negocio, devuelve desde cuándo
+ * podrá (ISO); si ya puede, null. Solo informa: la base de datos es la que aplica la regla.
+ */
+export function reviewAllowedFrom(accountCreatedAt: string | undefined, now: Date): string | null {
+  const created = accountCreatedAt ? Date.parse(accountCreatedAt) : NaN;
+  if (Number.isNaN(created)) return null;
+  const from = created + NEW_ACCOUNT_REVIEW_WAIT_MS;
+  return from > now.getTime() ? new Date(from).toISOString() : null;
+}

@@ -112,29 +112,29 @@ Estados usados: **Aprobada**, **Fallida**, **Bloqueada** (no se puede probar en 
 
 ## D. Código
 
-Commits locales de esta etapa (sin push):
+Commits de esta etapa:
 
 | Commit | Cambio |
 |---|---|
 | `97f27ac` | El candado también impide usar producción en desarrollo local |
 | `205a73c` | **Error real encontrado en Android:** con la sesión iniciada, «Empezar a explorar» llevaba al inicio de sesión; ahora va a Explorar. El script de datos de prueba ahora puede subir foto y video. |
 | `6ad6237` | Pestañas de clientes alineadas con letra grande |
+| (siguiente) | Observaciones 1 y 2 corregidas con autorización (ver abajo) |
 
 No hizo falta cambiar el esquema, borrar información ni cambiar reglas del negocio.
 
-**Observaciones (sin corregir: son cambios de comportamiento, a decidir):**
-1. Al salir del editor de un producto con cambios sin guardar, los cambios se pierden sin aviso.
-2. Una cuenta nueva solo se entera de la regla de 24 horas al publicar, después de escribir la reseña. Se le podría avisar antes.
+**Observaciones:**
+1. **Corregida (autorizada).** Al salir del editor de un producto con cambios sin guardar, los cambios se perdían sin aviso. Ahora la flecha «Volver», el botón atrás de Android y el gesto preguntan «¿Salir sin guardar?». Sin cambios, o al guardar o borrar, sale sin preguntar. Verificado en el emulador, 7/7: sin cambios no pregunta, atrás pregunta, «Cancelar» conserva el cambio, la flecha pregunta, «Salir sin guardar» no guarda, guardar sale directo y el precio quedó restaurado.
+2. **Corregida (autorizada).** Una cuenta de menos de 24 h ahora ve el aviso «Tu cuenta es nueva… Podrás publicar tu reseña desde: Mañana · 9:30 a. m.» arriba de las estrellas, antes de escribir. La base de datos sigue aplicando la regla y no se cambió el esquema. Verificado en el emulador: la cuenta nueva ve el aviso; Lucía, con una cuenta de 2 días, no lo ve; publicar sigue bloqueado con el mensaje de siempre. Tiene 3 pruebas unitarias nuevas y en total pasan 144/144.
 3. En el panel de negocios, un producto sin foto aparece como «Solo foto». Solo pasa con datos sembrados, porque la app exige foto.
 4. Al cambiar el tamaño de letra del sistema con la app abierta, Android la reinicia en la bienvenida. En Expo Go es normal; habrá que comprobarlo en el build nativo.
 5. En Expo Go, una recarga de desarrollo devuelve a la bienvenida. Eso explica el «vuelve al inicio» que se veía en el iPhone.
 
 ## E. Próximo paso
 
-1. Revisar las observaciones 1 y 2 de la sección D y decidir si entran.
-2. Con autorización: generar un **APK `preview` contra pruebas** con EAS para probar lo que Expo Go no permite: avisos push, enlaces universales, rendimiento real y el reinicio al cambiar la letra.
-3. Antes de cualquier build de producción: agregar las variables de Supabase al ambiente `production` de EAS.
-4. Guardar `ZIPA_CLAVE_PRUEBAS` en el gestor de contraseñas y borrar la variable de Windows.
-5. Con autorización: subir la rama (`git push`) para respaldar estos 3 commits.
+1. Con autorización: generar un **APK `preview` contra pruebas** con EAS para probar lo que Expo Go no permite: avisos push, enlaces universales, rendimiento real y el reinicio al cambiar la letra.
+2. Antes de cualquier build de producción: agregar las variables de Supabase al ambiente `production` de EAS.
+3. Guardar `ZIPA_CLAVE_PRUEBAS` en el gestor de contraseñas y borrar la variable de Windows.
+4. La rama se subió a GitHub con autorización. Falta revisar y fusionar en `main`, también con autorización.
 
 Las capturas y los resultados en JSON quedaron en la carpeta temporal de la sesión (no van al repositorio).

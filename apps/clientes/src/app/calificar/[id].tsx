@@ -1,4 +1,4 @@
-import { Button, OffensiveTextError, Screen, TextField, colors, fonts, useAuth, type LocalFile, type Review, radius, spacing, typography } from '@zipa/shared';
+import { Button, OffensiveTextError, Screen, TextField, colors, fonts, reservationWhen, reviewAllowedFrom, useAuth, type LocalFile, type Review, radius, spacing, typography } from '@zipa/shared';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ImagePlus, Star, X } from 'lucide-react-native';
@@ -21,6 +21,9 @@ export default function Calificar() {
   const [editing, setEditing] = useState(false); // ya había calificado: edita su reseña
   const [photo, setPhoto] = useState<LocalFile | null>(null); // foto nueva
   const [savedPhoto, setSavedPhoto] = useState<string | null>(null); // foto que ya tenía
+  // Cuenta de menos de 24 h: se avisa antes de escribir (antes solo se sabía al publicar).
+  const [now] = useState(() => new Date());
+  const allowedFrom = editing ? null : reviewAllowedFrom(user?.createdAt, now);
 
   useEffect(() => { api.getBusiness(id).then((b) => setBusinessName(b?.name ?? '')).catch(() => {}); }, [api, id]);
 
@@ -71,6 +74,12 @@ export default function Calificar() {
         <Text style={styles.title} accessibilityRole="header">{editing ? 'Edita tu reseña' : '¿Cómo te fue?'}</Text>
         <Text style={styles.body}>{editing ? 'Ya calificaste este negocio. Puedes cambiar tus estrellas o tu comentario.' : 'Califica al negocio en general: la comida o los productos, la atención y el lugar.'}</Text>
       </View>
+      {!!allowedFrom && (
+        <View style={styles.wait} accessibilityRole="alert">
+          <Text style={styles.waitTitle}>Tu cuenta es nueva</Text>
+          <Text style={styles.waitBody}>Para evitar reseñas falsas, las cuentas nuevas pueden calificar 24 horas después de crearse. Podrás publicar tu reseña desde: {reservationWhen(allowedFrom, now)}</Text>
+        </View>
+      )}
       <View style={styles.stars} accessibilityRole="radiogroup" accessibilityLabel="Calificación">
         {([1, 2, 3, 4, 5] as const).map((n) => {
           const on = n <= stars;
@@ -122,5 +131,8 @@ const styles = StyleSheet.create({
   photoRemove: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: radius.pill, backgroundColor: 'rgba(20,33,31,0.75)', alignItems: 'center', justifyContent: 'center' },
   photoButton: { minHeight: 56, borderRadius: radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
   photoButtonText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
+  wait: { gap: spacing.xxs, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.star, backgroundColor: colors.warningSoft },
+  waitTitle: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  waitBody: { ...typography.body, color: colors.text },
   note: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted, textAlign: 'center' },
 });
