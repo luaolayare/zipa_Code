@@ -1,6 +1,6 @@
 // Clasificación del negocio: categoría principal, subcategoría y etiquetas secundarias.
 // Las subcategorías vienen de Supabase (el equipo las administra), no están fijas en la app.
-import { CLASSIFICATION_EXAMPLES, MAIN_CATEGORIES, colors, fonts, legacyCategoryFor, subcategoriesOf, useAuth, type Category, type CategoryNode, type MainCategory } from '@zipa/shared';
+import { CLASSIFICATION_EXAMPLES, MAIN_CATEGORIES, colors, fonts, legacyCategoryFor, subcategoriesOf, useAuth, type Category, type CategoryNode, type MainCategory, radius, spacing, typography } from '@zipa/shared';
 import { Check, ChevronDown, ChevronUp, HelpCircle } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -49,7 +49,7 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
   };
 
   return (
-    <View style={{ gap: 18 }}>
+    <View style={{ gap: spacing.lg }}>
       <OptionCards<MainCategory> label="¿Qué es tu negocio?" options={MAIN_OPTIONS} value={value.mainCategory} onChange={pickMain} />
       <ClassificationHelp />
 
@@ -59,7 +59,7 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
         <ActivityIndicator color={colors.primary} accessibilityLabel="Cargando categorías" />
       ) : (
         <>
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: spacing.sm }}>
             <Text style={styles.label}>¿Qué vendes principalmente?</Text>
             <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel="Subcategoría">
               {subs.map((c) => {
@@ -74,7 +74,7 @@ export function CategoryPicker({ value, onChange }: { value: Classification; onC
           </View>
 
           {!!value.subcategoryId && (
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: spacing.sm }}>
               <Text style={styles.label}>También ofrece <Text style={styles.optional}>(opcional, hasta {MAX_TAGS})</Text></Text>
               <Text style={styles.help}>Así te encuentran también en esas búsquedas. Ej: una cafetería que vende repostería.</Text>
               <View style={styles.row}>
@@ -117,7 +117,7 @@ function ClassificationHelp() {
         {open ? <ChevronUp size={18} color={colors.primary} /> : <ChevronDown size={18} color={colors.primary} />}
       </Pressable>
       {open && (
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: spacing.xs }}>
           <Text style={styles.help}>Elige según lo que vendes principalmente:</Text>
           {CLASSIFICATION_EXAMPLES.map((e) => (
             <Text key={e.sells} style={styles.help}>
@@ -131,20 +131,20 @@ function ClassificationHelp() {
 }
 
 const styles = StyleSheet.create({
-  helpBox: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: colors.primarySoft },
-  helpHead: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 28 },
-  helpTitle: { flex: 1, fontFamily: fonts.bold, fontSize: 14.5, color: colors.primary },
+  helpBox: { gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.primarySoft },
+  helpHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: 28 },
+  helpTitle: { ...typography.label, flex: 1, fontFamily: fonts.bold, color: colors.primary },
   helpStrong: { fontFamily: fonts.bold, color: colors.text },
-  label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text },
+  label: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
   optional: { fontFamily: fonts.regular, color: colors.textMuted },
-  help: { fontSize: 14, lineHeight: 20, fontFamily: fonts.regular, color: colors.textMuted },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  chip: { minHeight: 48, paddingHorizontal: 18, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  help: { ...typography.body, color: colors.textMuted },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: { minHeight: 48, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   on: { backgroundColor: colors.primary, borderColor: colors.primary },
-  text: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
+  text: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
   textOn: { color: '#FFFFFF' },
-  tag: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
+  tag: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
   tagOn: { borderStyle: 'solid', borderColor: colors.primary, backgroundColor: colors.primarySoft },
-  tagText: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.text },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, lineHeight: 20, color: colors.danger },
+  tagText: { ...typography.label, color: colors.text },
+  error: { ...typography.label, color: colors.danger },
 });

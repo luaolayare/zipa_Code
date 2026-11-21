@@ -1,4 +1,4 @@
-import { colors, fonts } from '@zipa/shared';
+import { colors, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -18,7 +18,7 @@ export function StepHeader({ step, title }: { step: number; title: string }) {
       </View>
       <View style={styles.bars} accessibilityLabel={`Paso ${step} de ${TOTAL_STEPS}`}>
         {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-          <View key={i} style={[styles.bar, { backgroundColor: i < step ? colors.primary : '#DCD6CC' }]} />
+          <View key={i} style={[styles.bar, { backgroundColor: i < step ? colors.primary : colors.inputBorder }]} />
         ))}
       </View>
     </View>
@@ -39,12 +39,12 @@ export function BackButton({ light = false, onPress }: { light?: boolean; onPres
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 18, paddingBottom: 18, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: colors.border },
-  top: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  back: { width: 50, height: 50, borderRadius: 25, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  wrap: { gap: spacing.lg, paddingBottom: spacing.lg, marginBottom: spacing.xxs, borderBottomWidth: 1, borderBottomColor: colors.border },
+  top: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  back: { width: 50, height: 50, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   backLight: { backgroundColor: 'rgba(255,255,255,0.14)', borderColor: 'rgba(255,255,255,0.25)' },
-  step: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1.6, textTransform: 'uppercase', color: colors.textMuted },
-  title: { fontFamily: fonts.display, fontSize: 25, lineHeight: 30, letterSpacing: -0.5, color: colors.text },
-  bars: { flexDirection: 'row', gap: 8 },
-  bar: { flex: 1, height: 7, borderRadius: 999 },
+  step: { ...typography.overline, color: colors.textMuted },
+  title: { ...typography.title, color: colors.text },
+  bars: { flexDirection: 'row', gap: spacing.xs },
+  bar: { flex: 1, height: 7, borderRadius: radius.pill },
 });

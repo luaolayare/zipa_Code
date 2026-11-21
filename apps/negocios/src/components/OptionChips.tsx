@@ -1,4 +1,4 @@
-import { colors, fonts } from '@zipa/shared';
+import { colors, fonts, radius, spacing, typography } from '@zipa/shared';
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 /** Elección única en forma de píldoras (categorías). */
@@ -14,7 +14,7 @@ export function OptionChips<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: spacing.sm }}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={label}>
         {options.map((o) => {
@@ -45,7 +45,7 @@ export function OptionCards<T extends string>({
   // En celulares angostos van una debajo de otra, para que los títulos no se partan.
   const stacked = useWindowDimensions().width < 400;
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: spacing.sm }}>
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.cards, stacked && styles.cardsStacked]} accessibilityRole="radiogroup" accessibilityLabel={label}>
         {options.map((o) => {
@@ -63,18 +63,18 @@ export function OptionCards<T extends string>({
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  chip: { minHeight: 50, paddingHorizontal: 20, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  label: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: { minHeight: 50, paddingHorizontal: spacing.lg, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   on: { backgroundColor: colors.primary, borderColor: colors.primary },
-  text: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
+  text: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
   textOn: { color: '#FFFFFF' },
-  cards: { flexDirection: 'row', gap: 12 },
-  cardsStacked: { flexDirection: 'column', gap: 10 },
-  cardTitleStacked: { fontSize: 18, lineHeight: 22 },
-  card: { flex: 1, padding: 16, gap: 6, borderRadius: 22, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface },
+  cards: { flexDirection: 'row', gap: spacing.sm },
+  cardsStacked: { flexDirection: 'column', gap: spacing.sm },
+  cardTitleStacked: { ...typography.subtitle },
+  card: { flex: 1, padding: spacing.md, gap: spacing.xs, borderRadius: radius.lg, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.surface },
   cardOn: { borderColor: colors.primary, backgroundColor: colors.stage3d },
   // 16: "Emprendimiento" cabe completo en media pantalla sin partirse.
-  cardTitle: { fontFamily: fonts.display, fontSize: 16, lineHeight: 20, letterSpacing: -0.2, color: colors.text },
-  cardBody: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 19, color: colors.textMuted },
+  cardTitle: { ...typography.body, fontFamily: fonts.display, color: colors.text },
+  cardBody: { ...typography.body, color: colors.textMuted },
 });

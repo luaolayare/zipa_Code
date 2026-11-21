@@ -1,4 +1,4 @@
-import { Button, TextField, colors, type BusinessType } from '@zipa/shared';
+import { Button, TextField, colors, type BusinessType, spacing } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
@@ -29,9 +29,9 @@ export default function Datos() {
       <StepHeader step={2} title="Datos del negocio" />
       {restored && (
         <Notice tone="info">
-          <Text style={type.strong}>Retomamos tu registro donde lo dejaste.</Text>
-          <Text style={type.small}>Por seguridad, la cédula o NIT se vuelve a pedir en el paso 3.</Text>
-          <Text style={[type.strong, { color: colors.primary, marginTop: 6, textDecorationLine: 'underline' }]} accessibilityRole="button" onPress={reset}>Empezar de cero</Text>
+          <Text style={type.label}>Retomamos tu registro donde lo dejaste.</Text>
+          <Text style={type.help}>Por seguridad, la cédula o NIT se vuelve a pedir en el paso 3.</Text>
+          <Text style={[type.label, { color: colors.primary, marginTop: spacing.xs, textDecorationLine: 'underline' }]} accessibilityRole="button" onPress={reset}>Empezar de cero</Text>
         </Notice>
       )}
       <TextField label="Nombre del negocio" value={draft.name} onChangeText={(name) => update({ name })} placeholder="Ej: Arepas Mamá Inés" maxLength={80} />

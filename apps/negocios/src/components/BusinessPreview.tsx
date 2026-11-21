@@ -1,5 +1,5 @@
 // La tarjeta del negocio tal como sale en la app de clientes.
-import { businessCover, businessTypeLabel, colors, fonts, mainCategoryName, mainOf, type BusinessType, type Classified } from '@zipa/shared';
+import { businessCover, businessTypeLabel, colors, fonts, mainCategoryName, mainOf, type BusinessType, type Classified, radius, spacing, typography } from '@zipa/shared';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { initials } from './kit';
@@ -44,17 +44,17 @@ export function BusinessPreview({
 }
 
 const styles = StyleSheet.create({
-  frame: { backgroundColor: colors.stage3d, borderRadius: 30, padding: 14 },
-  card: { backgroundColor: colors.surface, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  frame: { backgroundColor: colors.stage3d, borderRadius: radius.xl, padding: spacing.md },
+  card: { backgroundColor: colors.surface, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
   cover: { height: 150, alignItems: 'center', justifyContent: 'center' },
-  logo: { width: 84, height: 84, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logo: { width: 84, height: 84, borderRadius: radius.xl, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   logoImage: { width: '100%', height: '100%' },
-  logoText: { fontFamily: fonts.display, fontSize: 32, color: colors.text, letterSpacing: -0.5 },
-  badge: { position: 'absolute', left: 14, bottom: 14, backgroundColor: colors.accent, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  badgeText: { fontFamily: fonts.bold, fontSize: 14, color: colors.text },
-  body: { padding: 18, gap: 6 },
-  name: { fontFamily: fonts.display, fontSize: 22, lineHeight: 26, color: colors.text, letterSpacing: -0.3 },
-  meta: { fontFamily: fonts.regular, fontSize: 14.5, color: colors.textMuted },
-  tags: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 4 },
-  tag: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.accentText, backgroundColor: colors.accentSoft, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 999, overflow: 'hidden' },
+  logoText: { ...typography.title, color: colors.text },
+  badge: { position: 'absolute', left: 14, bottom: 14, backgroundColor: colors.accent, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: radius.pill },
+  badgeText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  body: { padding: spacing.lg, gap: spacing.xs },
+  name: { ...typography.heading, color: colors.text },
+  meta: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted },
+  tags: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xxs },
+  tag: { ...typography.caption, fontFamily: fonts.bold, color: colors.accentText, backgroundColor: colors.accentSoft, paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs, borderRadius: radius.pill, overflow: 'hidden' },
 });

@@ -1,4 +1,4 @@
-import { colors } from '@zipa/shared';
+import { colors, spacing } from '@zipa/shared';
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,5 +18,5 @@ export function Page({ children, contentStyle }: { children: ReactNode; contentS
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  content: { padding: 24, paddingBottom: 48, gap: 22 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.xl },
 });

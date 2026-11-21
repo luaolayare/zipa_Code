@@ -1,6 +1,6 @@
 // Fotos adicionales de un producto (hasta 3, además de la principal), cada una con descripción corta.
 // Sirven para mostrar otros diseños, colores o presentaciones del mismo producto.
-import { colors, fonts, type LocalFile } from '@zipa/shared';
+import { colors, fonts, type LocalFile, radius, spacing, typography } from '@zipa/shared';
 import { ImagePlus, Star, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -41,13 +41,13 @@ export function MorePhotos({
   };
 
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: spacing.sm }}>
       <Text style={styles.label}>Más fotos <Text style={styles.optional}>(opcional, hasta {MAX_EXTRA_PHOTOS})</Text></Text>
-      <Text style={type.small}>Muestra otros diseños, colores o presentaciones del mismo {word}. El cliente las ve deslizando.</Text>
+      <Text style={type.help}>Muestra otros diseños, colores o presentaciones del mismo {word}. El cliente las ve deslizando.</Text>
       {photos.map((p, i) => (
         <View key={p.key} style={styles.item}>
           {extraUri(p) && <Image source={{ uri: extraUri(p)! }} style={styles.thumb} accessibilityLabel={p.label || `Foto ${i + 2}`} />}
-          <View style={{ flex: 1, gap: 8 }}>
+          <View style={{ flex: 1, gap: spacing.xs }}>
             <TextInput
               accessibilityLabel={`Descripción de la foto ${i + 2}`}
               value={p.label}
@@ -82,14 +82,14 @@ export function MorePhotos({
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text },
+  label: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
   optional: { fontFamily: fonts.regular, color: colors.textMuted },
-  item: { flexDirection: 'row', gap: 12, padding: 10, borderRadius: 18, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  thumb: { width: 76, height: 76, borderRadius: 14, backgroundColor: colors.stage3d },
-  input: { minHeight: 44, borderRadius: 12, borderWidth: 1.5, borderColor: colors.inputBorder, paddingHorizontal: 12, fontFamily: fonts.regular, fontSize: 15, color: colors.text, backgroundColor: colors.surface },
-  actions: { flexDirection: 'row', gap: 16 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 32 },
-  actionText: { fontFamily: fonts.bold, fontSize: 13.5, color: colors.primary },
-  add: { minHeight: 52, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  addText: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary },
+  item: { flexDirection: 'row', gap: spacing.sm, padding: spacing.sm, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  thumb: { width: 76, height: 76, borderRadius: radius.md, backgroundColor: colors.stage3d },
+  input: { ...typography.caption, minHeight: 44, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.inputBorder, paddingHorizontal: spacing.sm, fontFamily: fonts.regular, color: colors.text, backgroundColor: colors.surface },
+  actions: { flexDirection: 'row', gap: spacing.md },
+  action: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs, minHeight: 32 },
+  actionText: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
+  add: { minHeight: 52, borderRadius: radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  addText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary },
 });

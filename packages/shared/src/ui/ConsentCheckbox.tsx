@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '../theme';
+import { colors, radius, spacing, typography } from '../theme';
 
 /**
  * Casilla obligatoria de aceptación. Empieza sin marcar; quien la usa no deja seguir hasta que se marque.
@@ -38,12 +38,12 @@ export function ConsentCheckbox({ checked, onChange, onOpenTerms, onOpenPrivacy,
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xxs },
   hit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -10, marginTop: -10 },
-  box: { width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: colors.inputBorder, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  box: { width: 24, height: 24, borderRadius: radius.sm, borderWidth: 2, borderColor: colors.inputBorder, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   boxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
   boxInvalid: { borderColor: colors.danger },
-  check: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', lineHeight: 18 },
-  label: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.textBody },
+  check: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', lineHeight: 18 }, // palomita: símbolo dentro de la casilla
+  label: { ...typography.body, flex: 1, color: colors.textBody },
   link: { color: colors.price, fontWeight: '700', textDecorationLine: 'underline' },
 });

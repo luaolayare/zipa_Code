@@ -1,4 +1,4 @@
-import { Button, TextField, colors, fonts, isValidIdNumber } from '@zipa/shared';
+import { Button, TextField, colors, fonts, isValidIdNumber, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { Camera, Check, ImageIcon } from 'lucide-react-native';
 import { useState } from 'react';
@@ -45,9 +45,9 @@ export default function Verificacion() {
         <View style={[styles.dropIcon, done && { backgroundColor: colors.success }]}>
           {done ? <Check size={30} color="#FFFFFF" strokeWidth={3} /> : <Camera size={28} color={colors.text} />}
         </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={type.h3}>Foto de tu local o puesto</Text>
-          <Text style={type.small}>{done ? 'Foto cargada. Toca para tomar otra.' : 'Toca para tomarla con la cámara.'}</Text>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
+          <Text style={type.subtitle}>Foto de tu local o puesto</Text>
+          <Text style={type.caption}>{done ? 'Foto cargada. Toca para tomar otra.' : 'Toca para tomarla con la cámara.'}</Text>
         </View>
       </Pressable>
       {done && <Image source={{ uri: draft.photoUri! }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />}
@@ -55,7 +55,7 @@ export default function Verificacion() {
         <ImageIcon size={20} color={colors.primary} />
         <Text style={styles.altText}>Elegir una foto que ya tengo</Text>
       </Pressable>
-      <Text style={type.small}>Solo la ve el equipo de revisión y se borra cuando terminamos de revisar.</Text>
+      <Text style={type.help}>Solo la ve el equipo de revisión y se borra cuando terminamos de revisar.</Text>
 
       <TextField
         label="Cédula o NIT del responsable"
@@ -73,10 +73,10 @@ export default function Verificacion() {
 }
 
 const styles = StyleSheet.create({
-  drop: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 20, borderRadius: 24, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
+  drop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.xl, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
   dropDone: { borderColor: colors.success },
-  dropIcon: { width: 60, height: 60, borderRadius: 18, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
-  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: 22, backgroundColor: colors.stage3d },
-  alt: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 40 },
-  altText: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.primary, textDecorationLine: 'underline' },
+  dropIcon: { width: 60, height: 60, borderRadius: radius.lg, backgroundColor: colors.chipIdle, alignItems: 'center', justifyContent: 'center' },
+  preview: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg, backgroundColor: colors.stage3d },
+  alt: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', minHeight: 40 },
+  altText: { ...typography.label, fontFamily: fonts.bold, color: colors.primary, textDecorationLine: 'underline' },
 });

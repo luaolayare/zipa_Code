@@ -1,6 +1,6 @@
 // Formulario de un producto: nombre, precio, descripción, fotos y video.
 // Lo usan el Paso 4 del registro y el panel (agregar o editar).
-import { MAX_PRICE_COP, MENU_SECTIONS, TextField, colors, fonts, formatCop, type LocalFile, PlateArt, availabilityLabels, catalogTitle, productWord, type Classified } from '@zipa/shared';
+import { MAX_PRICE_COP, MENU_SECTIONS, TextField, colors, fonts, formatCop, type LocalFile, PlateArt, availabilityLabels, catalogTitle, productWord, type Classified, radius, spacing, typography } from '@zipa/shared';
 import { Camera, Check, ImageIcon, Video } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -91,7 +91,7 @@ export function ProductEditor({ value, onChange, business }: { value: ProductFor
       <TextField label="Descripción (opcional)" value={value.description} onChangeText={(description) => onChange({ ...value, description })} placeholder="¿Qué lleva? ¿Cómo se sirve o cómo está hecho?" multiline maxLength={300} />
 
       {/* Sección del menú: sugerencias para restaurantes y campo libre para todos. */}
-      <View style={{ gap: 10 }}>
+      <View style={{ gap: spacing.sm }}>
         <Text style={styles.label}>{word === 'plato' ? 'Sección del menú' : 'Sección (opcional)'}</Text>
         {word === 'plato' && (
           <View style={styles.chips}>
@@ -120,9 +120,9 @@ export function ProductEditor({ value, onChange, business }: { value: ProductFor
         accessibilityLabel={labels.on}
         onPress={() => onChange({ ...value, available: !value.available })}
         style={({ pressed }) => [styles.toggleRow, pressed && { opacity: 0.85 }]}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={type.h3}>{labels.on}</Text>
-          <Text style={type.small}>{value.available ? 'Los clientes lo ven normal.' : labels.offHint}</Text>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
+          <Text style={type.subtitle}>{labels.on}</Text>
+          <Text style={type.help}>{value.available ? 'Los clientes lo ven normal.' : labels.offHint}</Text>
         </View>
         <View style={[styles.track, value.available && styles.trackOn]}>
           <View style={[styles.knob, value.available && styles.knobOn]} />
@@ -134,13 +134,13 @@ export function ProductEditor({ value, onChange, business }: { value: ProductFor
         <View style={styles.photoFrame}>
           {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} accessibilityLabel={`Foto de ${value.name || 'tu producto'}`} /> : <PlateArt of={business} size={120} />}
         </View>
-        <View style={{ flex: 1, gap: 10 }}>
+        <View style={{ flex: 1, gap: spacing.sm }}>
           <MediaButton icon={<Camera size={20} color={colors.text} />} label={photoUri ? 'Tomar otra' : 'Tomar foto'} onPress={async () => apply(await takePhoto(), 'photo')} />
           <MediaButton icon={<ImageIcon size={20} color={colors.text} />} label="De mis fotos" onPress={async () => apply(await pickPhoto(), 'photo')} />
         </View>
       </View>
       {Platform.OS !== 'web' && (
-        <Text style={type.small}>Al elegirla puedes recortarla y acercarla. Así se verá en tu {catalogWord}; nada se publica hasta que toques «Guardar».</Text>
+        <Text style={type.help}>Al elegirla puedes recortarla y acercarla. Así se verá en tu {catalogWord}; nada se publica hasta que toques «Guardar».</Text>
       )}
 
       <TextField label="Descripción de la foto principal (opcional)" value={value.photoLabel} onChangeText={(photoLabel) => onChange({ ...value, photoLabel })} placeholder="Ej: Diseño clásico" maxLength={40} />
@@ -171,9 +171,9 @@ export function ProductEditor({ value, onChange, business }: { value: ProductFor
         <View style={[styles.videoIcon, hasVideo && { backgroundColor: colors.success }]}>
           {hasVideo ? <Check size={26} color="#FFFFFF" strokeWidth={3} /> : <Video size={26} color="#FFFFFF" />}
         </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={type.h3}>{hasVideo ? 'Video listo' : 'Video del producto'}</Text>
-          <Text style={type.small}>
+        <View style={{ flex: 1, gap: spacing.xxs }}>
+          <Text style={type.subtitle}>{hasVideo ? 'Video listo' : 'Video del producto'}</Text>
+          <Text style={type.help}>
             {hasVideo
               ? 'El equipo lo revisa antes de mostrarlo. Mientras tanto, los clientes ven la foto. En tu panel verás si quedó aprobado.'
               : `Graba unos 20 segundos mostrando el ${word}. Es opcional, pero los productos con video llaman mucho más la atención.`}
@@ -204,28 +204,28 @@ function MediaButton({ icon, label, onPress }: { icon: React.ReactNode; label: s
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 18 },
-  label: { fontSize: 15, fontFamily: fonts.bold, color: colors.text, marginBottom: -8 },
-  photoRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  photoFrame: { width: 132, height: 132, borderRadius: 22, backgroundColor: colors.stage3d, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  wrap: { gap: spacing.lg },
+  label: { ...typography.label, fontFamily: fonts.bold, color: colors.text, marginBottom: -8 },
+  photoRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  photoFrame: { width: 132, height: 132, borderRadius: radius.lg, backgroundColor: colors.stage3d, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
-  mediaButton: { minHeight: 52, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14 },
-  mediaText: { fontFamily: fonts.bold, fontSize: 15, color: colors.text },
-  videoBox: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
+  mediaButton: { minHeight: 52, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md },
+  mediaText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  videoBox: { flexDirection: 'row', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.inputBorder, backgroundColor: colors.surface },
   videoDone: { borderStyle: 'solid', borderColor: colors.success },
-  videoIcon: { width: 52, height: 52, borderRadius: 16, backgroundColor: colors.price, alignItems: 'center', justifyContent: 'center' },
-  videoActions: { gap: 12, alignItems: 'center', marginTop: -6 },
-  recButton: { alignSelf: 'stretch', minHeight: 56, borderRadius: 18, backgroundColor: colors.price, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  recDot: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#FFFFFF' },
-  recText: { fontFamily: fonts.bold, fontSize: 16.5, color: '#FFFFFF' },
-  link: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary, textDecorationLine: 'underline' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 42, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 999, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  videoIcon: { width: 52, height: 52, borderRadius: radius.lg, backgroundColor: colors.price, alignItems: 'center', justifyContent: 'center' },
+  videoActions: { gap: spacing.sm, alignItems: 'center', marginTop: -6 },
+  recButton: { alignSelf: 'stretch', minHeight: 56, borderRadius: radius.lg, backgroundColor: colors.price, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  recDot: { width: 16, height: 16, borderRadius: radius.pill, backgroundColor: '#FFFFFF' },
+  recText: { ...typography.body, fontFamily: fonts.bold, color: '#FFFFFF' },
+  link: { ...typography.label, fontFamily: fonts.bold, color: colors.primary, textDecorationLine: 'underline' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  chip: { minHeight: 42, paddingHorizontal: spacing.md, justifyContent: 'center', borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontFamily: fonts.bold, fontSize: 14.5, color: colors.text },
-  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
-  track: { width: 52, height: 32, borderRadius: 16, backgroundColor: colors.inputBorder, padding: 3, justifyContent: 'center' },
+  chipText: { ...typography.label, fontFamily: fonts.bold, color: colors.text },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
+  track: { width: 52, height: 32, borderRadius: radius.lg, backgroundColor: colors.inputBorder, padding: spacing.xxs, justifyContent: 'center' },
   trackOn: { backgroundColor: colors.success },
-  knob: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#FFFFFF' },
+  knob: { width: 26, height: 26, borderRadius: radius.pill, backgroundColor: '#FFFFFF' },
   knobOn: { alignSelf: 'flex-end' },
 });

@@ -1,4 +1,4 @@
-import { BRAND, Button, colors, fonts, useAuth, catalogTitle } from '@zipa/shared';
+import { BRAND, Button, colors, fonts, useAuth, catalogTitle, radius, spacing, typography } from '@zipa/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -108,8 +108,8 @@ export default function VistaPrevia() {
 
       {!!error && <Text style={type.error} accessibilityRole="alert">{error}</Text>}
       <Button title={progress || 'Enviar a revisión'} onPress={publish} loading={!!progress} />
-      {!!progress && <Text style={[type.small, { textAlign: 'center' }]} accessibilityLiveRegion="polite">{progress}</Text>}
-      <Text style={[type.small, { textAlign: 'center' }]}>
+      {!!progress && <Text style={[type.caption, { textAlign: 'center' }]} accessibilityLiveRegion="polite">{progress}</Text>}
+      <Text style={[type.help, { textAlign: 'center' }]}>
         Revisamos tu negocio antes de publicarlo. Al enviarlo aceptas las condiciones para negocios de {BRAND.name}.
       </Text>
     </Page>
@@ -126,9 +126,9 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
 }
 
 const styles = StyleSheet.create({
-  summary: { backgroundColor: colors.surface, borderRadius: 24, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 18 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 16, paddingVertical: 14 },
+  summary: { backgroundColor: colors.surface, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.lg },
+  row: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.md, paddingVertical: spacing.md },
   rowLine: { borderBottomWidth: 1, borderBottomColor: colors.border },
-  label: { fontFamily: fonts.regular, fontSize: 15.5, color: colors.textMuted },
-  value: { flex: 1, textAlign: 'right', fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
+  label: { ...typography.caption, fontFamily: fonts.regular, color: colors.textMuted },
+  value: { ...typography.label, flex: 1, textAlign: 'right', fontFamily: fonts.bold, color: colors.text },
 });
