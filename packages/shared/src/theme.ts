@@ -1,4 +1,4 @@
-// Identidad visual de Zipa lo tiene. Este archivo es la fuente de verdad (docs/diseno/ESPECIFICACION.md
+// Identidad visual de LocalmenteTuyo. Este archivo es la fuente de verdad (docs/diseno/ESPECIFICACION.md
 // lo describe). Rediseño de tipografía y espacios aprobado el 20-nov-2026 (docs/diseno/rediseno-tipografia/).
 import type { TextStyle } from 'react-native';
 

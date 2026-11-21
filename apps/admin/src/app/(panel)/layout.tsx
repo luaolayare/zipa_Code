@@ -17,7 +17,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>▣</span>
-          <span>Zipa lo tiene<small>Panel del equipo</small></span>
+          <span>LocalmenteTuyo<small>Panel del equipo</small></span>
         </div>
         <Nav negocios={negocios ?? 0} videos={videos ?? 0} resenas={resenas ?? 0} reportes={reportes ?? 0} />
         <div className="who">

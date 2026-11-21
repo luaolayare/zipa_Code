@@ -30,7 +30,7 @@ export default function Entrar() {
       <form className="auth-card" onSubmit={submit}>
         <div className="brand" style={{ color: 'var(--text)' }}>
           <span className="brand-mark" aria-hidden>▣</span>
-          <span>Zipa lo tiene<small>Panel del equipo</small></span>
+          <span>LocalmenteTuyo<small>Panel del equipo</small></span>
         </div>
         <h1 style={{ fontSize: 30 }}>Entrar</h1>
         <p className="muted">Solo para el equipo de revisión. Después te pediremos el código de tu app de autenticación.</p>

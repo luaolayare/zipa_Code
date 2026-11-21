@@ -37,9 +37,9 @@ export default function Welcome() {
       <View style={styles.spacer} />
 
       <View style={styles.copy}>
-        <Text style={styles.title}>Lo mejor de {BRAND.city}, hecho aquí.</Text>
+        <Text style={styles.title}>{BRAND.slogan}</Text>
         <Text style={styles.subtitle}>
-          Restaurantes y emprendimientos de la zona en un solo lugar. Mira fotos y videos de los platos y productos antes de pedir o comprar, y cuéntale a otros viajeros cómo te fue.
+          Restaurantes, emprendimientos, artesanos y comercios locales en un solo lugar. Mira fotos y videos de lo que ofrecen, reserva o escríbeles, y cuéntale a otros cómo te fue.
         </Text>
       </View>
 

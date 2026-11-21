@@ -5,7 +5,7 @@ import { BRAND, LOGO_IMAGE } from '../brand';
 import { colors, fonts } from '../theme';
 
 /**
- * Logo de Zipa lo tiene. Cuando exista el logo definitivo, se pone su imagen en LOGO_IMAGE
+ * Logo de LocalmenteTuyo. Cuando exista el logo definitivo, se pone su imagen en LOGO_IMAGE
  * (brand.ts) y todas las pantallas lo usan sin más cambios. Mientras tanto se dibuja el actual:
  * cuadro mostaza con una tienda.
  *

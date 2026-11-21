@@ -8,7 +8,7 @@ const display = Bricolage_Grotesque({ subsets: ['latin'], weight: ['600', '700',
 const text = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-text' });
 
 export const metadata: Metadata = {
-  title: 'Zipa lo tiene · Panel del equipo',
+  title: 'LocalmenteTuyo · Panel del equipo',
   robots: { index: false, follow: false },
 };
 

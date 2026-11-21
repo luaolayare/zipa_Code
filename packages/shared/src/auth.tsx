@@ -65,7 +65,7 @@ const toUser = (s: Session | null): AppUser | null =>
  */
 export function AuthProvider({ client, children, storage = null, app = 'clientes' }: { client: SupabaseClient | null; children: ReactNode; storage?: KeyValueStore | null; app?: 'clientes' | 'negocios' }) {
   if (!client && !__DEV__) {
-    console.error('Zipa lo tiene: compilación de producción sin variables de Supabase (ver .env.example).');
+    console.error('LocalmenteTuyo: compilación de producción sin variables de Supabase (ver .env.example).');
     return <MissingConfigView />;
   }
   return <AuthProviderInner client={client} storage={storage} app={app}>{children}</AuthProviderInner>;

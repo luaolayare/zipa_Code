@@ -34,7 +34,7 @@ export default function Qr() {
     try {
       const uri = await captureRef(poster, { format: 'png', quality: 1, result: 'tmpfile' });
       if (!(await Sharing.isAvailableAsync())) throw new Error('Compartir no está disponible en este celular.');
-      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Tu QR de Zipa lo tiene', UTI: 'public.png' });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'Tu QR de LocalmenteTuyo', UTI: 'public.png' });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No pudimos preparar la imagen del QR.');
     } finally {

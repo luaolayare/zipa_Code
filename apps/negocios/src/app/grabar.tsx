@@ -63,7 +63,7 @@ export default function Grabar() {
         {permission.canAskAgain ? (
           <Button title="Permitir la cámara" variant="accent" onPress={requestPermission} style={{ alignSelf: 'stretch' }} />
         ) : (
-          <Text style={styles.body}>Actívala en los ajustes del celular, en los permisos de Zipa lo tiene Negocios.</Text>
+          <Text style={styles.body}>Actívala en los ajustes del celular, en los permisos de LocalmenteTuyo Negocios.</Text>
         )}
         <Button title="Volver" variant="link" onPress={() => close(null)} />
       </SafeAreaView>

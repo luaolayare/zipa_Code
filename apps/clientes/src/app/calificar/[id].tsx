@@ -71,8 +71,8 @@ export default function Calificar() {
       <BackButton />
       <View style={{ gap: spacing.xs }}>
         {!!businessName && <Text style={styles.business}>{businessName}</Text>}
-        <Text style={styles.title} accessibilityRole="header">{editing ? 'Edita tu reseña' : '¿Cómo te fue?'}</Text>
-        <Text style={styles.body}>{editing ? 'Ya calificaste este negocio. Puedes cambiar tus estrellas o tu comentario.' : 'Califica al negocio en general: la comida o los productos, la atención y el lugar.'}</Text>
+        <Text style={styles.title} accessibilityRole="header">{editing ? 'Edita tu reseña' : '¿Qué te pareció este lugar?'}</Text>
+        <Text style={styles.body}>{editing ? 'Ya calificaste este negocio. Puedes cambiar tus estrellas o tu comentario.' : 'Comparte tu experiencia: la comida o los productos, la atención y el lugar. Tu opinión ayuda a otros.'}</Text>
       </View>
       {!!allowedFrom && (
         <View style={styles.wait} accessibilityRole="alert">

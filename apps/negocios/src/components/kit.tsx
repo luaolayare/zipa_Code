@@ -52,7 +52,7 @@ export function SectionTitle({ title, action, style }: { title: string; action?:
 
 export const BUSINESS_TYPES: { id: BusinessType; title: string; description: string }[] = [
   { id: 'emprendimiento', title: 'Emprendimiento local', description: 'Pequeño o nuevo: puesto, local o venta desde casa' },
-  { id: 'establecido', title: 'Clásico de la zona', description: 'Con trayectoria: muchos años en Zipaquirá' },
+  { id: 'establecido', title: 'Clásico de la zona', description: 'Con trayectoria: muchos años en la zona' },
 ];
 
 /** Iniciales para el logo del negocio: "Arepas Mamá Inés" → "AM". */

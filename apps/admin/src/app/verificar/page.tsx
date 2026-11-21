@@ -73,7 +73,7 @@ export default function Verificar() {
         ) : (
           <>
             <h1 style={{ fontSize: 28 }}>Escribe tu código</h1>
-            <p className="muted">Abre tu app de autenticación y escribe el código de 6 dígitos de Zipa lo tiene.</p>
+            <p className="muted">Abre tu app de autenticación y escribe el código de 6 dígitos de LocalmenteTuyo.</p>
           </>
         )}
         {estado.paso !== 'cargando' && (
