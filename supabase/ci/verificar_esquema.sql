@@ -62,7 +62,7 @@ begin
   if exists (select 1 from public.businesses where subcategory_id is null) then
     raise exception 'Hay negocios sin subcategoría';
   end if;
-  if to_regprocedure('public.buscar_negocios(text, text, text, text, integer, integer)') is null then
+  if to_regprocedure('public.buscar_negocios(text, text, text, text, integer, integer, text)') is null then
     raise exception 'Falta la función buscar_negocios';
   end if;
   if public.normalizar('  Doña ÑAÑA: ¡Café! ') <> 'dona nana cafe' then

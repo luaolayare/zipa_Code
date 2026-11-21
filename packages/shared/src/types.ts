@@ -22,6 +22,7 @@ export interface SearchOptions {
   order?: SearchOrder;
   limit?: number;
   offset?: number;
+  municipio?: string | null; // código DANE de la ciudad que se explora (null = todas las activas)
 }
 export type BusinessType = 'emprendimiento' | 'establecido';
 export type BusinessStatus = 'borrador' | 'en_revision' | 'publicado' | 'rechazado';
@@ -49,6 +50,11 @@ export interface Business {
   distanceM: number | null; // distancia al cliente en metros (se calculará con la ubicación)
   productCount: number; // productos con modelo 3D
   reviewNote?: string | null; // motivo del rechazo (solo lo ve el dueño)
+  municipioCodigo: string; // código DANE del municipio del negocio
+  municipio: string; // «Zipaquirá»
+  departamento: string; // «Cundinamarca»
+  latitud: number | null; // punto del local que confirmó el negocio (null si no lo ha confirmado)
+  longitud: number | null;
 }
 
 export interface Product {

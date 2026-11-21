@@ -16,6 +16,7 @@ export * from './push';
 export * from './auth';
 export * from './demo';
 export * from './legal';
+export * from './territorio';
 export * from './moderation';
 export { confirmAsync } from './ui/confirm';
 export { ReportView } from './ui/ReportView';

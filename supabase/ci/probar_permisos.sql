@@ -1499,6 +1499,166 @@ do $$ begin
   end if;
 end $$;
 
+-- CIUDADES Y VISIBILIDAD POR MUNICIPIO (migraciones 0023 y 0024) ----------------------------------
+-- Zipaquirá (25899) es la única ciudad activa. Tunja (15001) no está configurada (próximamente).
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-0000000000f7', 'tunja@prueba.test', '{"full_name":"Dueña Tunja"}'),
+  ('00000000-0000-0000-0000-0000000000f8', 'pasto@prueba.test', '{"full_name":"Dueña Pasto"}'),
+  ('00000000-0000-0000-0000-0000000000f9', 'cliente.bogota@prueba.test', '{"full_name":"Cliente Bogotá"}');
+update auth.users set created_at = now() - interval '3 days' where email like '%@prueba.test';
+-- Un negocio publicado (aprobado) en Tunja, con un producto y su QR: no debe verse mientras Tunja no abra.
+insert into public.businesses (id, owner_id, name, type, category, address, status, municipio_codigo) values
+  ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000f7', 'Almojábanas de Tunja', 'emprendimiento', 'comer', 'Calle 19', 'publicado', '15001');
+insert into public.products (id, business_id, name) values ('00000000-0000-0000-0000-0000000000f5', '00000000-0000-0000-0000-0000000000f6', 'Almojábana');
+insert into public.business_qr (business_id, token) values ('00000000-0000-0000-0000-0000000000f6', 'qr-tunja-prueba')
+  on conflict (business_id) do update set token = excluded.token;
+
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.municipios$q$) < 1100 then raise exception 'anon no ve el catálogo de municipios'; end if;
+  if ci_pruebas.cuenta($q$select municipio_codigo from public.cobertura_municipios where estado = 'activa'$q$) <> 1 then raise exception 'debería haber una sola ciudad activa'; end if;
+  if ci_pruebas.cuenta($q$select * from public.businesses where id = '00000000-0000-0000-0000-0000000000f6'$q$) <> 0 then raise exception 'anon ve un negocio de una ciudad no activa (tabla)'; end if;
+  if ci_pruebas.cuenta($q$select * from public.businesses_public where id = '00000000-0000-0000-0000-0000000000f6'$q$) <> 0 then raise exception 'anon ve un negocio de una ciudad no activa (vista)'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(p_texto => 'almojabana')$q$) <> 0 then raise exception 'la búsqueda muestra un negocio de una ciudad no activa'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(p_municipio => '15001')$q$) <> 0 then raise exception 'el listado de Tunja muestra negocios sin estar activa'; end if;
+  if ci_pruebas.cuenta($q$select * from public.products where id = '00000000-0000-0000-0000-0000000000f5'$q$) <> 0 then raise exception 'anon ve productos de una ciudad no activa'; end if;
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(p_municipio => '25899') where municipio_codigo <> '25899'$q$) <> 0 then raise exception 'el listado de Zipaquirá mezcla otras ciudades'; end if;
+  -- Escribir el catálogo, el estado de las ciudades o leer los interesados: no.
+  perform ci_pruebas.debe_fallar($q$insert into public.cobertura_municipios (municipio_codigo, estado) values ('15001', 'activa')$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$update public.municipios set nombre = 'x' where codigo = '25899'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select * from public.interes_comercial$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_cambiar_estado_ciudad('15001', 'activa')$q$, 'permission denied%');
+  -- Interés comercial desde Tunja: sí (sin cuenta); desde Zipaquirá (activa): no, que se registre.
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_interes_comercial('15001', 'Arepas Boyacenses', 'restaurante', 'Marta', '300 111 2233', true)$q$);
+  if (public.registrar_interes_comercial('15001', 'Arepas Boyacenses', 'restaurante', 'Marta', '3001112233', true) ->> 'repetido')::boolean is not true then
+    raise exception 'el mismo interés el mismo día se guardó dos veces';
+  end if;
+  perform ci_pruebas.debe_fallar($q$select public.registrar_interes_comercial('25899', 'Algo', 'restaurante', 'Ana', '3001112233', true)$q$, 'LocalmenteTuyo ya está disponible en Zipaquirá%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_interes_comercial('52001', 'Algo', 'restaurante', 'Ana', '3001112233', false)$q$, 'Necesitamos tu autorización%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_interes_comercial('99999', 'Algo', 'restaurante', 'Ana', '3001112233', true)$q$, 'Elige un municipio%');
+end $$;
+reset role;
+
+-- Cliente de otra ciudad (su cuenta no depende de dónde esté): explora Zipaquirá, pero no puede reseñar
+-- ni registrar visitas en un negocio de una ciudad no activa, aunque tenga su id o su QR.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000f9","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.businesses_public where municipio_codigo = '25899'$q$) < 1 then raise exception 'el cliente no ve Zipaquirá'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.guardar_mi_resena('00000000-0000-0000-0000-0000000000f6', 5, 'Muy buenas')$q$, '%');
+  if exists (select 1 from public.reviews where business_id = '00000000-0000-0000-0000-0000000000f6') then raise exception 'se guardó una reseña en un negocio de una ciudad no activa'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.registrar_visita('00000000-0000-0000-0000-0000000000f6', 'qr-tunja-prueba')$q$, 'Este negocio no está disponible%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_ciudades()$q$, 'No autorizado%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_cambiar_estado_ciudad('15001', 'activa')$q$, 'No autorizado%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_interesados()$q$, 'No autorizado%');
+end $$;
+reset role;
+
+-- Dueña en una ciudad que no abre (Pasto): no puede registrar un negocio (solo interés).
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000f8","role":"authenticated"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$insert into public.businesses (owner_id, name, type, category, address, municipio_codigo) values ('00000000-0000-0000-0000-0000000000f8', 'Cuyes de Pasto', 'establecido', 'comer', 'Calle 18', '52001')$q$, 'LocalmenteTuyo todavía no está disponible%');
+end $$;
+reset role;
+-- La dueña de Tunja ve su propio negocio aunque Tunja no esté activa, y no puede abrir su ciudad.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000f7","role":"authenticated"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.businesses where id = '00000000-0000-0000-0000-0000000000f6'$q$) <> 1 then raise exception 'la dueña no ve su negocio de una ciudad no activa'; end if;
+  perform ci_pruebas.debe_fallar($q$update public.cobertura_municipios set estado = 'activa' where municipio_codigo = '15001'$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_cambiar_estado_ciudad('15001', 'activa')$q$, 'No autorizado%');
+end $$;
+reset role;
+
+-- Revisora (aal2): ve ciudades e interesados, pero no cambia el estado de una ciudad (solo admin).
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a2","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  if jsonb_array_length(public.admin_ciudades()) < 2 then raise exception 'la revisora no ve las ciudades'; end if;
+  if jsonb_array_length(public.admin_interesados('15001')) <> 1 then raise exception 'la revisora no ve el interesado de Tunja'; end if;
+  perform ci_pruebas.debe_fallar($q$select public.admin_cambiar_estado_ciudad('15001', 'activa')$q$, 'No autorizado%');
+end $$;
+reset role;
+-- Admin SIN segundo factor: no.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal1"}';
+do $$ begin
+  perform ci_pruebas.debe_fallar($q$select public.admin_cambiar_estado_ciudad('15001', 'activa')$q$, 'No autorizado%');
+end $$;
+reset role;
+
+-- Admin con aal2 abre Tunja: queda en la bitácora, no aprueba negocios pendientes y el negocio
+-- publicado de Tunja aparece. Al cerrarla, deja de verse sin borrar nada.
+insert into public.businesses (id, owner_id, name, type, category, address, status, municipio_codigo) values
+  ('00000000-0000-0000-0000-0000000000f4', '00000000-0000-0000-0000-0000000000f8', 'Pendiente de Tunja', 'emprendimiento', 'comer', 'Calle 20', 'en_revision', '15001');
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform public.admin_cambiar_estado_ciudad('15001', 'activa', 'Apertura de prueba');
+end $$;
+reset role;
+do $$ begin
+  if (select status from public.businesses where id = '00000000-0000-0000-0000-0000000000f4') <> 'en_revision' then raise exception 'activar la ciudad aprobó un negocio pendiente'; end if;
+  if not exists (select 1 from public.admin_actions where action = 'cambiar_estado_ciudad' and details ->> 'codigo' = '15001' and details ->> 'a' = 'activa') then raise exception 'el cambio de ciudad no quedó en la bitácora'; end if;
+end $$;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.buscar_negocios(p_municipio => '15001')$q$) <> 1 then raise exception 'Tunja activa no muestra su negocio publicado'; end if;
+  if ci_pruebas.cuenta($q$select * from public.businesses_public where id = '00000000-0000-0000-0000-0000000000f4'$q$) <> 0 then raise exception 'se ve un negocio pendiente'; end if;
+end $$;
+reset role;
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated","aal":"aal2"}';
+do $$ begin
+  perform public.admin_cambiar_estado_ciudad('15001', 'proximamente', 'Cierre de prueba');
+end $$;
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+do $$ begin
+  if ci_pruebas.cuenta($q$select * from public.businesses_public where municipio_codigo = '15001'$q$) <> 0 then raise exception 'al cerrar Tunja sus negocios siguen visibles'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from public.businesses where municipio_codigo = '15001') <> 2 then raise exception 'cerrar la ciudad borró negocios'; end if;
+end $$;
+
+-- Dueña de un negocio publicado que mueve el punto poco (sigue publicado) o cambia de municipio
+-- (vuelve a revisión). Chía (25175) en preparación solo para esta prueba.
+insert into public.cobertura_municipios (municipio_codigo, estado) values ('25175', 'en_preparacion');
+insert into public.businesses (id, owner_id, name, type, category, address, status, latitud, longitud) values
+  ('00000000-0000-0000-0000-0000000000f3', '00000000-0000-0000-0000-0000000000f9', 'Mueve Municipio', 'emprendimiento', 'comer', 'Calle 3', 'publicado', 5.02548, -73.99444);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000f9","role":"authenticated"}';
+do $$
+declare estado text;
+begin
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set latitud = 5.0260, longitud = -73.9950 where id = '00000000-0000-0000-0000-0000000000f3'$q$);
+  select status into estado from public.businesses where id = '00000000-0000-0000-0000-0000000000f3';
+  if estado <> 'publicado' then raise exception 'mover el punto menos de 300 m no debería pedir revisión (%)', estado; end if;
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set latitud = 5.0400, longitud = -73.9950 where id = '00000000-0000-0000-0000-0000000000f3'$q$);
+  select status into estado from public.businesses where id = '00000000-0000-0000-0000-0000000000f3';
+  if estado <> 'en_revision' then raise exception 'mover el punto más de 300 m no devolvió el negocio a revisión (%)', estado; end if;
+  perform ci_pruebas.debe_fallar($q$update public.businesses set municipio_codigo = '52001' where id = '00000000-0000-0000-0000-0000000000f3'$q$, 'LocalmenteTuyo todavía no está disponible%');
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set municipio_codigo = '25175' where id = '00000000-0000-0000-0000-0000000000f3'$q$);
+end $$;
+reset role;
+-- Republicado por el equipo y luego la dueña cambia de municipio: vuelve a revisión.
+update public.businesses set status = 'publicado', municipio_codigo = '25899' where id = '00000000-0000-0000-0000-0000000000f3';
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"00000000-0000-0000-0000-0000000000f9","role":"authenticated"}';
+do $$
+declare estado text;
+begin
+  perform ci_pruebas.debe_funcionar($q$update public.businesses set municipio_codigo = '25175' where id = '00000000-0000-0000-0000-0000000000f3'$q$);
+  select status into estado from public.businesses where id = '00000000-0000-0000-0000-0000000000f3';
+  if estado <> 'en_revision' then raise exception 'cambiar de municipio no devolvió el negocio a revisión (%)', estado; end if;
+end $$;
+reset role;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

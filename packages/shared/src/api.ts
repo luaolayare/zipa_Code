@@ -7,6 +7,7 @@ import { DEMO_CATEGORIES, MIN_REVIEWS_FOR_RANKING, normalize } from './categorie
 import { DEMO_BUSINESSES, DEMO_PRODUCTS, DEMO_REVIEWS } from './demo';
 import type { ConsentInput } from './legal';
 import { OffensiveTextError, findOffensiveWords } from './moderation';
+import { ZIPAQUIRA, municipio as municipioPorCodigo, type EstadoCiudad } from './territorio';
 import type { Business, BusinessType, Category, CategoryNode, MainCategory, Product, ProductPhoto, Review, ReviewStatus, SearchOptions } from './types';
 
 /** Cédula o NIT sin puntos ni espacios: "1.234.567" → "1234567", "900.123.456-7" → "900123456-7". */
@@ -93,6 +94,11 @@ const toBusiness = (r: any): Business => ({
   distanceM: null, // pendiente: calcular con la ubicación del cliente
   productCount: r.product_count ?? 0,
   reviewNote: r.review_note ?? null,
+  municipioCodigo: r.municipio_codigo ?? ZIPAQUIRA,
+  municipio: r.municipio ?? municipioPorCodigo(r.municipio_codigo ?? ZIPAQUIRA)?.nombre ?? '',
+  departamento: r.departamento ?? municipioPorCodigo(r.municipio_codigo ?? ZIPAQUIRA)?.departamento ?? '',
+  latitud: r.latitud == null ? null : Number(r.latitud),
+  longitud: r.longitud == null ? null : Number(r.longitud),
 });
 
 const toProduct = (r: any): Product => ({
@@ -145,7 +151,7 @@ const toReview = (r: any): Review => ({
  */
 export function searchDemo(
   businesses: Business[],
-  { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0 }: SearchOptions,
+  { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0, municipio = null }: SearchOptions,
   products: Product[] = DEMO_PRODUCTS,
   categories: CategoryNode[] = DEMO_CATEGORIES,
 ): Business[] {
@@ -155,6 +161,7 @@ export function searchDemo(
   const rankable = (b: Business) => (b.reviewCount >= MIN_REVIEWS_FOR_RANKING ? 1 : 0);
   const list = businesses.filter(
     (b) =>
+      (!municipio || b.municipioCodigo === municipio) &&
       (!main || b.mainCategory === main) &&
       (!subcategory || b.subcategoryId === subcategory || b.tags.includes(subcategory)) &&
       (!q || has(b.name) || has(b.specialty) || has(b.subcategoryName) ||
@@ -227,6 +234,9 @@ export interface BusinessEdit {
   address?: string;
   hours?: string | null;
   whatsapp?: string | null;
+  municipioCodigo?: string;
+  latitud?: number | null; // null = quitar el punto
+  longitud?: number | null;
 }
 
 export interface NewBusiness {
@@ -236,6 +246,24 @@ export interface NewBusiness {
   address: string;
   hours?: string;
   whatsapp?: string;
+  municipioCodigo: string; // código DANE
+  latitud?: number | null; // punto del local, solo si el negocio lo confirmó
+  longitud?: number | null;
+}
+
+/** Interés de un comerciante de una ciudad que todavía no abre (sin documentos ni fotos). */
+export interface CommercialInterest {
+  municipioCodigo: string;
+  businessName: string;
+  kind: 'restaurante' | 'emprendimiento';
+  contactName: string;
+  whatsapp: string;
+  acceptsContact: boolean;
+}
+
+export interface CityStatus {
+  codigo: string;
+  estado: EstadoCiudad;
 }
 
 /**
@@ -342,8 +370,8 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
      * producto o plato, y subcategoría; con filtros y en páginas de hasta 50.
      */
     async searchBusinesses(options: SearchOptions = {}): Promise<Business[]> {
-      const { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0 } = options;
-      if (!db) return searchDemo(DEMO_BUSINESSES, { text, main, subcategory, order, limit, offset });
+      const { text = '', main = null, subcategory = null, order = 'relevancia', limit = 30, offset = 0, municipio = null } = options;
+      if (!db) return searchDemo(DEMO_BUSINESSES, { text, main, subcategory, order, limit, offset, municipio });
       const { data, error } = await db.rpc('buscar_negocios', {
         p_texto: text.trim() || null,
         p_categoria: main,
@@ -351,17 +379,41 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
         p_orden: order,
         p_limite: limit,
         p_desde: offset,
+        p_municipio: municipio,
       });
       if (error) throw error;
       return ((data as unknown[]) ?? []).map(toBusiness);
     },
 
     /** Negocios destacados ahora mismo (suscripción), en el orden del equipo (migración 0017). */
-    async featuredBusinesses(limit = 10): Promise<Business[]> {
+    async featuredBusinesses(limit = 10, municipio: string | null = null): Promise<Business[]> {
       if (!db) return [];
-      const { data, error } = await db.rpc('negocios_destacados', { p_limite: limit });
+      const { data, error } = await db.rpc('negocios_destacados', { p_limite: limit, p_municipio: municipio });
       if (error) throw error;
       return ((data as unknown[]) ?? []).map(toBusiness);
+    },
+
+    /** Ciudades configuradas por el equipo y su estado (las que no están, son «próximamente»). */
+    async listCityStatuses(): Promise<CityStatus[]> {
+      if (!db) return [{ codigo: ZIPAQUIRA, estado: 'activa' }];
+      const { data, error } = await db.from('cobertura_municipios').select('municipio_codigo, estado');
+      if (error) throw error;
+      return (data ?? []).map((c) => ({ codigo: c.municipio_codigo as string, estado: c.estado as EstadoCiudad }));
+    },
+
+    /** Un comerciante de una ciudad que aún no abre deja sus datos para cuando abra (no crea un negocio). */
+    async registerInterest(input: CommercialInterest): Promise<{ repeated: boolean }> {
+      if (!db) return { repeated: false };
+      const { data, error } = await db.rpc('registrar_interes_comercial', {
+        p_municipio: input.municipioCodigo,
+        p_nombre_negocio: input.businessName,
+        p_tipo: input.kind,
+        p_nombre_contacto: input.contactName,
+        p_whatsapp: input.whatsapp,
+        p_acepta: input.acceptsContact,
+      });
+      if (error) throw new Error(error.message || 'No pudimos guardar tus datos. Intenta de nuevo.');
+      return { repeated: !!(data as { repetido?: boolean } | null)?.repetido };
     },
 
     /** Hasta cuándo está destacado el negocio propio (null si no lo está). */
@@ -373,15 +425,18 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
     },
 
     /** Cuántos negocios publicados tiene cada categoría principal (sin descargarlos). */
-    async countByMainCategory(): Promise<Record<MainCategory, number>> {
+    async countByMainCategory(municipio: string | null = null): Promise<Record<MainCategory, number>> {
       if (!db) {
+        const demoCity = DEMO_BUSINESSES.filter((b) => !municipio || b.municipioCodigo === municipio);
         return {
-          emprendimientos: DEMO_BUSINESSES.filter((b) => b.mainCategory === 'emprendimientos').length,
-          restaurantes: DEMO_BUSINESSES.filter((b) => b.mainCategory === 'restaurantes').length,
+          emprendimientos: demoCity.filter((b) => b.mainCategory === 'emprendimientos').length,
+          restaurantes: demoCity.filter((b) => b.mainCategory === 'restaurantes').length,
         };
       }
       const count = async (main: MainCategory) => {
-        const { count: n, error } = await db.from('businesses_public').select('id', { count: 'exact', head: true }).eq('main_category', main);
+        let q = db.from('businesses_public').select('id', { count: 'exact', head: true }).eq('main_category', main);
+        if (municipio) q = q.eq('municipio_codigo', municipio);
+        const { count: n, error } = await q;
         if (error) throw error;
         return n ?? 0;
       };
@@ -803,7 +858,7 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       const { data, error } = await db
         .from('businesses')
         // La base pone la categoría vieja a partir de la subcategoría (trigger businesses_clasificar).
-        .insert({ owner_id: ownerId, name: input.name, type: input.type, subcategory_id: input.subcategoryId, address: input.address, hours: input.hours, whatsapp: input.whatsapp, status: 'borrador' })
+        .insert({ owner_id: ownerId, name: input.name, type: input.type, subcategory_id: input.subcategoryId, address: input.address, hours: input.hours, whatsapp: input.whatsapp, status: 'borrador', municipio_codigo: input.municipioCodigo, latitud: input.latitud ?? null, longitud: input.longitud ?? null })
         .select('id')
         .single();
       if (error) throw error;
@@ -988,6 +1043,8 @@ export function createApi(db: SupabaseClient | null, options: { storage?: KeyVal
       if (edit.address !== undefined) row.address = edit.address.trim();
       if (edit.hours !== undefined) row.hours = edit.hours?.trim() || null;
       if (edit.whatsapp !== undefined) row.whatsapp = edit.whatsapp?.trim() || null;
+      if (edit.municipioCodigo !== undefined) row.municipio_codigo = edit.municipioCodigo;
+      if (edit.latitud !== undefined) { row.latitud = edit.latitud; row.longitud = edit.longitud ?? null; }
       const { data, error } = await db.from('businesses').update(row).eq('id', businessId).select('*, subcategory:categories!businesses_subcategory_id_fkey(name, parent_id), business_tags(category_id)').single();
       if (error) throw error;
       return toBusiness({ ...data, rating: null, review_count: 0, product_count: 0 });

@@ -21,7 +21,7 @@ export const DEMO_PRODUCTS: Product[] = [
 
 const productCount = (businessId: string) => DEMO_PRODUCTS.filter((p) => p.businessId === businessId).length;
 
-type DemoBusiness = Omit<Business, 'ownerId' | 'status' | 'productCount' | 'mainCategory' | 'subcategoryName' | 'tags' | 'logoUrl'> & { subcategoryId: string };
+type DemoBusiness = Omit<Business, 'ownerId' | 'status' | 'productCount' | 'mainCategory' | 'subcategoryName' | 'tags' | 'logoUrl' | 'municipioCodigo' | 'municipio' | 'departamento' | 'latitud' | 'longitud'> & { subcategoryId: string };
 
 const demo = (b: DemoBusiness): Business => {
   const sub = DEMO_CATEGORIES.find((c) => c.id === b.subcategoryId);
@@ -34,6 +34,11 @@ const demo = (b: DemoBusiness): Business => {
     subcategoryName: sub?.name ?? null,
     tags: [],
     logoUrl: null,
+    municipioCodigo: '25899',
+    municipio: 'Zipaquirá',
+    departamento: 'Cundinamarca',
+    latitud: null,
+    longitud: null,
   };
 };
 
