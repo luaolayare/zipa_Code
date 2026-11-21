@@ -4,6 +4,15 @@
 **Rama:** `feature/tipografia-espacios`.
 **Estado:** **causa raíz no confirmada.** Las hipótesis están ordenadas por probabilidad, con su evidencia.
 
+> **Corrección del 21-nov-2026:** el problema se observó en **iPhone con Expo Go**, no en Android. Consecuencias:
+> - **H-A pierde peso:** en iOS, Expo Go sí tiene avisos y el permiso no viene concedido por defecto, así que `register()` no corre solo al iniciar sesión. Igual, desde el Bloque 1 (`e1b0fe1`) la app ya no registra avisos dentro de Expo Go.
+> - **H-B** ya tiene «Intentar de nuevo» (`2d8d04c`).
+> - **H-C** tiene imágenes reducidas (`7e9eb27`; `resizeMethod` solo actúa en Android).
+> - **H-D** (entorno de desarrollo) queda como la explicación más probable en iPhone.
+> - Logcat no aplica sin Android.
+>
+> La usuaria reporta que ahora lo ve estable. Ver `docs/BLOQUE_1_ESTABILIZACION.md`.
+
 **Restricciones:** no se cambió código de la app, ni Supabase remoto, ni datos de producción. Solo hubo lecturas públicas. No hubo APK, despliegues, push ni merge.
 
 ## Problema reportado
