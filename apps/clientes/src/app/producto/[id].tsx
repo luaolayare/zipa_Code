@@ -1,5 +1,5 @@
 // Producto: galería (video aprobado y fotos), datos, «Ver en 3D» solo si hay modelo, y calificar.
-import { PlateArt, colors, fonts, formatCop, slideIndex, useAuth, type Business, type Product, restaurantOf } from '@zipa/shared';
+import { PlateArt, colors, fonts, formatCop, radius, sizes, slideIndex, spacing, typography, useAuth, type Business, type Product, restaurantOf } from '@zipa/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ScanLine } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -81,8 +81,8 @@ export default function ProductoScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}>
-      <View style={[styles.stage, { paddingTop: insets.top + 12 }]}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}>
+      <View style={[styles.stage, { paddingTop: insets.top + spacing.sm }]}>
         <View style={styles.stageTop}>
           <BackButton onDark />
           <Text style={styles.stageBadge}>{product.modelUrl ? 'Vista 3D' : slides.length > 1 ? `${slide + 1} de ${slides.length}` : videoUrl ? 'Video del negocio' : product.photoUrl ? 'Foto del negocio' : 'Ilustración'}</Text>
@@ -161,25 +161,25 @@ export default function ProductoScreen() {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, backgroundColor: colors.background },
-  stage: { backgroundColor: colors.stage3d, paddingHorizontal: 20, paddingBottom: 20 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },
+  stage: { backgroundColor: colors.stage3d, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
   stageTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  stageBadge: { fontFamily: fonts.bold, fontSize: 15, color: colors.text, backgroundColor: colors.accent, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, overflow: 'hidden' },
-  stageArt: { height: 340, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  photo: { width: '100%', height: '100%', borderRadius: 28 },
-  gallery: { height: 340, marginTop: 12 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 10 },
+  stageBadge: { ...typography.label, fontFamily: fonts.bold, backgroundColor: colors.accent, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.pill, overflow: 'hidden' },
+  stageArt: { height: 340, alignItems: 'center', justifyContent: 'center', marginTop: spacing.sm },
+  photo: { width: '100%', height: '100%', borderRadius: radius.xl },
+  gallery: { height: 340, marginTop: spacing.sm },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: spacing.sm }, // puntos: medida fina, fuera de la escala
   dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(20,33,31,0.25)' },
   dotOn: { width: 20, backgroundColor: colors.text },
-  caption: { textAlign: 'center', marginTop: 6, fontFamily: fonts.semibold, fontSize: 14.5, color: colors.textBody },
-  body: { padding: 22, gap: 12 },
-  businessName: { fontFamily: fonts.semibold, fontSize: 16, color: colors.textMuted, textDecorationLine: 'underline' },
-  h1: { fontFamily: fonts.hero, fontSize: 34, lineHeight: 37, letterSpacing: -1, color: colors.text, textAlign: 'left' },
-  description: { fontFamily: fonts.regular, fontSize: 17, lineHeight: 26, color: colors.textBody },
-  price: { fontFamily: fonts.display, fontSize: 30, color: colors.price, marginVertical: 4 },
-  primary: { minHeight: 58, borderRadius: 18, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 },
-  primaryText: { fontFamily: fonts.bold, fontSize: 17, color: '#FFFFFF' },
-  outline: { minHeight: 58, borderRadius: 18, borderWidth: 1.5, borderColor: colors.text, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  outlineText: { fontFamily: fonts.bold, fontSize: 17, color: colors.text },
-  note: { fontFamily: fonts.regular, fontSize: 13.5, color: colors.textMuted, textAlign: 'center' },
+  caption: { ...typography.label, color: colors.textBody, textAlign: 'center', marginTop: spacing.xs },
+  body: { padding: spacing.lg, paddingTop: spacing.xl, gap: spacing.xs },
+  businessName: { ...typography.label, color: colors.textMuted, textDecorationLine: 'underline' },
+  h1: { ...typography.title, textAlign: 'left' },
+  description: { ...typography.body, marginTop: spacing.xxs },
+  price: { ...typography.title, color: colors.price, marginVertical: spacing.xs },
+  primary: { minHeight: sizes.button, borderRadius: radius.md, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xs },
+  primaryText: { ...typography.subtitle, color: '#FFFFFF' },
+  outline: { minHeight: sizes.button, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.text, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xs, paddingHorizontal: spacing.md },
+  outlineText: { ...typography.subtitle, textAlign: 'center' },
+  note: { ...typography.caption, textAlign: 'center' },
 });
