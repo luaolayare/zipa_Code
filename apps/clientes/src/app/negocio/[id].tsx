@@ -1,9 +1,9 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, radius, sizes, spacing, typography, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
+import { Button, WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, radius, sizes, spacing, typography, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { AtSign, Ban, BadgeCheck, CalendarDays, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -57,6 +57,29 @@ export default function NegocioDetalle() {
     }
   };
 
+  // Ficha, productos y reseñas (solo lecturas). El reintento automático ante fallos pasajeros ya lo
+  // hace supabase-js (≥2.119) en cada lectura: hasta 3 veces (1, 2 y 4 s), solo GET y solo con red
+  // caída o 503/520, nunca por sesión, permisos o validación. La app NO agrega otro (duplicaría
+  // peticiones). Si aun así falla, la pantalla ofrece «Intentar de nuevo». `loadSeq` descarta
+  // respuestas de una carga anterior (otra pulsación o la persona salió) para que no se pisen.
+  const loadSeq = useRef(0);
+  const [loading, setLoading] = useState(false);
+  const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
+    setLoading(true);
+    try {
+      const [b, p] = await Promise.all([api.getBusiness(id), api.listProducts(id), loadReviews()]);
+      if (seq !== loadSeq.current) return;
+      setBusiness(b);
+      setProducts(p);
+      setError(false);
+    } catch {
+      if (seq === loadSeq.current) setError(true);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
+    }
+  }, [api, id, loadReviews]);
+
   useFocusEffect(
     useCallback(() => {
       setStatusBarStyle('light');
@@ -69,15 +92,16 @@ export default function NegocioDetalle() {
         if (user) api.registerVisit(id, token).then((ok) => setVisit(ok)).catch(() => {});
         else setPendingVisit(id, token);
       }
-      Promise.all([api.getBusiness(id), api.listProducts(id), loadReviews()])
-        .then(([b, p]) => { setBusiness(b); setProducts(p); setError(false); })
-        .catch(() => setError(true));
+      load();
       // Aparte y sin bloquear la ficha: si falla, simplemente no se muestran redes ni entregas.
       api.getBusinessLinks(id).then(setLinks).catch(() => setLinks(null));
       // Reservas: solo si el restaurante las activó. Si falla, no se muestra el botón.
       api.getReservationSettings(id).then((s) => setReservable(!!s?.enabled)).catch(() => setReservable(false));
-      return () => setStatusBarStyle('dark');
-    }, [api, id, v, user, loadReviews]),
+      return () => {
+        loadSeq.current++; // al salir, se ignora lo que llegue tarde y no se reintenta
+        setStatusBarStyle('dark');
+      };
+    }, [api, id, v, user, load]),
   );
 
   // Analítica: una vista por negocio abierto (no cada vez que se vuelve a la pantalla).
@@ -88,6 +112,7 @@ export default function NegocioDetalle() {
       <SafeAreaView style={styles.center}>
         <Text style={styles.emptyTitle}>No pudimos cargar este negocio</Text>
         <Text style={styles.muted}>Revisa tu conexión a internet.</Text>
+        <Button title="Intentar de nuevo" onPress={load} loading={loading} style={styles.retry} />
         <BackButton />
       </SafeAreaView>
     );
@@ -310,6 +335,7 @@ function ContactButton({ icon, label, sub, onPress }: { icon: React.ReactNode; l
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.background },
+  retry: { alignSelf: 'stretch', marginTop: spacing.xs },
   header: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.xl },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   logo: { width: 80, height: 80, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
