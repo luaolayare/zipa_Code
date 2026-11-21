@@ -11,6 +11,9 @@ import {
   confirmAsync,
   fonts,
   formatCop,
+  radius,
+  spacing,
+  typography,
   normalizeWhatsapp,
   rejectReasonLabel,
   reservationWhen,
@@ -86,7 +89,7 @@ export default function MiReserva() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
           <BackButton />
           <Text style={[styles.overline, { flex: 1 }]}>Solicitud de reserva</Text>
         </View>
@@ -111,8 +114,8 @@ export default function MiReserva() {
           )}
         </View>
 
-        <View style={styles.card}>
-          <Row label="Restaurante" value={r.businessName ?? 'Restaurante'} />
+        <View style={[styles.card, styles.rows]}>
+          <Row label="Restaurante" value={r.businessName ?? 'Restaurante'} first />
           <Row label="Fecha y hora" value={reservationWhen(r.startsAt, new Date())} />
           <Row label="Personas" value={String(r.partySize)} />
           <Row label="A nombre de" value={r.contactName} />
@@ -147,29 +150,34 @@ export default function MiReserva() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, first }: { label: string; value: string; first?: boolean }) {
   return (
-    <View style={{ gap: 2 }}>
-      <Text style={styles.muted}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+    <View style={[styles.row, !first && styles.rowLine]}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background },
-  content: { padding: 20, paddingBottom: 48, gap: 16 },
-  overline: { fontFamily: fonts.bold, fontSize: 12.5, letterSpacing: 1.4, textTransform: 'uppercase', color: colors.textMuted },
-  h1: { fontFamily: fonts.display, fontSize: 24, color: colors.text, textAlign: 'center' },
-  sent: { gap: 4, padding: 16, borderRadius: 18, backgroundColor: '#DCEFE2' },
-  sentTitle: { fontFamily: fonts.bold, fontSize: 17, color: colors.success },
-  sentText: { fontFamily: fonts.regular, fontSize: 14.5, lineHeight: 21, color: colors.success },
-  card: { gap: 10, padding: 18, borderRadius: 22, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  code: { fontFamily: fonts.display, fontSize: 34, letterSpacing: 1, color: colors.text },
-  label: { fontFamily: fonts.bold, fontSize: 15.5, color: colors.text },
-  value: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
-  body: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
-  reason: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 22, color: colors.danger },
-  muted: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted },
-  error: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.danger },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.background },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.sm },
+  overline: typography.overline,
+  h1: { ...typography.heading, textAlign: 'center' },
+  sent: { gap: spacing.xxs, padding: spacing.md, borderRadius: radius.lg, backgroundColor: colors.successSoft },
+  sentTitle: { ...typography.subtitle, color: colors.success },
+  sentText: { ...typography.body, color: colors.success },
+  card: { gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  rows: { gap: 0, paddingVertical: spacing.xxs },
+  row: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing.md, paddingVertical: spacing.sm },
+  rowLine: { borderTopWidth: 1, borderTopColor: colors.border },
+  rowLabel: { ...typography.body, color: colors.textMuted, flex: 1 },
+  rowValue: { ...typography.label, lineHeight: 24, maxWidth: '58%', textAlign: 'right' },
+  code: { ...typography.display, fontFamily: fonts.display, letterSpacing: 1 }, // el código se dicta: un poco de aire entre letras
+  label: typography.subtitle,
+  value: typography.label,
+  body: typography.body,
+  reason: { ...typography.label, lineHeight: 22, color: colors.danger },
+  muted: { ...typography.caption, fontFamily: fonts.regular },
+  error: { ...typography.label, color: colors.danger },
 });
