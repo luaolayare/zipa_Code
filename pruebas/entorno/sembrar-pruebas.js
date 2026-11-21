@@ -81,6 +81,24 @@ async function negocio(duena, datos, productos) {
     ok(await ines.c.rpc('guardar_config_reservas', { p_business: rest, p_enabled: true, p_max_party: 8, p_min_notice_minutes: 60, p_max_advance_days: 30, p_response_hours: 24, p_slot_minutes: 30, p_instructions: null, p_windows: [1, 2, 3, 4, 5, 6, 7].map((d) => ({ weekday: d, starts: '07:00', ends: '20:00' })), p_blocked: [] }), 'reservas');
     ok(await clientes[0].c.rpc('solicitar_reserva', { p_business: rest, p_starts_at: hora(3, '13:00'), p_party: 4, p_name: 'Lucía Gómez', p_whatsapp: '3009998877', p_table: 'Terraza', p_notes: 'Prueba', p_items: [], p_idempotency: crypto.randomUUID() }), 'solicitud');
   }
+  // Opcional: foto y video de prueba en el primer plato (ZIPA_FOTO y ZIPA_VIDEO: rutas a archivos
+  // ficticios). El video queda «aprobado» para que la app lo muestre, como si el equipo lo revisara.
+  if (process.env.ZIPA_FOTO || process.env.ZIPA_VIDEO) {
+    const fs = require('fs');
+    const prod = ok(await svc.from('products').select('id, photo_url, video_path').eq('business_id', rest).order('sort_order').limit(1), 'plato')[0];
+    const carpeta = `${ines.id}/${rest}/${prod.id}`;
+    if (process.env.ZIPA_FOTO && !prod.photo_url) {
+      const ruta = `${carpeta}/foto-prueba.png`;
+      ok(await svc.storage.from('productos').upload(ruta, fs.readFileSync(process.env.ZIPA_FOTO), { contentType: 'image/png', upsert: true }), 'foto');
+      ok(await svc.from('products').update({ photo_url: svc.storage.from('productos').getPublicUrl(ruta).data.publicUrl }).eq('id', prod.id), 'foto en plato');
+    }
+    if (process.env.ZIPA_VIDEO && !prod.video_path) {
+      const ruta = `${carpeta}/video-prueba.mp4`;
+      ok(await svc.storage.from('videos').upload(ruta, fs.readFileSync(process.env.ZIPA_VIDEO), { contentType: 'video/mp4', upsert: true }), 'video');
+      ok(await svc.from('products').update({ video_path: ruta, video_status: 'aprobado' }).eq('id', prod.id), 'video en plato');
+    }
+  }
+
   console.log(JSON.stringify({ admin: admin.email, restaurante: { id: rest, duena: ines.email }, emprendimiento: { id: emp, duena: marta.email }, clientes: clientes.map((c) => c.email) }, null, 2));
   console.log('Listo. El administrador debe activar el MFA (TOTP) al entrar al panel por primera vez.');
 })().catch((e) => { console.error(e.message || e); process.exit(1); });

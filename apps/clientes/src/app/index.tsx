@@ -1,4 +1,4 @@
-import { BRAND, Logo, colors, fonts, radius, spacing, typography } from '@zipa/shared';
+import { BRAND, Logo, colors, fonts, radius, spacing, typography, useAuth } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { Box, ScanQrCode } from 'lucide-react-native';
@@ -12,6 +12,7 @@ import { openNegociosApp } from '@/lib/negocios';
 export default function Welcome() {
   const insets = useSafeAreaInsets();
   const { origen, lugar } = useLocalSearchParams<{ origen?: string; lugar?: string }>();
+  const { user } = useAuth();
 
   // Texto claro sobre el fondo verde; al salir vuelve a oscuro.
   useFocusEffect(
@@ -52,7 +53,7 @@ export default function Welcome() {
         </View>
       )}
 
-      <Pressable accessibilityRole="button" onPress={() => router.push('/login')} style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
+      <Pressable accessibilityRole="button" onPress={() => (user ? router.replace('/explorar') : router.push('/login'))} style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
         <Text style={styles.ctaText}>Empezar a explorar</Text>
       </Pressable>
       <Pressable accessibilityRole="link" onPress={openNegociosApp} style={styles.bizLink} hitSlop={4}>
