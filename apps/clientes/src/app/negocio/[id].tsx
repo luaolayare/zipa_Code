@@ -1,5 +1,5 @@
 // Detalle del negocio: portada, calificación, menú o vitrina, contacto y reseñas.
-import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
+import { WhatsAppIcon, groupMenu, businessCover, businessTypeLabel, categoryLabel, colors, confirmAsync, fonts, radius, sizes, spacing, typography, formatPriceLevel, formatRating, useAuth, type Business, type Product, type Review, catalogTitle, productWord, configuredSocial, deliverySummary, socialLabel, type BusinessLinks, restaurantOf } from '@zipa/shared';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { setStatusBarStyle } from 'expo-status-bar';
 import { AtSign, Ban, BadgeCheck, CalendarDays, Camera, Flag, Globe, MapPin, Package } from 'lucide-react-native';
@@ -132,8 +132,8 @@ export default function NegocioDetalle() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}>
-      <View style={[styles.header, { backgroundColor: cover, paddingTop: insets.top + 12 }]}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: spacing.xxxl + insets.bottom }}>
+      <View style={[styles.header, { backgroundColor: cover, paddingTop: insets.top + spacing.sm }]}>
         <BackButton onDark />
         <View style={styles.identity}>
           <View style={styles.logo}>
@@ -141,7 +141,7 @@ export default function NegocioDetalle() {
               ? <Image source={{ uri: business.logoUrl }} style={styles.logoImage} accessibilityLabel={`Logo de ${business.name}`} />
               : <Text style={styles.logoText}>{initials(business.name)}</Text>}
           </View>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: spacing.xxs }}>
             <Text style={styles.name} accessibilityRole="header">{business.name}</Text>
             <Text style={styles.headerMeta}>{meta}</Text>
           </View>
@@ -211,7 +211,7 @@ export default function NegocioDetalle() {
           {!!delivery && (
             <View style={styles.delivery}>
               <Package size={18} color={colors.primary} />
-              <View style={{ flex: 1, gap: 2 }}>
+              <View style={{ flex: 1, gap: spacing.xxs }}>
                 <Text style={styles.deliveryText}>{delivery}</Text>
                 {!!links?.deliveryNote && <Text style={styles.contactSub}>{links.deliveryNote}</Text>}
               </View>
@@ -225,7 +225,7 @@ export default function NegocioDetalle() {
         ) : (
           // Por secciones; si ningún producto tiene sección, una sola grilla sin título.
           groupMenu(products).map(({ section, items }, g, all) => (
-            <View key={section ?? 'sin-seccion'} style={{ gap: 12 }}>
+            <View key={section ?? 'sin-seccion'} style={{ gap: spacing.sm }}>
               {(section || all.length > 1) && <Text style={styles.menuSection} accessibilityRole="header">{section ?? 'Más del menú'}</Text>}
               <View style={styles.grid}>
                 {items.map((p, i) => <ProductCard key={p.id} product={p} business={business} seed={g * 10 + i} />)}
@@ -244,7 +244,7 @@ export default function NegocioDetalle() {
               <View style={styles.reviewTop}>
                 <Text style={styles.author} numberOfLines={1}>{r.authorName}{isMine ? ' (tú)' : ''}</Text>
                 <Text style={styles.stars} accessibilityLabel={`${r.stars} de 5 estrellas`}>
-                  {'★'.repeat(r.stars)}<Text style={{ color: '#D8D2C6' }}>{'★'.repeat(5 - r.stars)}</Text>
+                  {'★'.repeat(r.stars)}<Text style={styles.starsOff}>{'★'.repeat(5 - r.stars)}</Text>
                 </Text>
               </View>
               {(r.visited || r.photoUrl || r.status === 'en_espera') && (
@@ -287,7 +287,7 @@ export default function NegocioDetalle() {
           </Pressable>
         )}
 
-        <Pressable accessibilityRole="button" onPress={() => report('business', business.id, business.name)} style={[styles.action, { alignSelf: 'center', marginTop: 8 }]}>
+        <Pressable accessibilityRole="button" onPress={() => report('business', business.id, business.name)} style={[styles.action, { alignSelf: 'center', marginTop: spacing.xs }]}>
           <Flag size={14} color={colors.textMuted} />
           <Text style={styles.actionText}>Reportar este negocio</Text>
         </Pressable>
@@ -309,62 +309,63 @@ function ContactButton({ icon, label, sub, onPress }: { icon: React.ReactNode; l
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background },
-  header: { paddingHorizontal: 20, paddingBottom: 28, gap: 22 },
-  identity: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  logo: { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.background },
+  header: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.xl },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  logo: { width: 80, height: 80, borderRadius: radius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   logoImage: { width: '100%', height: '100%' },
-  logoText: { fontFamily: fonts.display, fontSize: 30, letterSpacing: -0.5, color: colors.text },
-  name: { fontFamily: fonts.hero, fontSize: 32, lineHeight: 35, letterSpacing: -0.8, color: '#FFFFFF' },
-  headerMeta: { fontFamily: fonts.medium, fontSize: 16, color: 'rgba(255,255,255,0.85)' },
-  body: { padding: 20, gap: 18 },
-  thanks: { backgroundColor: colors.primarySoft, borderRadius: 20, padding: 16 },
-  waiting: { backgroundColor: colors.accentSoft },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  badge: { fontFamily: fonts.bold, fontSize: 13, color: colors.primary },
+  logoText: { ...typography.title, fontSize: 30, lineHeight: 36 }, // iniciales del logo, no texto de lectura
+  name: { ...typography.title, color: '#FFFFFF' },
+  headerMeta: { ...typography.body, fontFamily: fonts.medium, color: 'rgba(255,255,255,0.85)' },
+  body: { padding: spacing.lg, gap: spacing.md },
+  thanks: { backgroundColor: colors.infoSoft, borderRadius: radius.lg, padding: spacing.md },
+  waiting: { backgroundColor: colors.warningSoft },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xxs },
+  badge: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
   badgeOk: { color: colors.success },
-  badgeWait: { color: colors.accentText, backgroundColor: colors.accentSoft, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, overflow: 'hidden' },
-  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: 16, backgroundColor: colors.stage3d },
-  thanksText: { fontFamily: fonts.medium, fontSize: 15.5, lineHeight: 22, color: colors.primary },
-  tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, flexWrap: 'wrap' },
-  tag: { fontFamily: fonts.bold, fontSize: 14, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, overflow: 'hidden' },
-  tagEmp: { backgroundColor: colors.accentSoft, color: colors.accentText },
-  tagClassic: { backgroundColor: colors.primarySoft, color: colors.primary },
-  hours: { flexShrink: 1, fontFamily: fonts.semibold, fontSize: 15, color: colors.success },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  ratingCard: { gap: 14, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  ratingBig: { fontFamily: fonts.display, fontSize: 44, letterSpacing: -1.5, color: colors.text },
-  ratingLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  rateButton: { minHeight: 52, paddingHorizontal: 20, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  primaryButton: { minHeight: 52, paddingHorizontal: 22, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { fontFamily: fonts.bold, fontSize: 16, color: '#FFFFFF' },
-  contact: { gap: 10 },
-  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  socialChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  socialText: { fontFamily: fonts.semibold, fontSize: 14.5, color: colors.text },
-  delivery: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 4 },
-  deliveryText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
-  contactButton: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  contactIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  contactLabel: { fontFamily: fonts.bold, fontSize: 16, color: colors.text },
-  contactSub: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted },
-  h2: { fontFamily: fonts.display, fontSize: 25, letterSpacing: -0.5, color: colors.text, marginTop: 8 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  muted: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textMuted },
-  emptyTitle: { fontFamily: fonts.display, fontSize: 22, color: colors.text, textAlign: 'center' },
-  review: { gap: 10, padding: 18, borderRadius: 24, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  author: { flex: 1, fontFamily: fonts.bold, fontSize: 16.5, color: colors.text },
-  stars: { fontSize: 18, letterSpacing: 1, color: colors.starText },
-  reviewText: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24, color: colors.textBody },
-  reply: { gap: 4, padding: 14, borderRadius: 16, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
-  replyLabel: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 0.4, color: colors.primary },
-  replyText: { fontFamily: fonts.regular, fontSize: 15, lineHeight: 22, color: colors.textBody },
-  actions: { flexDirection: 'row', gap: 18 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44 },
-  actionText: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.textMuted },
-  menuSection: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1, textTransform: 'uppercase', color: colors.textMuted, marginTop: 4 },
-  moreReviews: { minHeight: 48, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  moreReviewsText: { fontFamily: fonts.bold, fontSize: 15, color: colors.primary },
+  badgeWait: { color: colors.accentText, backgroundColor: colors.warningSoft, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.pill, overflow: 'hidden' },
+  reviewPhoto: { width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md, backgroundColor: colors.stage3d },
+  thanksText: { ...typography.body, fontFamily: fonts.medium, color: colors.primary },
+  tagsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
+  tag: { ...typography.label, fontFamily: fonts.bold, paddingHorizontal: spacing.sm, paddingVertical: spacing.xxs + 2, borderRadius: radius.pill, overflow: 'hidden' },
+  tagEmp: { backgroundColor: colors.warningSoft, color: colors.accentText },
+  tagClassic: { backgroundColor: colors.infoSoft, color: colors.primary },
+  hours: { flexShrink: 1, ...typography.label, color: colors.success },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  ratingCard: { gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  ratingBig: { ...typography.display, fontFamily: fonts.display, fontSize: 40, lineHeight: 46 }, // número grande de la calificación
+  ratingLabel: typography.subtitle,
+  rateButton: { minHeight: sizes.button, paddingHorizontal: spacing.lg, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  primaryButton: { minHeight: sizes.button, paddingHorizontal: spacing.lg, borderRadius: radius.md, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  primaryText: { ...typography.subtitle, color: '#FFFFFF' },
+  contact: { gap: spacing.sm },
+  socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  socialChip: { minHeight: sizes.touchMin, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  socialText: typography.label,
+  delivery: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, paddingHorizontal: spacing.xxs },
+  deliveryText: typography.label,
+  contactButton: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  contactIcon: { width: 44, height: 44, borderRadius: radius.md, backgroundColor: colors.infoSoft, alignItems: 'center', justifyContent: 'center' },
+  contactLabel: typography.subtitle,
+  contactSub: typography.caption,
+  h2: { ...typography.heading, marginTop: spacing.md },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  muted: { ...typography.body, color: colors.textMuted },
+  emptyTitle: { ...typography.heading, textAlign: 'center' },
+  review: { gap: spacing.xs, padding: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  reviewTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  author: { flex: 1, ...typography.subtitle },
+  stars: { fontSize: 18, letterSpacing: 1, color: colors.starText }, // estrellas: tamaño del ícono, no texto
+  starsOff: { color: colors.inputBorder },
+  reviewText: typography.body,
+  reply: { gap: spacing.xxs, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.background, borderLeftWidth: 4, borderLeftColor: colors.primary },
+  replyLabel: { ...typography.caption, fontFamily: fonts.bold, color: colors.primary },
+  replyText: typography.body,
+  actions: { flexDirection: 'row', gap: spacing.lg },
+  action: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minHeight: sizes.touchMin },
+  actionText: { ...typography.caption, fontFamily: fonts.semibold },
+  menuSection: { ...typography.overline, marginTop: spacing.xxs },
+  moreReviews: { minHeight: sizes.button, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  moreReviewsText: { ...typography.subtitle, color: colors.primary },
 });
