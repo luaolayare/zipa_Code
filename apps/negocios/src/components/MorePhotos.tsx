@@ -46,7 +46,7 @@ export function MorePhotos({
       <Text style={type.help}>Muestra otros diseños, colores o presentaciones del mismo {word}. El cliente las ve deslizando.</Text>
       {photos.map((p, i) => (
         <View key={p.key} style={styles.item}>
-          {extraUri(p) && <Image source={{ uri: extraUri(p)! }} style={styles.thumb} accessibilityLabel={p.label || `Foto ${i + 2}`} />}
+          {extraUri(p) && <Image resizeMethod="resize" source={{ uri: extraUri(p)! }} style={styles.thumb} accessibilityLabel={p.label || `Foto ${i + 2}`} />}
           <View style={{ flex: 1, gap: spacing.xs }}>
             <TextInput
               accessibilityLabel={`Descripción de la foto ${i + 2}`}

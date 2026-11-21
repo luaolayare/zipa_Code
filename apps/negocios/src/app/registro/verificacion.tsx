@@ -50,7 +50,7 @@ export default function Verificacion() {
           <Text style={type.caption}>{done ? 'Foto cargada. Toca para tomar otra.' : 'Toca para tomarla con la cámara.'}</Text>
         </View>
       </Pressable>
-      {done && <Image source={{ uri: draft.photoUri! }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />}
+      {done && <Image resizeMethod="resize" source={{ uri: draft.photoUri! }} style={styles.preview} accessibilityLabel="Foto de tu local que enviarás a revisión" />}
       <Pressable accessibilityRole="button" onPress={async () => apply(await pickPhoto('verificacion'))} style={styles.alt} hitSlop={6}>
         <ImageIcon size={20} color={colors.primary} />
         <Text style={styles.altText}>Elegir una foto que ya tengo</Text>

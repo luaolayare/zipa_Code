@@ -24,7 +24,7 @@ export function BusinessPreview({
       <View style={styles.card}>
         <View style={[styles.cover, { backgroundColor: businessCover(of).cover }]}>
           <View style={styles.logo}>
-            {logoUri ? <Image source={{ uri: logoUri }} style={styles.logoImage} accessibilityLabel={`Logo de ${name || 'tu negocio'}`} /> : <Text style={styles.logoText}>{initials(name)}</Text>}
+            {logoUri ? <Image resizeMethod="resize" source={{ uri: logoUri }} style={styles.logoImage} accessibilityLabel={`Logo de ${name || 'tu negocio'}`} /> : <Text style={styles.logoText}>{initials(name)}</Text>}
           </View>
           {productCount > 0 && (
             <View style={styles.badge}><Text style={styles.badgeText}>{productCount} {productCount === 1 ? 'producto' : 'productos'}</Text></View>

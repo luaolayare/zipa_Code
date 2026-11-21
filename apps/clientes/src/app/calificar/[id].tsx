@@ -87,7 +87,7 @@ export default function Calificar() {
         <Text style={styles.photoLabel}>Foto (opcional)</Text>
         {photo || savedPhoto ? (
           <View>
-            <Image source={{ uri: photo?.uri ?? savedPhoto! }} style={styles.photo} accessibilityLabel="Foto de tu reseña" />
+            <Image resizeMethod="resize" source={{ uri: photo?.uri ?? savedPhoto! }} style={styles.photo} accessibilityLabel="Foto de tu reseña" />
             {!!photo && (
               <Pressable accessibilityRole="button" accessibilityLabel="Quitar la foto" onPress={() => setPhoto(null)} style={styles.photoRemove}>
                 <X size={18} color="#FFFFFF" />

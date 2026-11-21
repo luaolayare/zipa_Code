@@ -35,7 +35,7 @@ export function LogoPicker({
       <Text style={styles.label}>Logo del negocio <Text style={styles.optional}>(opcional)</Text></Text>
       <View style={styles.row}>
         <View style={styles.logo} accessibilityLabel={uri ? `Logo de ${name || 'tu negocio'}` : 'Sin logo'}>
-          {uri ? <Image source={{ uri }} style={styles.image} resizeMode="cover" /> : <Text style={styles.initials}>{initials(name)}</Text>}
+          {uri ? <Image resizeMethod="resize" source={{ uri }} style={styles.image} resizeMode="cover" /> : <Text style={styles.initials}>{initials(name)}</Text>}
           {busy && <View style={styles.busy}><ActivityIndicator color="#FFFFFF" /></View>}
         </View>
         <View style={{ flex: 1, gap: spacing.xs }}>

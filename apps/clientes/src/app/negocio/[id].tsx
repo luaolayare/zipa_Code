@@ -163,7 +163,7 @@ export default function NegocioDetalle() {
         <View style={styles.identity}>
           <View style={styles.logo}>
             {business.logoUrl
-              ? <Image source={{ uri: business.logoUrl }} style={styles.logoImage} accessibilityLabel={`Logo de ${business.name}`} />
+              ? <Image resizeMethod="resize" source={{ uri: business.logoUrl }} style={styles.logoImage} accessibilityLabel={`Logo de ${business.name}`} />
               : <Text style={styles.logoText}>{initials(business.name)}</Text>}
           </View>
           <View style={{ flex: 1, gap: spacing.xxs }}>
@@ -284,7 +284,7 @@ export default function NegocioDetalle() {
                 </View>
               )}
               {!!r.text && <Text style={styles.reviewText}>{r.text}</Text>}
-              {!!r.photoUrl && <Image source={{ uri: r.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${r.authorName}`} />}
+              {!!r.photoUrl && <Image resizeMethod="resize" source={{ uri: r.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${r.authorName}`} />}
               {!!r.reply && (
                 <View style={styles.reply}>
                   <Text style={styles.replyLabel}>Respuesta de {business.name}</Text>

@@ -95,7 +95,7 @@ export default function Panel() {
             <Text style={styles.kicker}>Panel de tu negocio</Text>
             <View style={styles.titleRow}>
               {business.logoUrl ? (
-                <Image source={{ uri: business.logoUrl }} style={styles.headerLogo} accessibilityLabel={`Logo de ${business.name}`} />
+                <Image resizeMethod="resize" source={{ uri: business.logoUrl }} style={styles.headerLogo} accessibilityLabel={`Logo de ${business.name}`} />
               ) : (
                 <Pressable accessibilityRole="button" accessibilityLabel="Agregar el logo de tu negocio" onPress={() => router.push('/negocio/editar')} style={styles.headerLogoEmpty}>
                   <Text style={styles.headerLogoText}>+ Logo</Text>

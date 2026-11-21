@@ -107,7 +107,7 @@ export default function ProductoScreen() {
                     ? <ProductVideo url={s.url} label={`Video de ${product.name}`} active={slide === i} />
                     : (
                       <Pressable accessibilityRole="button" accessibilityLabel={`${s.label ?? `Foto ${i + 1} de ${product.name}`}. Toca para ampliar.`} onPress={() => openPhoto(s.url)} style={{ flex: 1 }}>
-                        <Image source={{ uri: s.url }} style={styles.photo} />
+                        <Image resizeMethod="resize" source={{ uri: s.url }} style={styles.photo} />
                       </Pressable>
                     )}
                 </View>
@@ -124,7 +124,7 @@ export default function ProductoScreen() {
               <ProductVideo url={videoUrl} label={`Video de ${product.name}`} />
             ) : product.photoUrl ? (
               <Pressable accessibilityRole="button" accessibilityLabel={`${product.photoLabel ?? `Foto de ${product.name}`}. Toca para ampliar.`} onPress={() => openPhoto(product.photoUrl!)} style={{ flex: 1, alignSelf: 'stretch' }}>
-                <Image source={{ uri: product.photoUrl }} style={styles.photo} />
+                <Image resizeMethod="resize" source={{ uri: product.photoUrl }} style={styles.photo} />
               </Pressable>
             ) : (
               <PlateArt of={business} size={300} />

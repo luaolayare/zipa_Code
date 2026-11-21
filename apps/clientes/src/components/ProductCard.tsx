@@ -11,7 +11,7 @@ export function ProductCard({ product: p, business, seed }: { product: Product; 
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${p.name}, ${formatCop(p.priceCop)}${p.available ? '' : `, ${labels.off.toLowerCase()}`}${hasVideo ? ', con video' : ''}`} onPress={open} style={({ pressed }) => [styles.card, !p.available && styles.off, pressed && { opacity: 0.88 }]}>
       <View style={[styles.thumb, { backgroundColor: seed % 2 ? colors.stage3d : colors.neutralSoft }]}>
-        {p.photoUrl ? <Image source={{ uri: p.photoUrl }} style={styles.photo} /> : <PlateArt of={business} size={120} seed={seed} />}
+        {p.photoUrl ? <Image resizeMethod="resize" source={{ uri: p.photoUrl }} style={styles.photo} /> : <PlateArt of={business} size={120} seed={seed} />}
         {!p.available && <Text style={styles.badgeOff}>{labels.off}</Text>}
         {p.available && p.photos.length > 0 && <Text style={styles.badgeOff}>{p.photos.length + 1} fotos</Text>}
         {hasVideo && (

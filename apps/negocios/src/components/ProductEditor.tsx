@@ -132,7 +132,7 @@ export function ProductEditor({ value, onChange, business }: { value: ProductFor
       <Text style={styles.label}>Foto</Text>
       <View style={styles.photoRow}>
         <View style={styles.photoFrame}>
-          {photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} accessibilityLabel={`Foto de ${value.name || 'tu producto'}`} /> : <PlateArt of={business} size={120} />}
+          {photoUri ? <Image resizeMethod="resize" source={{ uri: photoUri }} style={styles.photo} accessibilityLabel={`Foto de ${value.name || 'tu producto'}`} /> : <PlateArt of={business} size={120} />}
         </View>
         <View style={{ flex: 1, gap: spacing.sm }}>
           <MediaButton icon={<Camera size={20} color={colors.text} />} label={photoUri ? 'Tomar otra' : 'Tomar foto'} onPress={async () => apply(await takePhoto(), 'photo')} />

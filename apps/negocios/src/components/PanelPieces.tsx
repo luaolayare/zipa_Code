@@ -28,7 +28,7 @@ export function ProductRow({ product, business, onPress, onToggleAvailable, grou
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${product.name}, ${formatCop(product.priceCop)}, ${s.label}. Editar`} onPress={onPress} style={({ pressed }) => [styles.row, grouped && styles.rowGrouped, grouped && !first && styles.rowLine, pressed && { opacity: 0.85 }]}>
       <View style={styles.thumb}>
-        {product.photoUrl ? <Image source={{ uri: product.photoUrl }} style={styles.thumbImg} /> : <PlateArt of={business} size={64} />}
+        {product.photoUrl ? <Image resizeMethod="resize" source={{ uri: product.photoUrl }} style={styles.thumbImg} /> : <PlateArt of={business} size={64} />}
       </View>
       <View style={{ flex: 1, gap: spacing.xxs }}>
         <Text style={type.subtitle} numberOfLines={2}>{product.name}</Text>
@@ -94,7 +94,7 @@ export function ReviewItem({ review, onReplied }: { review: Review; onReplied: (
         <View style={styles.visited}><BadgeCheck size={15} color={colors.success} /><Text style={styles.visitedText}>Visitó el negocio</Text></View>
       )}
       <Text style={styles.reviewText}>{review.text}</Text>
-      {!!review.photoUrl && <Image source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${review.authorName}`} />}
+      {!!review.photoUrl && <Image resizeMethod="resize" source={{ uri: review.photoUrl }} style={styles.reviewPhoto} accessibilityLabel={`Foto de ${review.authorName}`} />}
       <Text style={type.caption}>{date}</Text>
 
       {review.reply && !editing ? (

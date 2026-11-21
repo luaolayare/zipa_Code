@@ -50,7 +50,7 @@ export default function Productos() {
       {draft.products.map((p, i) => (
         <View key={i} style={styles.row}>
           <View style={styles.thumb}>
-            {p.form.photo ? <Image source={{ uri: p.form.photo.uri }} style={styles.thumbImg} /> : <PlateArt of={draft} size={64} />}
+            {p.form.photo ? <Image resizeMethod="resize" source={{ uri: p.form.photo.uri }} style={styles.thumbImg} /> : <PlateArt of={draft} size={64} />}
           </View>
           <View style={{ flex: 1, gap: spacing.xxs }}>
             <Text style={type.subtitle} numberOfLines={1}>{p.form.name}</Text>
