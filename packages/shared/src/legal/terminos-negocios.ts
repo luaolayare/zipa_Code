@@ -5,8 +5,8 @@ import type { LegalDocument } from './tipos';
 export const TERMINOS_NEGOCIOS: LegalDocument = {
   id: 'terminos_negocios',
   title: 'Términos y condiciones para negocios',
-  VERSION: '1.0',
-  FECHA: '2026-11-08',
+  VERSION: '1.1',
+  FECHA: '2026-11-21',
   borrador: true,
   intro:
     `Estos términos regulan el uso de la app ${BRAND.negociosApp} por parte de restaurantes, emprendimientos y sus responsables. Al crear tu cuenta y registrar tu negocio los aceptas.`,
@@ -34,12 +34,11 @@ export const TERMINOS_NEGOCIOS: LegalDocument = {
       ],
     },
     {
-      heading: '4. Fotos, videos y modelos 3D que subes',
+      heading: '4. Fotos y videos que subes',
       paragraphs: [
-        `Las fotos y videos siguen siendo tuyos. Al subirlos nos das una licencia gratuita, no exclusiva, válida en todo el mundo y por el tiempo que estén publicados, para guardarlos, procesarlos (incluido generar modelos 3D a partir de los videos), adaptarlos al formato de la app, mostrarlos en las apps de ${BRAND.name} y usarlos para promocionar tu negocio dentro de ${BRAND.name}.`,
+        `Las fotos y videos siguen siendo tuyos. Al subirlos nos das una licencia gratuita, no exclusiva, válida en todo el mundo y por el tiempo que estén publicados, para guardarlos, procesarlos, adaptarlos al formato de la app, mostrarlos en las apps de ${BRAND.name} y usarlos para promocionar tu negocio dentro de ${BRAND.name}.`,
         'Si quieres que usemos tu contenido en publicidad fuera de las apps (redes sociales, sitio web, material impreso), te pediremos autorización aparte.',
         'Declaras que tienes los derechos sobre ese contenido y, si aparecen personas, su autorización. Cuando retires un producto o elimines tu cuenta, dejaremos de mostrar ese contenido y lo borraremos en un plazo de [PLAZO DE BORRADO] días.',
-        'Los modelos 3D son representaciones aproximadas generadas automáticamente. Revisa cómo quedan antes de publicarlos.',
       ],
     },
     {

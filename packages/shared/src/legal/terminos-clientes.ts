@@ -5,8 +5,8 @@ import type { LegalDocument } from './tipos';
 export const TERMINOS_CLIENTES: LegalDocument = {
   id: 'terminos_clientes',
   title: 'Términos y condiciones para clientes',
-  VERSION: '1.0',
-  FECHA: '2026-11-08',
+  VERSION: '1.1',
+  FECHA: '2026-11-21',
   borrador: true,
   intro:
     `Estos términos regulan el uso de la app ${BRAND.clientesApp} por parte de clientes y turistas. Al crear una cuenta los aceptas. Si no estás de acuerdo, puedes seguir explorando como invitado sin crear cuenta.`,
@@ -22,7 +22,7 @@ export const TERMINOS_CLIENTES: LegalDocument = {
       paragraphs: [
         'La app muestra información de negocios independientes. No vendemos, no cobramos ni entregamos sus productos, y no somos parte de la compra que hagas.',
         'Cada negocio es el único responsable de sus productos, precios, disponibilidad, horarios, calidad y atención, y de cumplir con el Estatuto del Consumidor (Ley 1480 de 2011). Los precios que ves los publica el negocio y pueden cambiar.',
-        'Las fotos, los videos y, cuando un producto los tenga, los modelos 3D son representaciones aproximadas del negocio. El producto real puede variar en tamaño, color o presentación.',
+        'Las fotos y los videos son representaciones aproximadas del negocio. El producto real puede variar en tamaño, color o presentación.',
       ],
     },
     {
@@ -56,7 +56,7 @@ export const TERMINOS_CLIENTES: LegalDocument = {
     {
       heading: '7. Propiedad intelectual',
       paragraphs: [
-        `La marca, el diseño y el software de ${BRAND.name} son de [NOMBRE DEL RESPONSABLE]. Las fotos, videos y modelos 3D de cada negocio pertenecen a ese negocio o se usan con su autorización.`,
+        `La marca, el diseño y el software de ${BRAND.name} son de [NOMBRE DEL RESPONSABLE]. Las fotos y videos de cada negocio pertenecen a ese negocio o se usan con su autorización.`,
       ],
     },
     {
