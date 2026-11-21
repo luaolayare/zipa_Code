@@ -130,11 +130,29 @@ No hizo falta cambiar el esquema, borrar información ni cambiar reglas del nego
 4. Al cambiar el tamaño de letra del sistema con la app abierta, Android la reinicia en la bienvenida. En Expo Go es normal; habrá que comprobarlo en el build nativo.
 5. En Expo Go, una recarga de desarrollo devuelve a la bienvenida. Eso explica el «vuelve al inicio» que se veía en el iPhone.
 
+## Actualización: APK `preview`, variables de producción y `main` (autorizado)
+
+**APK `preview` contra pruebas** (EAS, builds `4a6160a7` clientes y `7de51eb5` negocios), instalados en el emulador:
+
+| Prueba | Resultado | Detalle |
+|---|---|---|
+| Android entrega el enlace del QR a la app instalada | Aprobada | `vitrinalocal://negocio/…` lo resuelve `co.zipa.vitrinalocal` (sin elegir navegador) |
+| QR con la app abierta | Aprobada | Abre la ficha con «Abriste este negocio con su código QR» |
+| QR con la app cerrada | Aprobada | Arranca directo en la ficha con el aviso |
+| QR sin sesión | Esperado | Abre la ficha. La visita se guarda y se registra al iniciar sesión, por eso el aviso aparece después |
+| Inicio de sesión en los dos APK | Aprobada | Lucía en clientes; dueña del restaurante en negocios |
+| Cierres o bloqueos (Logcat) | 0 | Ni en `co.zipa.vitrinalocal` ni en `co.zipa.vitrinanegocios` |
+| Avisos push | **No se pueden probar en emulador** | La app solo pide el token push en un teléfono físico (`Device.isDevice`), a propósito. Hay que probarlo con un Android conectado por USB e instalando estos mismos APK |
+
+**Variables de producción en EAS:** el ambiente `production` de las dos apps ya tiene `EXPO_PUBLIC_SUPABASE_URL` (proyecto `auilsjqprobmhusvxmmz`) y `EXPO_PUBLIC_SUPABASE_ANON_KEY` (clave pública `anon`, guardada como *sensitive*). Solo se leyó la clave; no se cambió nada en Supabase de producción. El candado aprueba `production → producción` y sigue bloqueando `preview → producción`.
+
+**`main`:** con la CI en verde, se adelantó `main` hasta la rama (fast-forward, sin conflictos). La CI solo prueba contra un Supabase local y no despliega nada.
+
 ## E. Próximo paso
 
-1. Con autorización: generar un **APK `preview` contra pruebas** con EAS para probar lo que Expo Go no permite: avisos push, enlaces universales, rendimiento real y el reinicio al cambiar la letra.
-2. Antes de cualquier build de producción: agregar las variables de Supabase al ambiente `production` de EAS.
+1. Probar los avisos push con un teléfono Android físico (USB) usando los APK `preview` ya generados.
+2. Listo: variables de Supabase en el ambiente `production` de EAS.
 3. Guardar `ZIPA_CLAVE_PRUEBAS` en el gestor de contraseñas y borrar la variable de Windows.
-4. La rama se subió a GitHub con autorización. Falta revisar y fusionar en `main`, también con autorización.
+4. Listo: rama subida y `main` actualizado.
 
 Las capturas y los resultados en JSON quedaron en la carpeta temporal de la sesión (no van al repositorio).
