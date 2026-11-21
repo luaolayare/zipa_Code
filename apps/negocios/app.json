@@ -2,19 +2,22 @@
   "expo": {
     "name": "LocalmenteTuyo Negocios",
     "slug": "vitrina-negocios",
-    "scheme": "vitrinanegocios",
-    "version": "0.1.0",
+    "scheme": [
+      "localmentetuyonegocios",
+      "vitrinanegocios"
+    ],
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "co.zipa.vitrinanegocios"
+      "bundleIdentifier": "com.localmentetuyo.negocios"
     },
     "android": {
-      "package": "co.zipa.vitrinanegocios",
+      "package": "com.localmentetuyo.negocios",
       "adaptiveIcon": {
-        "backgroundColor": "#F2B134",
+        "backgroundColor": "#FDF9F3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -67,7 +70,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F2B134"
+          "backgroundColor": "#FDF9F3"
         }
       ],
       "expo-sharing",

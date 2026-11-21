@@ -8,11 +8,11 @@ import QRCode from 'react-native-qrcode-svg';
 /**
  * Enlace que abre el negocio en la app de clientes. `v` es el código de visita del negocio
  * (migración 0012): quien abre la ficha con este QR obtiene el sello "Reseña con QR" (no prueba visita ni consumo).
- * PROVISIONAL: usa el esquema de la app (vitrinalocal://). Cuando exista el dominio propio se cambia
+ * PROVISIONAL: usa el esquema de la app (localmentetuyo://; la app sigue abriendo también los QR antiguos vitrinalocal://). Cuando exista el dominio propio se cambia
  * por https://<dominio>/n/<id>, que abre la app si está instalada o lleva a la tienda si no.
  */
 export const qrLink = (businessId: string, token: string | null) =>
-  `vitrinalocal://negocio/${businessId}${token ? `?v=${token}` : ''}`;
+  `localmentetuyo://negocio/${businessId}${token ? `?v=${token}` : ''}`;
 
 export const QrPoster = forwardRef<ComponentRef<typeof View>, { businessId: string; token: string | null; name: string; restaurant: boolean }>(function QrPoster({ businessId, token, name, restaurant }, ref) {
   return (

@@ -2,7 +2,7 @@
 // sin TypeScript, porque se ejecuta al compilar).
 //
 // Regla:
-// - Perfil `production`  -> la app DEBE apuntar al proyecto de producción.
+// - Perfiles `production` y `production-apk` -> la app DEBE apuntar al proyecto de producción.
 // - Cualquier otro perfil (`preview`, `development`) -> NO puede apuntar a producción.
 // Si no se cumple, la compilación se detiene con un mensaje claro.
 //
@@ -13,6 +13,8 @@
 // el .env local debe ser el del proyecto de pruebas (o Supabase local).
 
 const PROYECTO_PRODUCCION = 'auilsjqprobmhusvxmmz';
+// Perfiles de EAS de producción: el AAB para Google Play y el APK release (mismo código y entorno).
+const PERFILES_PRODUCCION = ['production', 'production-apk'];
 
 function revisarEntorno(env = process.env) {
   const perfil = env.EAS_BUILD_PROFILE;
@@ -26,10 +28,11 @@ function revisarEntorno(env = process.env) {
     return { perfil: null, destino: 'local' };
   }
   if (!url) throw new Error(`[Zipa] El build "${perfil}" no tiene EXPO_PUBLIC_SUPABASE_URL. Revisa las variables del ambiente de EAS.`);
-  if (perfil === 'production' && !apuntaAProduccion) {
+  const esProduccion = PERFILES_PRODUCCION.includes(perfil);
+  if (esProduccion && !apuntaAProduccion) {
     throw new Error(`[Zipa] El build de producción no apunta al proyecto de producción (${PROYECTO_PRODUCCION}). Revisa el ambiente "production" de EAS.`);
   }
-  if (perfil !== 'production' && apuntaAProduccion) {
+  if (!esProduccion && apuntaAProduccion) {
     if (env.ZIPA_PERMITIR_PRODUCCION_EN_PRUEBAS === '1') {
       console.warn(`[Zipa] ATENCIÓN: build "${perfil}" contra PRODUCCIÓN por ZIPA_PERMITIR_PRODUCCION_EN_PRUEBAS=1.`);
       return { perfil, destino: 'produccion' };

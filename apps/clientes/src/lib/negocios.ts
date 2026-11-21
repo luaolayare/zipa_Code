@@ -2,7 +2,7 @@ import { BRAND } from '@zipa/shared';
 import { Alert, Linking } from 'react-native';
 
 // Enlace a la app de negocios (scheme de apps/negocios/app.json).
-const NEGOCIOS_URL = 'vitrinanegocios://';
+const NEGOCIOS_URL = 'localmentetuyonegocios://';
 
 /** Abre la app de negocios; si no está instalada, explica dónde registrarse. */
 export async function openNegociosApp() {

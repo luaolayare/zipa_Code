@@ -2,19 +2,22 @@
   "expo": {
     "name": "LocalmenteTuyo",
     "slug": "vitrina-local",
-    "scheme": "vitrinalocal",
-    "version": "0.1.0",
+    "scheme": [
+      "localmentetuyo",
+      "vitrinalocal"
+    ],
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "co.zipa.vitrinalocal"
+      "bundleIdentifier": "com.localmentetuyo.app"
     },
     "android": {
-      "package": "co.zipa.vitrinalocal",
+      "package": "com.localmentetuyo.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0F3D3E",
+        "backgroundColor": "#FDF9F3",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -50,7 +53,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#0F3D3E"
+          "backgroundColor": "#FDF9F3"
         }
       ],
       [

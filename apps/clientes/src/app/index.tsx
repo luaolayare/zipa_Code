@@ -43,7 +43,7 @@ export default function Welcome() {
         </Text>
       </View>
 
-      {/* Solo si la app se abrió desde un QR impreso: vitrinalocal://?origen=qr&lugar=Hotel%20X (scheme de app.json) */}
+      {/* Solo si la app se abrió desde un QR impreso: localmentetuyo://?origen=qr&lugar=Hotel%20X (o el esquema antiguo vitrinalocal://) */}
       {origen === 'qr' && (
         <View style={styles.qrCard}>
           <ScanQrCode size={28} color={colors.accent} strokeWidth={2} />

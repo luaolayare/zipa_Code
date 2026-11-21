@@ -18,6 +18,12 @@ describe('candado de entornos de EAS', () => {
     expect(revisarEntorno({ EAS_BUILD_PROFILE: 'production', EXPO_PUBLIC_SUPABASE_URL: PROD }).destino).toBe('produccion');
   });
 
+  test('APK release de producción (production-apk): solo contra producción', () => {
+    expect(revisarEntorno({ EAS_BUILD_PROFILE: 'production-apk', EXPO_PUBLIC_SUPABASE_URL: PROD }).destino).toBe('produccion');
+    expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production-apk', EXPO_PUBLIC_SUPABASE_URL: PRUEBAS })).toThrow(/no apunta al proyecto de producción/);
+    expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production-apk2', EXPO_PUBLIC_SUPABASE_URL: PROD })).toThrow(/apunta a PRODUCCIÓN/);
+  });
+
   test('producción contra otro proyecto: se detiene', () => {
     expect(() => revisarEntorno({ EAS_BUILD_PROFILE: 'production', EXPO_PUBLIC_SUPABASE_URL: PRUEBAS })).toThrow(/no apunta al proyecto de producción/);
   });
