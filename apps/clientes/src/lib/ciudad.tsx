@@ -16,6 +16,7 @@ import {
 } from '@zipa/shared';
 import * as Location from 'expo-location';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 const CLAVE = 'localmentetuyo.ciudad.v1';
 
@@ -55,10 +56,16 @@ async function ubicacionActual(pedirPermiso: boolean): Promise<ResultadoUbicacio
     if (!concedido && pedirPermiso && actual.canAskAgain) concedido = (await Location.requestForegroundPermissionsAsync()).granted;
     if (!concedido) return { tipo: 'denegado' };
     if (!(await Location.hasServicesEnabledAsync())) return { tipo: 'desactivada' };
-    // Una sola lectura aproximada (la última conocida si es reciente): basta para saber el municipio.
+    // Una sola lectura aproximada y actual (basta para saber el municipio). Si tarda más de 10 s, se usa
+    // la última conocida de los últimos 10 minutos; nunca una más vieja.
+    // En la vista web, expo-location devuelve la posición en caché del navegador si no se pide una nueva.
+    const opciones = { accuracy: Location.Accuracy.Low, ...(Platform.OS === 'web' ? { maximumAge: 0 } : {}) } as Location.LocationOptions;
+    const actualPos = Location.getCurrentPositionAsync(opciones).catch(() => null);
+    const espera = new Promise<null>((r) => setTimeout(() => r(null), 10_000));
     const pos =
-      (await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 })) ??
-      (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }));
+      (await Promise.race([actualPos, espera])) ??
+      (await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 }).catch(() => null));
+    if (!pos) return { tipo: 'error' };
     const m = municipioMasCercano(pos.coords.latitude, pos.coords.longitude);
     return m ? { tipo: 'ok', municipio: m } : { tipo: 'fuera_de_colombia' };
   } catch {
