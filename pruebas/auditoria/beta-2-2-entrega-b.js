@@ -136,7 +136,8 @@ const psql = (sql) => execSync('docker exec -i supabase_db_zipa-lo-tiene psql -U
 
   // ---------- Negocios: decidir ----------
   await n.goto('http://localhost:8084/reservas', { waitUntil: 'load' }); await n.waitForTimeout(4000);
-  const lista = { pendientes: await cuenta(n, 'Pendientes (2)', { exact: true }), codigo1: await cuenta(n, r1.code, { exact: true }) };
+  // La pestaña muestra «Pendientes» con el 2 en burbuja; su nombre accesible es «Pendientes (2)».
+  const lista = { pendientes: await n.getByRole('radio', { name: 'Pendientes (2)' }).count(), codigo1: await cuenta(n, r1.code, { exact: true }) };
   await shot(n, 'b4-solicitudes');
   await vis(n, n.getByRole('button', { name: new RegExp(`^Solicitud ${r1.code}`) })).click(); await n.waitForTimeout(3500);
   const ficha = { wa: await cuenta(n, '+573001234567', { exact: true }), mesa: await cuenta(n, 'Terraza', { exact: true }), plato: await cuenta(n, `2 × Ajiaco ${sfx}`, { exact: true }), aviso: await cuenta(n, /no están pagados ni garantizados/) };
