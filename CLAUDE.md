@@ -1,12 +1,13 @@
-# Zipa lo tiene (zipa_Code)
+# LocalmenteTuyo (zipa_Code)
 
-> Antes se llamaba Vitrina Local. El nombre y la ciudad están en `packages/shared/src/brand.ts`.
-> Los identificadores internos (slug, scheme, bundle ID) todavía dicen "vitrina": no cambiarlos sin autorización.
+> Antes se llamaba «Zipa lo tiene» y, antes, Vitrina Local. La marca y el eslogan están en `packages/shared/src/brand.ts`.
+> Los identificadores internos (slug, scheme, bundle ID, proyectos de EAS, Firebase y Supabase) todavía dicen "vitrina"/"zipa": no cambiarlos sin autorización.
+> Las ciudades se activan desde el panel (tabla `cobertura_municipios`, migración 0024); hoy solo Zipaquirá está activa.
 
 Lee también `AGENTS.md` (reglas de Expo: usar `npx expo install`, no confiar en APIs de memoria).
 
 ## Qué es
-Directorio de restaurantes y emprendimientos locales de Zipaquirá para turistas, con productos en 3D y reseñas.
+Directorio de restaurantes y emprendimientos locales de Colombia, ciudad por ciudad (hoy solo Zipaquirá), con catálogo, reseñas y reservas.
 
 ## Arquitectura definitiva
 - **Dos apps móviles independientes en Expo** (iOS y Android), en este monorepo con npm workspaces:

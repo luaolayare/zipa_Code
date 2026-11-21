@@ -69,7 +69,7 @@ async function negocio(ownerId, nombre, municipio, status, sub) {
   const { data: cob } = await anon.from('cobertura_municipios').select('municipio_codigo, estado');
   const activas = (cob ?? []).filter((c) => c.estado === 'activa').map((c) => c.municipio_codigo);
   ok('CI-1', 'Zipaquirá es la única ciudad activa', activas.length === 1 && activas[0] === '25899', cob);
-  ok('CI-2', 'Bogotá, Tunja y Pasto no están configuradas (próximamente)', !(cob ?? []).some((c) => ['11001', '15001', '52001'].includes(c.municipio_codigo)), cob);
+  ok('CI-2', 'Bogotá, Tunja y Pasto están en «próximamente» (sin configurar o cerradas por el equipo)', !(cob ?? []).some((c) => ['11001', '15001', '52001'].includes(c.municipio_codigo) && c.estado !== 'proximamente'), cob);
   const { count: nMun } = await anon.from('municipios').select('codigo', { count: 'exact', head: true });
   ok('CI-3', 'Catálogo DANE visible: 1.122 municipios', nMun === 1122, nMun);
 
