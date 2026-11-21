@@ -23,6 +23,7 @@ export function Nav({ negocios, videos, resenas, reportes }: { negocios: number;
       {item('/negocios', 'Negocios', negocios)}
       {item('/destacados', 'Destacados')}
       {item('/categorias', 'Categorías')}
+      {item('/ciudades', 'Ciudades')}
       <p className="nav-group">Moderación</p>
       {item('/videos', 'Videos', videos)}
       {item('/resenas', 'Reseñas', resenas)}

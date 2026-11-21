@@ -23,7 +23,7 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
   const { id } = await params;
   const { supabase } = await requireAdmin();
 
-  const { data: b } = await supabase.from('businesses').select('*, owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
+  const { data: b } = await supabase.from('businesses').select('*, municipio:municipios(nombre, departamento:departamentos(nombre)), owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
   if (!b) notFound();
 
   const [{ data: v }, { data: products }, { data: acciones }, { data: links }] = await Promise.all([
@@ -65,6 +65,8 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
             <dl className="facts">
               <dt>Responsable</dt><dd>{owner?.full_name ?? '—'}</dd>
               <dt>Dirección</dt><dd>{b.address}</dd>
+              <dt>Municipio</dt><dd>{b.municipio?.nombre ?? b.municipio_codigo}{b.municipio?.departamento?.nombre ? `, ${b.municipio.departamento.nombre}` : ""} <span className="small muted">(DANE {b.municipio_codigo})</span></dd>
+              <dt>Punto del local</dt><dd>{b.latitud != null ? <a href={`https://www.google.com/maps/search/?api=1&query=${b.latitud},${b.longitud}`} target="_blank" rel="noreferrer">Ver en el mapa</a> : <span className="muted">Sin confirmar</span>}</dd>
               <dt>Horario</dt><dd>{b.hours ?? '—'}</dd>
               <dt>WhatsApp</dt><dd>{b.whatsapp ?? '—'}</dd>
               <dt>Cédula o NIT</dt><dd>{v?.id_number ?? 'No la envió'}</dd>
