@@ -5,8 +5,8 @@ import { ESTADO, TIPO, clasificacion, fecha } from '@/lib/format';
 
 const FILTROS = ['en_revision', 'publicado', 'rechazado', 'borrador'] as const;
 
-export default async function Negocios({ searchParams }: { searchParams: Promise<{ estado?: string; hecho?: string; nombre?: string; municipio?: string }> }) {
-  const { estado: e, hecho, nombre, municipio: m } = await searchParams;
+export default async function Negocios({ searchParams }: { searchParams: Promise<{ estado?: string; hecho?: string; nombre?: string; municipio?: string; aviso?: string }> }) {
+  const { estado: e, hecho, nombre, municipio: m, aviso } = await searchParams;
   const municipio = /^\d{5}$/.test(m ?? '') ? m! : null;
   const estado = (FILTROS as readonly string[]).includes(e ?? '') ? e! : 'en_revision';
   const { supabase } = await requireAdmin();
@@ -39,6 +39,7 @@ export default async function Negocios({ searchParams }: { searchParams: Promise
         </nav>
       </div>
       {hecho === 'publicado' && <p className="notice ok" role="status" style={{ marginBottom: 16 }}>«{nombre}» quedó publicado y ya aparece en la app de clientes.</p>}
+      {hecho === 'eliminado' && <p className="notice ok" role="status" style={{ marginBottom: 16 }}>«{nombre}» se eliminó con sus productos, reseñas, reservas y archivos. Quedó registrado en la bitácora.{aviso ? ` ${aviso}` : ''}</p>}
       {hecho === 'rechazado' && <p className="notice warn" role="status" style={{ marginBottom: 16 }}>«{nombre}» no se aprobó. El negocio verá el motivo en su panel.</p>}
       {nombreCiudad && <p className="small" style={{ marginBottom: 16 }}>Solo negocios de {nombreCiudad}. <Link href={`/negocios?estado=${estado}`}>Ver todas las ciudades</Link></p>}
       {error && <p className="notice error">No pudimos cargar los negocios.</p>}

@@ -7,6 +7,7 @@ import { ESTADO, TIPO, clasificacion, fecha, pesos } from '@/lib/format';
 import { VideoReview } from '../../VideoReview';
 
 import { Decision } from './Decision';
+import { Eliminar } from './Eliminar';
 
 // «Contacto y entregas» (migración 0018). Los nombres repiten los de packages/shared/src/contact.ts.
 const REDES = [['instagram', 'Instagram'], ['facebook', 'Facebook'], ['tiktok', 'TikTok'], ['website', 'Sitio web']] as const;
@@ -21,7 +22,7 @@ const ENTREGA: Record<string, string> = {
 
 export default async function NegocioDetalle({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase } = await requireAdmin();
+  const { supabase, role } = await requireAdmin();
 
   const { data: b } = await supabase.from('businesses').select('*, municipio:municipios(nombre, departamento:departamentos(nombre)), owner:profiles!businesses_owner_id_fkey(full_name), subcategory:categories!businesses_subcategory_id_fkey(name, parent_id)').eq('id', id).maybeSingle();
   if (!b) notFound();
@@ -136,8 +137,19 @@ export default async function NegocioDetalle({ params }: { params: Promise<{ id:
               ))}
             </div>
           )}
+
+          {role === 'admin' && <EliminarConConteos supabase={supabase} businessId={b.id} name={b.name} productos={(products ?? []).length} />}
         </div>
       </div>
     </>
   );
+}
+
+/** Cuenta reseñas y reservas (el panel ya tiene los productos) para mostrarlas antes de eliminar. */
+async function EliminarConConteos({ supabase, businessId, name, productos }: { supabase: Awaited<ReturnType<typeof requireAdmin>>['supabase']; businessId: string; name: string; productos: number }) {
+  const [{ count: resenas }, { count: reservas }] = await Promise.all([
+    supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('business_id', businessId),
+    supabase.from('reservations').select('id', { count: 'exact', head: true }).eq('business_id', businessId),
+  ]);
+  return <Eliminar businessId={businessId} name={name} productos={productos} resenas={resenas ?? 0} reservas={reservas ?? 0} />;
 }

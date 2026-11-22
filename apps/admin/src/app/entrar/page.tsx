@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -28,9 +29,9 @@ export default function Entrar() {
   return (
     <main className="auth">
       <form className="auth-card" onSubmit={submit}>
-        <div className="brand" style={{ color: 'var(--text)' }}>
-          <span className="brand-mark" aria-hidden>▣</span>
-          <span>LocalmenteTuyo<small>Panel del equipo</small></span>
+        <div className="auth-logo">
+          <Image src="/logo.png" alt="LocalmenteTuyo. Lo mejor de aquí, cerquita de ti." width={220} height={220} priority />
+          <p className="small muted">Panel del equipo</p>
         </div>
         <h1 style={{ fontSize: 30 }}>Entrar</h1>
         <p className="muted">Solo para el equipo de revisión. Después te pediremos el código de tu app de autenticación.</p>

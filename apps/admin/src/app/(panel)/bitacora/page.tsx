@@ -6,6 +6,7 @@ import { fecha } from '@/lib/format';
 const ACCION: Record<string, string> = {
   publicar_negocio: 'Publicó un negocio',
   cambiar_estado_ciudad: 'Cambió el estado de una ciudad',
+  eliminar_negocio: 'Eliminó un negocio',
   rechazar_negocio: 'No aprobó un negocio',
   borrar_resena: 'Borró una reseña',
   reporte_revisado: 'Marcó un reporte como revisado',

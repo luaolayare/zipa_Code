@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { requireAdmin } from '@/lib/auth';
 
 import { Nav } from './Nav';
@@ -16,7 +17,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <span className="brand-mark" aria-hidden>▣</span>
+          <Image src="/logo-simbolo.png" alt="" width={40} height={40} className="brand-logo" priority />
           <span>LocalmenteTuyo<small>Panel del equipo</small></span>
         </div>
         <Nav negocios={negocios ?? 0} videos={videos ?? 0} resenas={resenas ?? 0} reportes={reportes ?? 0} />
