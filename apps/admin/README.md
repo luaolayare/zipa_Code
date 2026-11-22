@@ -14,12 +14,10 @@ pública: no se indexa y solo entra el equipo.
   - `admin`: además borra reseñas.
 - Las decisiones sobre negocios pasan por la Edge Function `revisar-negocio`. Todo queda en `admin_actions`.
 
-## Correr en local
-
-```bash
-cp apps/admin/.env.example apps/admin/.env.local   # y llena URL y clave publicable
-npm run admin                                       # http://localhost:3000
-```
+## Correr el panel
+Ver **docs/GUIA_LEVANTAR_SERVICIOS.md** (secciones 1 a 3):
+- `npm run admin` → http://localhost:3000 con datos de **pruebas** (`apps/admin/.env.development.local`).
+- Con datos reales solo con `ZIPA_ENTORNO=produccion`, `npm run build` y `npm run start` (usa `apps/admin/.env.local`).
 
 ## Agregar a alguien al equipo
 
