@@ -1,5 +1,5 @@
 // Datos del sitio que NO se inventan. Mientras un valor sea null, la web muestra «Por completar» en ese
-// punto y el build lo advierte. Complétalos aquí y vuelve a publicar (un push basta: Cloudflare compila solo).
+// punto y el build lo advierte (y `build:estricto` falla). Complétalos aquí y vuelve a publicar.
 export const SITIO = {
   dominio: 'https://localmentetuyo.com',
   marca: 'LocalmenteTuyo',
@@ -7,31 +7,32 @@ export const SITIO = {
   desarrollador: { nombre: 'SCALIX Cloud', web: 'https://scalix-cloud.com/' },
 
   // Enlaces públicos de Google Play. Hoy las apps están en prueba interna: no hay enlace público todavía.
-  // Ejemplo cuando existan: 'https://play.google.com/store/apps/details?id=com.localmentetuyo.app'
+  // Cuando estén abiertas al público:
+  //   clientes: 'https://play.google.com/store/apps/details?id=com.localmentetuyo.app'
+  //   negocios: 'https://play.google.com/store/apps/details?id=com.localmentetuyo.negocios'
   play: {
     clientes: null,
     negocios: null,
   },
 
-  // Responsable del tratamiento de datos (Ley 1581 de 2012). Obligatorio antes de publicar la política.
+  // Responsable del tratamiento (Ley 1581 de 2012; Decreto 1377 de 2013, art. 13: nombre o razón social,
+  // domicilio, dirección, correo y teléfono). El número de identificación NO se publica ni se guarda aquí.
   responsable: {
-    razonSocial: null, // nombre o razón social exacta
-    identificacion: null, // NIT o cédula
-    direccion: null,
-    ciudad: null,
-    correoPrivacidad: null, // correo para temas de datos personales y eliminación de cuentas
-    telefono: null,
+    // Nombre completo de la persona natural titular (o razón social de la empresa, si es ella la responsable).
+    nombre: null,
+    domicilio: 'Zipaquirá, Cundinamarca, Colombia',
+    direccion: 'Carrera 22 # 9-68', // solo se muestra en la política de privacidad
+    correoPrivacidad: 'luaolayare17@gmail.com',
+    telefono: '+57 318 486 4874', // solo en la política y en soporte, como texto (no es canal de WhatsApp)
   },
 
-  // Canal de soporte general (puede ser el mismo correo de privacidad).
-  correoSoporte: null,
+  correoSoporte: 'luaolayare17@gmail.com',
 
-  // Plazos y condiciones que debe definir el responsable.
   plazos: {
-    borradoCuenta: null, // días para borrar los datos después de eliminar la cuenta
-    conservacionInteres: null, // cuánto se conserva un registro de interés comercial
+    supresionDias: 30, // días naturales para completar la supresión tras una solicitud válida (sin exceder la ley)
+    interesMeses: 12, // conservación máxima de un registro de interés comercial
   },
-  edadMinima: null, // edad mínima para usar las apps
-  paisesServidores: null, // países donde los proveedores guardan los datos
-  fechaVigencia: null, // fecha desde la que rige la versión publicada de los documentos legales
+  edadMinima: 18,
+  // Fecha de esta versión de los documentos (AAAA-MM-DD). Se actualiza al publicar cambios.
+  fechaVigencia: '2026-11-23',
 };

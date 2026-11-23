@@ -3,8 +3,12 @@ import { SITIO } from '../sitio.config.mjs';
 import { botonPlay, correoEnlace, dato, esc } from './plantilla.mjs';
 
 const R = SITIO.responsable;
-const responsableTexto = (ruta) =>
-  `${dato(R.razonSocial, 'razón social del responsable', ruta)}, identificado con ${dato(R.identificacion, 'NIT o cédula', ruta)}, con domicilio en ${dato(R.direccion, 'dirección', ruta)}, ${dato(R.ciudad, 'ciudad', ruta)}, Colombia`;
+const ETIQUETA_NOMBRE = 'nombre completo del responsable (o razón social y NIT de SCALIX Cloud, si la empresa es la responsable)';
+// Nombre y domicilio; la dirección solo en la política de privacidad (Decreto 1377 de 2013, art. 13).
+const responsableTexto = (ruta, conDireccion = false) =>
+  `${dato(R.nombre, ETIQUETA_NOMBRE, ruta)}, con domicilio en ${esc(R.domicilio)}${conDireccion ? `, en la ${esc(R.direccion)}` : ''}`;
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const fechaLarga = (iso) => { const [a, m, d] = iso.split('-').map(Number); return `${d} de ${MESES[m - 1]} de ${a}`; };
 const seccion = (titulo, ...parrafos) => `<section class="legal-seccion"><h2>${titulo}</h2>${parrafos.map((p) => (p.startsWith('<') ? p : `<p>${p}</p>`)).join('')}</section>`;
 const lista = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
 const encabezadoLegal = (titulo, resumen, ruta) => `
@@ -13,7 +17,7 @@ const encabezadoLegal = (titulo, resumen, ruta) => `
     <p class="etiqueta">Información legal</p>
     <h1>${titulo}</h1>
     <p class="entrada">${resumen}</p>
-    <p class="vigencia">Vigente desde: ${dato(SITIO.fechaVigencia, 'fecha de vigencia', ruta)}</p>
+    <p class="vigencia">${SITIO.fechaVigencia ? `Vigente desde el ${fechaLarga(SITIO.fechaVigencia)}` : `Vigente desde: ${dato(null, 'fecha de vigencia', ruta)}`}</p>
   </div>
 </section>`;
 
@@ -152,14 +156,16 @@ export function privacidad() {
     cuerpo: `${encabezadoLegal('Política de privacidad', 'Cómo tratamos los datos personales de quienes usan la app LocalmenteTuyo, la app LocalmenteTuyo Negocios y este sitio web, según la Ley 1581 de 2012 y sus decretos reglamentarios.', ruta)}
 <article class="contenedor angosto legal">
 ${seccion('1. Responsable del tratamiento',
-  `Responsable: ${responsableTexto(ruta)}.`,
-  `Correo para temas de datos personales: ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)}. Teléfono: ${dato(R.telefono, 'teléfono de contacto', ruta)}.`)}
+  `Responsable: ${responsableTexto(ruta, true)}.`,
+  `Correo para temas de datos personales: ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)}. Teléfono: ${dato(R.telefono, 'teléfono de contacto', ruta)}.`,
+  `${esc(SITIO.marca)} es la marca de la plataforma; las apps las desarrolla ${esc(SITIO.desarrollador.nombre)}.`)}
 ${seccion('2. Datos que recogemos',
   '<p><strong>Cuenta (ambas apps):</strong> nombre, correo electrónico y contraseña (guardada cifrada; nunca la vemos).</p>',
   '<p><strong>Clientes:</strong> reseñas, calificaciones y fotos que publicas; los negocios que abres con su código QR; los reportes que envías; y, si pides una reserva, el nombre y el WhatsApp de contacto, el número de personas, la fecha y hora y las notas que quieras dejar.</p>',
   '<p><strong>Negocios:</strong> nombre y datos del negocio (tipo, categoría, municipio, dirección, horario, WhatsApp, redes y entregas), cédula o NIT del responsable, una foto del local para verificarlo, fotos y videos de los productos y, si lo confirmas estando en el local, su punto en el mapa.</p>',
   '<p><strong>Interés comercial:</strong> si tu ciudad aún no está disponible y registras tu interés, guardamos el nombre del negocio, si es restaurante o emprendimiento, el municipio, tu nombre y tu WhatsApp, con tu autorización para contactarte. No pedimos cuenta, documentos ni fotos para esto.</p>',
   '<p><strong>Municipio que exploras:</strong> la ciudad que eliges en la app se guarda solo en tu celular.</p>',
+  '<p><strong>WhatsApp:</strong> si tocas el botón de WhatsApp de un negocio, la conversación ocurre en WhatsApp (un servicio de Meta), fuera de LocalmenteTuyo y con sus propias condiciones. En las reservas, el restaurante ve el WhatsApp de contacto que escribiste para poder responderte.</p>',
   '<p><strong>Ubicación:</strong> es opcional. Solo si tocas «Usar mi ubicación» y lo autorizas, la app lee una vez tu ubicación aproximada para sugerirte el municipio más cercano; ese cálculo se hace en tu celular y no guardamos ni enviamos tu ubicación. En la app de negocios, la ubicación se usa solo cuando tocas el botón para guardar el punto de tu local.</p>',
   '<p><strong>Datos técnicos:</strong> un identificador del celular para enviarte avisos (por ejemplo, el estado de una reserva), el modelo y sistema operativo, la versión de la app y una analítica de uso anónima, con un identificador aleatorio que no se relaciona con tu cuenta, tu correo ni tu ubicación.</p>',
   '<p><strong>Este sitio web:</strong> no tiene cuentas, formularios, cookies de seguimiento ni herramientas de analítica. El servicio de alojamiento puede registrar datos técnicos de cada visita (como la dirección IP) por seguridad y funcionamiento.</p>',
@@ -177,26 +183,28 @@ ${seccion('3. Para qué usamos tus datos', lista([
 ${seccion('4. Información pública',
   'Es pública para cualquier persona: la información del negocio publicado (sin la cédula o NIT), su municipio, dirección y punto en el mapa, sus fotos y productos, y las reseñas con el nombre de quien las escribe.',
   'No son públicos: tus reservas, los datos de verificación de los negocios ni los datos de interés comercial.')}
-${seccion('5. Proveedores que tratan datos por cuenta nuestra', lista([
-  '<strong>Supabase:</strong> base de datos, inicio de sesión, archivos y funciones del servidor.',
-  '<strong>Expo (EAS):</strong> compilación de las apps, actualizaciones y envío de avisos.',
-  '<strong>Google:</strong> entrega de avisos en Android (Firebase Cloud Messaging) y distribución en Google Play.',
-  '<strong>Cloudflare:</strong> alojamiento y seguridad de este sitio web.',
+${seccion('5. Proveedores y transferencia internacional', lista([
+  '<strong>Supabase:</strong> base de datos, inicio de sesión, archivos y funciones del servidor. Los datos de las apps se guardan en su región us-east-2 (Ohio, Estados Unidos).',
+  '<strong>Expo (EAS):</strong> compilación de las apps y envío de los avisos al celular.',
+  '<strong>Google (Firebase Cloud Messaging y Google Play):</strong> entrega de los avisos en Android y distribución de las apps.',
+  '<strong>Cloudflare:</strong> alojamiento y seguridad de este sitio web, desde su red global.',
 ]),
-  `Algunos guardan o procesan datos fuera de Colombia, principalmente en ${dato(SITIO.paisesServidores, 'países de los servidores', ruta)}. Al aceptar esta política autorizas de forma expresa esa transmisión, que hacemos según el artículo 26 de la Ley 1581 de 2012.`)}
+  'Por eso tus datos se guardan y se procesan fuera de Colombia: principalmente en Estados Unidos (base de datos) y en la infraestructura de los proveedores de avisos y del sitio web, que puede estar en otros países. Al aceptar esta política autorizas de forma expresa esa transferencia y transmisión internacional, que hacemos según los artículos 25 y 26 de la Ley 1581 de 2012 y con proveedores que ofrecen medidas de seguridad adecuadas.')}
 ${seccion('6. Seguridad',
   'Usamos conexiones cifradas, contraseñas cifradas y reglas de acceso para que cada persona solo vea y modifique lo que le corresponde. El equipo que revisa negocios entra con verificación en dos pasos.')}
 ${seccion('7. Conservación y eliminación',
   'Conservamos tus datos mientras tengas una cuenta activa.',
-  `Puedes eliminar tu cuenta desde la app (ver <a href="/eliminar-cuenta">Eliminar mi cuenta</a>). Al hacerlo borramos tu perfil, tus reseñas, tus reservas, tu negocio y tus archivos en un plazo de ${dato(SITIO.plazos.borradoCuenta, 'plazo de borrado en días', ruta)} días, salvo lo que la ley nos obligue a conservar.`,
+  'Puedes eliminar tu cuenta desde la app (ver <a href="/eliminar-cuenta">Eliminar mi cuenta</a>): tu perfil, tus reseñas, tus reservas, tu negocio y tus archivos se borran en ese momento.',
+  `Si nos pides la supresión por correo, la atendemos dentro de los plazos de la Ley 1581 de 2012 y la completamos en un máximo de ${SITIO.plazos.supresionDias} días naturales desde que confirmamos la solicitud, salvo los datos que debamos conservar por una obligación legal.`,
   'Los avisos enviados y los identificadores de celulares que ya no se usan se borran a los 90 días.',
-  `Los datos de interés comercial se conservan durante ${dato(SITIO.plazos.conservacionInteres, 'plazo de conservación del interés comercial', ruta)} o hasta que pidas que los borremos.`)}
+  `Los registros de interés comercial se conservan un máximo de ${SITIO.plazos.interesMeses} meses desde que los recibimos, o menos si pides que los borremos.`,
+  'Las copias de seguridad de nuestros proveedores se eliminan según sus propios ciclos automáticos.')}
 ${seccion('8. Tus derechos',
   'Según el artículo 8 de la Ley 1581 de 2012, puedes conocer, actualizar y rectificar tus datos; pedir prueba de la autorización que nos diste; ser informado sobre el uso que les damos; revocar la autorización o pedir que los borremos cuando no se respeten tus derechos; acceder gratis a tus datos; y presentar quejas ante la Superintendencia de Industria y Comercio después de haber hecho tu consulta o reclamo ante nosotros.',
   `Escríbenos a ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)} con tu nombre, el correo de tu cuenta (si tienes), lo que solicitas y, si aplica, los documentos que lo sustenten.`,
   'Consultas: las respondemos en máximo 10 días hábiles, prorrogables 5 días hábiles más avisándote el motivo (artículo 14). Reclamos: en máximo 15 días hábiles, prorrogables 8 días hábiles más avisándote el motivo (artículo 15).')}
 ${seccion('9. Menores de edad',
-  `Las apps no están dirigidas a menores de ${dato(SITIO.edadMinima, 'edad mínima', ruta)} años. Si crees que un menor nos dio datos, escríbenos para borrarlos.`)}
+  `Las apps están dirigidas a personas mayores de ${dato(SITIO.edadMinima, 'edad mínima', ruta)} años. Si eres menor de esa edad, no crees una cuenta. Si crees que un menor nos dio datos, escríbenos a ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)} y los borraremos.`)}
 ${seccion('10. Cambios a esta política',
   'Si cambiamos esta política te lo informaremos en la app antes de que el cambio aplique y, si afecta la finalidad del tratamiento, te pediremos una nueva autorización.')}
 </article>`,
@@ -221,7 +229,8 @@ ${seccion('Desde la app (la forma más rápida)',
   'La eliminación se hace en ese momento y cierra tu sesión.')}
 ${seccion('Si no puedes entrar a la app',
   `Escríbenos desde el correo con el que creaste tu cuenta a ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)}, con el asunto «Eliminar mi cuenta». Indica si es una cuenta de clientes o de negocios.`,
-  'Por seguridad, nunca te pediremos tu contraseña. Podemos hacerte preguntas para confirmar que la cuenta es tuya antes de eliminarla.')}
+  'Por seguridad, nunca te pediremos tu contraseña ni documentos de identidad. Podemos hacerte preguntas para confirmar que la cuenta es tuya antes de eliminarla.',
+  `Atendemos la solicitud dentro de los plazos de la Ley 1581 de 2012 (15 días hábiles, prorrogables por 8 días hábiles más avisándote el motivo) y completamos la eliminación en un máximo de ${SITIO.plazos.supresionDias} días naturales desde que confirmamos que la cuenta es tuya.`)}
 ${seccion('Qué se borra', lista([
   'Tu perfil (nombre y correo) y tu acceso.',
   'Tus reseñas y sus fotos, tus solicitudes de reserva, tus reportes y bloqueos.',
@@ -232,12 +241,11 @@ ${seccion('Qué podría conservarse', lista([
   'El registro interno de decisiones del equipo (por ejemplo, que un negocio fue aprobado), sin acceso a tu cuenta.',
   'La analítica de uso anónima, que no está relacionada con tu cuenta.',
   'La información que la ley nos obligue a conservar, durante el tiempo que exija.',
-  'Copias de seguridad de nuestros proveedores, que se eliminan de forma automática según sus propios plazos.',
-]),
-  `Plazo de borrado de los datos: ${dato(SITIO.plazos.borradoCuenta, 'plazo de borrado en días', ruta)} días.`)}
+  'Copias de seguridad de nuestros proveedores, que se eliminan de forma automática según sus propios ciclos.',
+]))}
 ${seccion('Interés comercial sin cuenta',
   `Si registraste el interés de tu negocio para una ciudad que aún no abre y quieres que borremos esos datos, escríbenos a ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)} indicando el nombre del negocio, el municipio y el número de WhatsApp que registraste.`)}
-${seccion('Responsable', `${responsableTexto(ruta)}. Más información en nuestra <a href="/privacidad">política de privacidad</a>.`)}
+${seccion('Responsable', `${responsableTexto(ruta)}. Correo: ${correoEnlace(R.correoPrivacidad, 'correo de privacidad', ruta)}. Más información en nuestra <a href="/privacidad">política de privacidad</a>.`)}
 </article>`,
   };
 }
@@ -287,6 +295,7 @@ export function soporte() {
   <section class="contacto revelar">
     <h2>Contacto</h2>
     <p>Correo de soporte: ${correoEnlace(SITIO.correoSoporte, 'correo de soporte', ruta)}</p>
+    <p>Teléfono: ${dato(R.telefono, 'teléfono de contacto', ruta)}</p>
     <p class="pie-pequeno">Cuéntanos qué app usas (clientes o negocios), el correo de tu cuenta y qué pasó. Nunca te pediremos tu contraseña.</p>
   </section>
 </div>`,
@@ -308,9 +317,10 @@ ${seccion('1. Quiénes somos',
 ${seccion('2. Qué es y qué no es LocalmenteTuyo',
   'Mostramos información de negocios independientes. No vendemos sus productos, no procesamos pagos por ellos ni prestamos servicios de domicilio.',
   'Cada negocio administra su información comercial y es el único responsable de sus productos, precios, disponibilidad, horarios, calidad y atención, y de cumplir el Estatuto del Consumidor (Ley 1480 de 2011). Las fotos y videos son representaciones aproximadas.',
-  'No garantizamos ventas, resultados comerciales ni la disponibilidad de los establecimientos.')}
+  'No garantizamos ventas, resultados comerciales ni la disponibilidad de los establecimientos.',
+  'Iniciamos en Zipaquirá, Cundinamarca, y llegaremos a otras ciudades de forma progresiva. En esta etapa las apps no muestran publicidad de terceros.')}
 ${seccion('3. Cuentas',
-  'Debes dar información verdadera y cuidar tu contraseña. Eres responsable de lo que se haga con tu cuenta. Puedes eliminarla cuando quieras desde la app.')}
+  `Las apps están dirigidas a personas mayores de ${esc(SITIO.edadMinima)} años. Debes dar información verdadera y cuidar tu contraseña. Eres responsable de lo que se haga con tu cuenta. Puedes eliminarla cuando quieras desde la app.`)}
 ${seccion('4. Reservas',
   'Algunos restaurantes reciben solicitudes de reserva desde la app. La reserva es un acuerdo entre tú y el restaurante: el restaurante decide si la confirma y responde por su cumplimiento. LocalmenteTuyo no cobra por reservar ni gestiona pagos.')}
 ${seccion('5. Reseñas',
