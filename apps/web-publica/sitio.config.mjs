@@ -19,7 +19,7 @@ export const SITIO = {
   // domicilio, dirección, correo y teléfono). El número de identificación NO se publica ni se guarda aquí.
   responsable: {
     // Nombre completo de la persona natural titular (o razón social de la empresa, si es ella la responsable).
-    nombre: null,
+    nombre: 'Luis Alfredo Olaya Requenet',
     domicilio: 'Zipaquirá, Cundinamarca, Colombia',
     direccion: 'Carrera 22 # 9-68', // solo se muestra en la política de privacidad
     correoPrivacidad: 'luaolayare17@gmail.com',
