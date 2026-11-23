@@ -1659,6 +1659,16 @@ begin
 end $$;
 reset role;
 
+-- VENCIMIENTO DEL INTERÉS COMERCIAL (0025): la limpieza diaria borra los de más de 12 meses ------------
+insert into public.interes_comercial (municipio_codigo, nombre_negocio, tipo, nombre_contacto, whatsapp, acepta_contacto, created_at) values
+  ('52001', 'Interés viejo', 'restaurante', 'Ana', '573001110001', true, now() - interval '13 months'),
+  ('52001', 'Interés reciente', 'restaurante', 'Ana', '573001110002', true, now() - interval '11 months');
+do $$ begin
+  perform public.limpiar_avisos_antiguos();
+  if exists (select 1 from public.interes_comercial where nombre_negocio = 'Interés viejo') then raise exception 'no se borró el interés de más de 12 meses'; end if;
+  if not exists (select 1 from public.interes_comercial where nombre_negocio = 'Interés reciente') then raise exception 'se borró un interés de menos de 12 meses'; end if;
+end $$;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin

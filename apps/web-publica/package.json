@@ -1,0 +1,15 @@
+{
+  "name": "web-publica",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web pública de LocalmenteTuyo (sitio estático para Cloudflare Pages).",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "build:estricto": "node build.mjs --estricto",
+    "dev": "node build.mjs && node servir.mjs"
+  }
+}
