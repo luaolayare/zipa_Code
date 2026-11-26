@@ -13,8 +13,17 @@ const globales = existsSync(join(dist, '_headers'))
   ? Object.fromEntries(readFileSync(join(dist, '_headers'), 'utf8').split('\n/')[0].split('\n').slice(1)
       .map((l) => l.trim()).filter(Boolean).map((l) => [l.slice(0, l.indexOf(':')), l.slice(l.indexOf(':') + 1).trim()]))
   : {};
-createServer((req, res) => {
-  const ruta = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^([/\\])+/, '');
+// /api/tester: ejecuta la misma Pages Function de functions/ (variables SUPABASE_URL y SUPABASE_ANON_KEY del entorno;
+// para probar, usa las del proyecto de PRUEBAS, nunca las de producción).
+const { onRequestPost } = await import('./functions/api/tester.js');
+createServer(async (req, res) => {
+  if (req.url === '/api/tester' && req.method === 'POST') {
+    const cuerpo = await new Promise((ok) => { let d = ''; req.on('data', (c) => (d += c)); req.on('end', () => ok(d)); });
+    const r = await onRequestPost({ request: new Request('http://local/api/tester', { method: 'POST', headers: req.headers, body: cuerpo }), env: process.env });
+    res.writeHead(r.status, Object.fromEntries(r.headers));
+    return res.end(await r.text());
+  }
+  const ruta =normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^([/\\])+/, '');
   let archivo = join(dist, ruta);
   if (!archivo.startsWith(dist)) { res.writeHead(400); return res.end(); }
   if (existsSync(archivo) && statSync(archivo).isDirectory()) archivo = join(archivo, 'index.html');

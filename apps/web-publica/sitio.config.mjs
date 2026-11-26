@@ -34,5 +34,5 @@ export const SITIO = {
   },
   edadMinima: 18,
   // Fecha de esta versión de los documentos (AAAA-MM-DD). Se actualiza al publicar cambios.
-  fechaVigencia: '2026-11-23',
+  fechaVigencia: '2026-11-26',
 };
