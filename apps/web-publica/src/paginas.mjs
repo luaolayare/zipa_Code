@@ -40,7 +40,7 @@ export function inicio() {
   const preguntas = [
     ['¿Qué es LocalmenteTuyo?', 'Una plataforma para descubrir restaurantes, emprendimientos y comercios locales. Tiene dos apps: <strong>LocalmenteTuyo</strong>, para quienes quieren descubrir, y <strong>LocalmenteTuyo Negocios</strong>, para que los comerciantes publiquen su negocio.'],
     ['¿Es gratuita?', 'Sí. Descargar y usar LocalmenteTuyo es gratis, y registrar tu negocio en LocalmenteTuyo Negocios también. La app no cobra por las reservas ni procesa pagos.'],
-    ['¿En qué ciudades está disponible?', 'Iniciamos en <strong>Zipaquirá, Cundinamarca</strong>. <strong>Bogotá y los municipios de la Sabana</strong> están en preparación: ya estamos sumando sus negocios y abriremos cada ciudad cuando tenga negocios verificados para descubrir. Si eliges una ciudad donde todavía no estamos, la app te lo avisa.'],
+    ['¿En qué ciudades está disponible?', 'En <strong>Zipaquirá, Bogotá y los municipios de la Sabana de Bogotá</strong>: Chía, Cajicá, Cota, Tenjo, Tabio, Sopó, La Calera, Tocancipá, Gachancipá, Cogua, Nemocón, Funza, Mosquera, Madrid, Facatativá, Bojacá, El Rosal, Subachoque, Zipacón, Soacha y Sibaté. Llegaremos a otras ciudades de Colombia poco a poco. Si eliges una ciudad donde todavía no estamos, la app te lo avisa.'],
     ['¿Cómo me uno como tester?', 'Déjanos tu correo de Google en la sección <a href="/#testers">Sé tester</a>. Te agregamos a la prueba en Google Play y te enviamos por correo los enlaces para instalar las apps.'],
     ['¿Cómo registro mi negocio?', 'Descarga LocalmenteTuyo Negocios y sigue cinco pasos: tu cuenta, los datos del negocio, la verificación (cédula o NIT y una foto del local), tus productos y una vista previa. Nuestro equipo revisa cada registro antes de publicarlo. Si tu ciudad aún no está disponible, puedes registrar tu interés para cuando abramos.'],
     ['¿Cómo funcionan las reservas?', 'Solo en los restaurantes que activan las reservas. Eliges el día, la hora y el número de personas, y envías la solicitud. El restaurante la confirma o la rechaza, y ves el estado en «Mis reservas». La app no cobra ni pide pagos por reservar.'],
@@ -50,12 +50,12 @@ export function inicio() {
   return {
     ruta,
     titulo: 'Inicio',
-    descripcion: 'LocalmenteTuyo: descubre restaurantes, emprendimientos y lugares especiales de tu ciudad en una sola app. Iniciamos en Zipaquirá.',
+    descripcion: 'LocalmenteTuyo: descubre restaurantes, emprendimientos y lugares especiales de tu ciudad en una sola app. Disponible en Zipaquirá, Bogotá y la Sabana.',
     cuerpo: `
 <section class="hero">
   <div class="contenedor hero-rejilla">
     <div class="hero-texto revelar">
-      <p class="etiqueta etiqueta-clara">Iniciamos en Zipaquirá</p>
+      <p class="etiqueta etiqueta-clara">Zipaquirá, Bogotá y la Sabana</p>
       <h1>Descubre lo mejor de tu ciudad.</h1>
       <p class="hero-sub">Restaurantes, emprendimientos y lugares especiales, reunidos en una sola aplicación.</p>
       <p class="hero-eslogan">${esc(SITIO.eslogan)}</p>
@@ -112,13 +112,13 @@ export function inicio() {
   <div class="contenedor cobertura">
     <div class="revelar">
       <p class="etiqueta">Cobertura</p>
-      <h2 class="titulo-seccion">Iniciamos en Zipaquirá.</h2>
+      <h2 class="titulo-seccion">Ya estamos en Bogotá y la Sabana.</h2>
       <p>LocalmenteTuyo está preparada para llegar, poco a poco, a otras ciudades de Colombia. Abriremos cada ciudad cuando tenga negocios verificados para descubrir.</p>
-      <p>¿Tienes un negocio en Bogotá o en la Sabana? Ya puedes escribirnos para sumarte antes de la apertura. En otras ciudades, desde LocalmenteTuyo Negocios puedes registrar tu interés y te avisaremos cuando lleguemos.</p>
+      <p>¿Tienes un negocio en Zipaquirá, Bogotá o la Sabana? Regístralo desde LocalmenteTuyo Negocios. En otras ciudades puedes registrar tu interés y te avisaremos cuando lleguemos.</p>
     </div>
     <div class="cobertura-tarjeta revelar">
       <div class="ciudad activa"><span class="punto"></span><div><b>Zipaquirá</b><small>Cundinamarca</small></div><span class="estado">Disponible</span></div>
-      <div class="ciudad"><span class="punto"></span><div><b>Bogotá y la Sabana</b><small>Chía, Cajicá, Cota, Funza, Mosquera, Soacha y más</small></div><span class="estado">En preparación</span></div>
+      <div class="ciudad activa"><span class="punto"></span><div><b>Bogotá y la Sabana</b><small>Chía, Cajicá, Cota, Funza, Mosquera, Soacha y más</small></div><span class="estado">Disponible</span></div>
       <div class="ciudad"><span class="punto"></span><div><b>Otras ciudades de Colombia</b><small>Abriremos de forma progresiva</small></div><span class="estado">Próximamente</span></div>
     </div>
   </div>
@@ -349,7 +349,7 @@ ${seccion('2. Qué es y qué no es LocalmenteTuyo',
   'Mostramos información de negocios independientes. No vendemos sus productos, no procesamos pagos por ellos ni prestamos servicios de domicilio.',
   'Cada negocio administra su información comercial y es el único responsable de sus productos, precios, disponibilidad, horarios, calidad y atención, y de cumplir el Estatuto del Consumidor (Ley 1480 de 2011). Las fotos y videos son representaciones aproximadas.',
   'No garantizamos ventas, resultados comerciales ni la disponibilidad de los establecimientos.',
-  'Iniciamos en Zipaquirá, Cundinamarca, y llegaremos a otras ciudades de forma progresiva. En esta etapa las apps no muestran publicidad de terceros.')}
+  'Estamos en Zipaquirá, Bogotá y la Sabana de Bogotá, y llegaremos a otras ciudades de forma progresiva. En esta etapa las apps no muestran publicidad de terceros.')}
 ${seccion('3. Cuentas',
   `Las apps están dirigidas a personas mayores de ${esc(SITIO.edadMinima)} años. Debes dar información verdadera y cuidar tu contraseña. Eres responsable de lo que se haga con tu cuenta. Puedes eliminarla cuando quieras desde la app.`)}
 ${seccion('4. Reservas',
