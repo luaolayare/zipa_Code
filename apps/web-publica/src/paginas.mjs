@@ -39,7 +39,7 @@ export function inicio() {
   ];
   const preguntas = [
     ['¿Qué es LocalmenteTuyo?', 'Una plataforma para descubrir restaurantes, emprendimientos y comercios locales. Tiene dos apps: <strong>LocalmenteTuyo</strong>, para quienes quieren descubrir, y <strong>LocalmenteTuyo Negocios</strong>, para que los comerciantes publiquen su negocio.'],
-    ['¿Es gratuita?', 'Sí. Descargar y usar LocalmenteTuyo es gratis, y registrar tu negocio en LocalmenteTuyo Negocios también. La app no cobra por las reservas ni procesa pagos. Más adelante los negocios podrán contratar publicidad opcional (Destacado y Pop-up); mira los <a href="/#planes">Planes</a>.'],
+    ['¿Es gratuita?', 'Sí. Descargar y usar LocalmenteTuyo es gratis, y registrar tu negocio en LocalmenteTuyo Negocios también. La app no cobra por las reservas ni procesa pagos.'],
     ['¿En qué ciudades está disponible?', 'En <strong>Zipaquirá, Bogotá y los municipios de la Sabana de Bogotá</strong>: Chía, Cajicá, Cota, Tenjo, Tabio, Sopó, La Calera, Tocancipá, Gachancipá, Cogua, Nemocón, Funza, Mosquera, Madrid, Facatativá, Bojacá, El Rosal, Subachoque, Zipacón, Soacha y Sibaté. Llegaremos a otras ciudades de Colombia poco a poco. Si eliges una ciudad donde todavía no estamos, la app te lo avisa.'],
     ['¿Cómo me uno como tester?', 'Déjanos tu correo de Google en la sección <a href="/#testers">Sé tester</a>. Te agregamos a la prueba en Google Play y te enviamos por correo los enlaces para instalar las apps.'],
     ['¿Cómo registro mi negocio?', 'Descarga LocalmenteTuyo Negocios y sigue cinco pasos: tu cuenta, los datos del negocio, la verificación (cédula o NIT y una foto del local), tus productos y una vista previa. Nuestro equipo revisa cada registro antes de publicarlo. Si tu ciudad aún no está disponible, puedes registrar tu interés para cuando abramos.'],
@@ -105,68 +105,6 @@ export function inicio() {
       <p>El registro es gratis y está sujeto a la revisión de nuestro equipo. LocalmenteTuyo te ayuda a darte a conocer; no garantiza ventas ni resultados comerciales.</p>
       ${botonPlay('negocios', 'LocalmenteTuyo Negocios')}
     </div>
-  </div>
-</section>
-
-<section id="planes" class="bloque">
-  <div class="contenedor">
-    <p class="etiqueta">Planes para negocios</p>
-    <h2 class="titulo-seccion">Gratis para empezar. Publicidad opcional para crecer.</h2>
-    <p class="planes-entrada">Registrar y mostrar tu negocio en LocalmenteTuyo es gratis. Más adelante podrás impulsarlo con publicidad dentro de la app, solo si quieres y solo por los días que elijas.</p>
-
-    <div class="plan-gratis revelar">
-      <div>
-        <span class="plan-sello">Hoy · todo incluido</span>
-        <h3>Plan Gratis</h3>
-        <p class="plan-precio">$0 <small>sin tarjeta y sin fecha de vencimiento</small></p>
-      </div>
-      <ul class="plan-lista">
-        <li>Ficha del negocio con logo, horario, dirección y mapa</li>
-        <li>Menú o catálogo con fotos, precios y secciones</li>
-        <li>Videos de tus productos</li>
-        <li>Reseñas de clientes y tus respuestas</li>
-        <li>Contacto directo por WhatsApp y redes</li>
-        <li>Código QR para tus mesas o vitrina</li>
-        <li>Solicitudes de reserva (restaurantes)</li>
-      </ul>
-    </div>
-
-    <div class="planes-proximo revelar">
-      <span class="plan-sello plan-sello-mostaza">Próximamente</span>
-      <h3>Publicidad opcional para impulsar tu negocio</h3>
-      <p>Valores de referencia en pesos colombianos, por campaña y por municipio. Todavía no están a la venta: te avisaremos cuando abramos la publicidad.</p>
-    </div>
-
-    <div class="formatos">
-      <article class="formato revelar">
-        <h4>Destacado</h4>
-        <p>Tu negocio en la sección «Destacados» del inicio de la app, en rotación con otros negocios.</p>
-        <dl class="precios"><div><dt>7 días</dt><dd>$9.900</dd></div><div><dt>30 días</dt><dd>$29.900</dd></div></dl>
-        <p class="formato-ideal">Ideal para presencia continua y reconocimiento.</p>
-      </article>
-      <article class="formato revelar">
-        <h4>Pop-up</h4>
-        <p>Una tarjeta promocional al abrir la app, que se cierra con un toque y lleva a tu oferta o a tu ficha.</p>
-        <dl class="precios"><div><dt>1 día</dt><dd>$19.900</dd></div><div><dt>3 días</dt><dd>$49.900</dd></div><div><dt>7 días</dt><dd>$99.900</dd></div></dl>
-        <p class="formato-ideal">Ideal para ofertas, aperturas y eventos.</p>
-      </article>
-    </div>
-
-    <div class="combos">
-      ${[
-        ['Impulso Express', '$24.900', '7 días de Destacado', '1 día de Pop-up', 'Ahorras $4.900', 'Para probar la publicidad o lanzar una oferta.', false],
-        ['Impulso Local', '$69.900', '30 días de Destacado', '3 días de Pop-up', 'Ahorras $9.900', 'Presencia todo el mes y una oferta especial.', true],
-        ['Impacto Premium', '$114.900', '30 días de Destacado', '7 días de Pop-up', 'Ahorras $14.900', 'Para lanzamientos y temporadas comerciales.', false],
-      ].map(([n, p, a, b, ah, d, top]) => `<article class="combo${top ? ' combo-top' : ''} revelar">${top ? '<span class="combo-marca">El más completo para el mes</span>' : ''}<h4>${n}</h4><p class="combo-precio">${p}</p><ul><li>${a}</li><li>${b}</li></ul><p class="combo-ahorro">${ah}</p><p class="combo-desc">${d}</p></article>`).join('')}
-    </div>
-
-    <ul class="planes-reglas revelar">
-      <li><b>Sin suscripción</b> ni renovación automática: pagas solo la campaña que elijas.</li>
-      <li><b>Sin comisión</b> por tus ventas ni por las reservas.</li>
-      <li><b>Cada campaña incluye</b> 1 municipio, 1 pieza gráfica que nos entregas, enlace a tu ficha y un reporte de vistas y toques.</li>
-      <li><b>Cuidamos a quien usa la app:</b> cupos limitados de Destacados por municipio y como máximo un Pop-up al día por municipio, que cada persona ve una vez cada 72 horas.</li>
-    </ul>
-    <p class="planes-cta revelar">¿Te interesa anunciar tu negocio cuando abramos? Escríbenos a ${correoEnlace(SITIO.correoSoporte, 'correo de soporte', ruta)} y te avisamos primero.</p>
   </div>
 </section>
 

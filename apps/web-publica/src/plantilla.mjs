@@ -28,7 +28,6 @@ const NAV = [
   ['/', 'Inicio'],
   ['/#como-funciona', 'Cómo funciona'],
   ['/#negocios', 'Para negocios'],
-  ['/#planes', 'Planes'],
   ['/#testers', 'Sé tester'],
   ['/#preguntas', 'Preguntas frecuentes'],
   ['/soporte', 'Soporte'],
