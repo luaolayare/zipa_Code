@@ -40,7 +40,8 @@ export function inicio() {
   const preguntas = [
     ['¿Qué es LocalmenteTuyo?', 'Una plataforma para descubrir restaurantes, emprendimientos y comercios locales. Tiene dos apps: <strong>LocalmenteTuyo</strong>, para quienes quieren descubrir, y <strong>LocalmenteTuyo Negocios</strong>, para que los comerciantes publiquen su negocio.'],
     ['¿Es gratuita?', 'Sí. Descargar y usar LocalmenteTuyo es gratis, y registrar tu negocio en LocalmenteTuyo Negocios también. La app no cobra por las reservas ni procesa pagos.'],
-    ['¿En qué ciudades está disponible?', 'Iniciamos en <strong>Zipaquirá, Cundinamarca</strong>. Vamos a llegar a otras ciudades de Colombia poco a poco. Si eliges una ciudad donde todavía no estamos, la app te lo avisa y te deja explorar Zipaquirá.'],
+    ['¿En qué ciudades está disponible?', 'Iniciamos en <strong>Zipaquirá, Cundinamarca</strong>. <strong>Bogotá y los municipios de la Sabana</strong> están en preparación: ya estamos sumando sus negocios y abriremos cada ciudad cuando tenga negocios verificados para descubrir. Si eliges una ciudad donde todavía no estamos, la app te lo avisa.'],
+    ['¿Cómo me uno como tester?', 'Déjanos tu correo de Google en la sección <a href="/#testers">Sé tester</a>. Te agregamos a la prueba en Google Play y te enviamos por correo los enlaces para instalar las apps.'],
     ['¿Cómo registro mi negocio?', 'Descarga LocalmenteTuyo Negocios y sigue cinco pasos: tu cuenta, los datos del negocio, la verificación (cédula o NIT y una foto del local), tus productos y una vista previa. Nuestro equipo revisa cada registro antes de publicarlo. Si tu ciudad aún no está disponible, puedes registrar tu interés para cuando abramos.'],
     ['¿Cómo funcionan las reservas?', 'Solo en los restaurantes que activan las reservas. Eliges el día, la hora y el número de personas, y envías la solicitud. El restaurante la confirma o la rechaza, y ves el estado en «Mis reservas». La app no cobra ni pide pagos por reservar.'],
     ['¿Cómo solicito ayuda?', 'En nuestra página de <a href="/soporte">Soporte</a> encuentras respuestas a los problemas más comunes y el canal de contacto.'],
@@ -113,12 +114,39 @@ export function inicio() {
       <p class="etiqueta">Cobertura</p>
       <h2 class="titulo-seccion">Iniciamos en Zipaquirá.</h2>
       <p>LocalmenteTuyo está preparada para llegar, poco a poco, a otras ciudades de Colombia. Abriremos cada ciudad cuando tenga negocios verificados para descubrir.</p>
-      <p>¿Tienes un negocio en otra ciudad? Desde LocalmenteTuyo Negocios puedes registrar tu interés y te avisaremos cuando lleguemos.</p>
+      <p>¿Tienes un negocio en Bogotá o en la Sabana? Ya puedes escribirnos para sumarte antes de la apertura. En otras ciudades, desde LocalmenteTuyo Negocios puedes registrar tu interés y te avisaremos cuando lleguemos.</p>
     </div>
     <div class="cobertura-tarjeta revelar">
       <div class="ciudad activa"><span class="punto"></span><div><b>Zipaquirá</b><small>Cundinamarca</small></div><span class="estado">Disponible</span></div>
+      <div class="ciudad"><span class="punto"></span><div><b>Bogotá y la Sabana</b><small>Chía, Cajicá, Cota, Funza, Mosquera, Soacha y más</small></div><span class="estado">En preparación</span></div>
       <div class="ciudad"><span class="punto"></span><div><b>Otras ciudades de Colombia</b><small>Abriremos de forma progresiva</small></div><span class="estado">Próximamente</span></div>
     </div>
+  </div>
+</section>
+
+<section id="testers" class="bloque">
+  <div class="contenedor testers">
+    <div class="revelar">
+      <p class="etiqueta">Pruebas en Google Play</p>
+      <h2 class="titulo-seccion">Sé de los primeros en probarla</h2>
+      <p>Estamos probando LocalmenteTuyo con un grupo cerrado antes de abrirla para todos. Déjanos tu correo de Google y te agregamos a la prueba. Te enviaremos por correo los enlaces para instalar las apps desde Google Play.</p>
+      <p class="nota-suave">Usa el mismo correo con el que entras a Google Play en tu celular Android.</p>
+    </div>
+    <form id="form-tester" class="tester-tarjeta revelar" novalidate>
+      <label class="campo" for="tester-correo">Tu correo de Google
+        <input id="tester-correo" name="correo" type="email" autocomplete="email" inputmode="email" placeholder="nombre@gmail.com" required maxlength="254">
+      </label>
+      <fieldset class="campo">
+        <legend>¿Qué quieres probar?</legend>
+        <label class="opcion"><input type="checkbox" name="apps" value="clientes" checked><span>LocalmenteTuyo <small>para descubrir negocios</small></span></label>
+        <label class="opcion"><input type="checkbox" name="apps" value="negocios"><span>LocalmenteTuyo Negocios <small>si tienes un negocio</small></span></label>
+      </fieldset>
+      <div class="trampa" aria-hidden="true"><label>Sitio web <input name="sitio" tabindex="-1" autocomplete="off"></label></div>
+      <label class="opcion acepta"><input type="checkbox" name="acepta" required><span>Autorizo usar mi correo para agregarme a las pruebas de las apps y enviarme sus enlaces e instrucciones, según la <a href="/privacidad">política de privacidad</a>.</span></label>
+      <button class="btn btn-principal" type="submit">Quiero ser tester</button>
+      <p class="tester-estado" role="status" aria-live="polite"></p>
+      <noscript><p class="tester-estado">Para enviar el formulario activa JavaScript, o escríbenos a ${correoEnlace(R.correoPrivacidad, 'correo', ruta)}.</p></noscript>
+    </form>
   </div>
 </section>
 
@@ -168,7 +196,8 @@ ${seccion('2. Datos que recogemos',
   '<p><strong>WhatsApp:</strong> si tocas el botón de WhatsApp de un negocio, la conversación ocurre en WhatsApp (un servicio de Meta), fuera de LocalmenteTuyo y con sus propias condiciones. En las reservas, el restaurante ve el WhatsApp de contacto que escribiste para poder responderte.</p>',
   '<p><strong>Ubicación:</strong> es opcional. Solo si tocas «Usar mi ubicación» y lo autorizas, la app lee una vez tu ubicación aproximada para sugerirte el municipio más cercano; ese cálculo se hace en tu celular y no guardamos ni enviamos tu ubicación. En la app de negocios, la ubicación se usa solo cuando tocas el botón para guardar el punto de tu local.</p>',
   '<p><strong>Datos técnicos:</strong> un identificador del celular para enviarte avisos (por ejemplo, el estado de una reserva), el modelo y sistema operativo, la versión de la app y una analítica de uso anónima, con un identificador aleatorio que no se relaciona con tu cuenta, tu correo ni tu ubicación.</p>',
-  '<p><strong>Este sitio web:</strong> no tiene cuentas, formularios, cookies de seguimiento ni herramientas de analítica. El servicio de alojamiento puede registrar datos técnicos de cada visita (como la dirección IP) por seguridad y funcionamiento.</p>',
+  '<p><strong>Lista de testers:</strong> si te inscribes en «Sé tester» de este sitio, guardamos tu correo de Google, las apps que quieres probar y la fecha, con tu autorización.</p>',
+  '<p><strong>Este sitio web:</strong> no tiene cuentas, cookies de seguimiento ni herramientas de analítica; su único formulario es el de testers. El servicio de alojamiento puede registrar datos técnicos de cada visita (como la dirección IP) por seguridad y funcionamiento.</p>',
   '<p>La cámara solo se usa cuando tomas una foto o grabas un video desde la app de negocios, y los videos se graban sin sonido. No recogemos datos sensibles en los términos del artículo 5 de la Ley 1581 de 2012.</p>')}
 ${seccion('3. Para qué usamos tus datos', lista([
   'Crear y administrar tu cuenta e iniciar sesión.',
@@ -177,12 +206,13 @@ ${seccion('3. Para qué usamos tus datos', lista([
   'Gestionar tus solicitudes de reserva: el restaurante ve tu nombre, tu WhatsApp y los datos de la solicitud para confirmarla o responderte.',
   'Verificar que los negocios registrados existen. La cédula o NIT y la foto del local solo las ve el equipo de revisión; la foto se borra después de la revisión.',
   'Contactar por WhatsApp a los comerciantes que registraron su interés, solo para avisarles cuando abramos en su ciudad.',
+  'Agregar a las pruebas de Google Play a quienes se inscriben como testers (Google recibe ese correo para darles acceso) y enviarles por correo los enlaces e instrucciones de la prueba.',
   'Enviarte avisos sobre tu cuenta, tus reservas o tu negocio. Solo te enviaremos mensajes publicitarios si lo autorizas aparte.',
   'Atender solicitudes, reportes de contenido y bloqueos, mantener la seguridad de la plataforma y mejorar la app con la analítica anónima.',
 ]))}
 ${seccion('4. Información pública',
   'Es pública para cualquier persona: la información del negocio publicado (sin la cédula o NIT), su municipio, dirección y punto en el mapa, sus fotos y productos, y las reseñas con el nombre de quien las escribe.',
-  'No son públicos: tus reservas, los datos de verificación de los negocios ni los datos de interés comercial.')}
+  'No son públicos: tus reservas, los datos de verificación de los negocios, los datos de interés comercial ni la lista de testers.')}
 ${seccion('5. Proveedores y transferencia internacional', lista([
   '<strong>Supabase:</strong> base de datos, inicio de sesión, archivos y funciones del servidor. Los datos de las apps se guardan en su región us-east-2 (Ohio, Estados Unidos).',
   '<strong>Expo (EAS):</strong> compilación de las apps y envío de los avisos al celular.',
@@ -198,6 +228,7 @@ ${seccion('7. Conservación y eliminación',
   `Si nos pides la supresión por correo, la atendemos dentro de los plazos de la Ley 1581 de 2012 y la completamos en un máximo de ${SITIO.plazos.supresionDias} días naturales desde que confirmamos la solicitud, salvo los datos que debamos conservar por una obligación legal.`,
   'Los avisos enviados y los identificadores de celulares que ya no se usan se borran a los 90 días.',
   `Los registros de interés comercial se conservan un máximo de ${SITIO.plazos.interesMeses} meses desde que los recibimos, o menos si pides que los borremos.`,
+  `Los correos de la lista de testers se conservan un máximo de ${SITIO.plazos.interesMeses} meses desde la inscripción, o menos si pides que los borremos. Para salir de la prueba en Google Play usa el enlace «Abandonar el programa» de la página de la prueba.`,
   'Las copias de seguridad de nuestros proveedores se eliminan según sus propios ciclos automáticos.')}
 ${seccion('8. Tus derechos',
   'Según el artículo 8 de la Ley 1581 de 2012, puedes conocer, actualizar y rectificar tus datos; pedir prueba de la autorización que nos diste; ser informado sobre el uso que les damos; revocar la autorización o pedir que los borremos cuando no se respeten tus derechos; acceder gratis a tus datos; y presentar quejas ante la Superintendencia de Industria y Comercio después de haber hecho tu consulta o reclamo ante nosotros.',

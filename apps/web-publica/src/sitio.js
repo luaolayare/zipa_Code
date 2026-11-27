@@ -13,6 +13,30 @@
     menu.addEventListener('click', function (e) { if (e.target.tagName === 'A') cerrar(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrar(); });
   }
+  // Formulario «Sé tester»: envía a /api/tester (Cloudflare Pages Function) y muestra el resultado ahí mismo.
+  var form = document.getElementById('form-tester');
+  if (form) {
+    var estado = form.querySelector('.tester-estado');
+    var boton = form.querySelector('button[type=submit]');
+    var mostrar = function (texto, tipo) { estado.textContent = texto; estado.className = 'tester-estado ' + (tipo || ''); };
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var correo = form.correo.value.trim();
+      var apps = Array.prototype.slice.call(form.querySelectorAll('input[name=apps]:checked')).map(function (i) { return i.value; });
+      if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,24}$/.test(correo)) { mostrar('Escribe un correo válido.', 'error'); form.correo.focus(); return; }
+      if (!apps.length) { mostrar('Elige al menos una app.', 'error'); return; }
+      if (!form.acepta.checked) { mostrar('Necesitamos tu autorización para usar tu correo.', 'error'); form.acepta.focus(); return; }
+      boton.disabled = true; mostrar('Enviando…');
+      fetch('/api/tester', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ correo: correo, apps: apps, acepta: true, sitio: form.sitio.value }) })
+        .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+        .then(function (d) {
+          if (d.ok) { form.reset(); form.querySelector('input[value=clientes]').checked = true; mostrar('¡Listo! Te agregaremos a la prueba y te enviaremos los enlaces a ' + correo + '. Revisa también la carpeta de spam.', 'ok'); }
+          else mostrar(d.mensaje || 'No pudimos guardar tu correo. Intenta de nuevo en un rato.', 'error');
+        })
+        .catch(function () { mostrar('No hay conexión. Intenta de nuevo en un rato.', 'error'); })
+        .then(function () { boton.disabled = false; });
+    });
+  }
   var cabecera = document.querySelector('.cabecera');
   var sombra = function () { if (cabecera) cabecera.classList.toggle('con-sombra', window.scrollY > 8); };
   window.addEventListener('scroll', sombra, { passive: true });

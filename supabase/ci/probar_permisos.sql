@@ -1669,6 +1669,31 @@ do $$ begin
   if not exists (select 1 from public.interes_comercial where nombre_negocio = 'Interés reciente') then raise exception 'se borró un interés de menos de 12 meses'; end if;
 end $$;
 
+-- SOLICITUDES DE TESTERS (0026): anon solo se inscribe; nadie lee la lista sin ser del equipo --------
+insert into public.solicitudes_tester (correo, apps, acepta, created_at) values
+  ('viejo.tester@gmail.com', '{clientes}', true, now() - interval '13 months');
+set local role anon;
+do $$ begin
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_tester('Nuevo.Tester@Gmail.com', '{clientes}', true)$q$);
+  perform ci_pruebas.debe_funcionar($q$select public.registrar_tester('nuevo.tester@gmail.com', '{negocios,otra}', true)$q$);
+  perform ci_pruebas.debe_fallar($q$select public.registrar_tester('no-es-correo', '{clientes}', true)$q$, 'Escribe un correo válido%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_tester('a@b.co', '{clientes}', false)$q$, 'Necesitamos tu autorización%');
+  perform ci_pruebas.debe_fallar($q$select public.registrar_tester('a@b.co', '{otra}', true)$q$, 'Elige al menos una app%');
+  perform ci_pruebas.debe_fallar($q$select * from public.solicitudes_tester$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$insert into public.solicitudes_tester (correo, apps, acepta) values ('x@y.co', '{clientes}', true)$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_testers()$q$, 'permission denied%');
+  perform ci_pruebas.debe_fallar($q$select public.admin_marcar_testers_invitados('{}')$q$, 'permission denied%');
+end $$;
+reset role;
+do $$ begin
+  if (select apps from public.solicitudes_tester where correo = 'nuevo.tester@gmail.com') <> '{clientes,negocios}'::text[] then
+    raise exception 'el correo repetido no sumó la app nueva';
+  end if;
+  perform public.limpiar_avisos_antiguos();
+  if exists (select 1 from public.solicitudes_tester where correo = 'viejo.tester@gmail.com') then raise exception 'no se borró la solicitud de tester de más de 12 meses'; end if;
+  if not exists (select 1 from public.solicitudes_tester where correo = 'nuevo.tester@gmail.com') then raise exception 'se borró una solicitud de tester reciente'; end if;
+end $$;
+
 -- Tablas futuras: no deben quedar expuestas solas ---------------------------------------------------
 create table public.ci_tabla_nueva (id int);
 do $$ begin
