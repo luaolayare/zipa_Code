@@ -91,7 +91,7 @@ ${cuerpo}
     <div>
       <a class="marca marca-clara" href="/"><img src="/img/simbolo.png" alt="" width="36" height="36"><span>Localmente<b>Tuyo</b></span></a>
       <p class="pie-eslogan">${esc(SITIO.eslogan)}</p>
-      <p class="pie-pequeno">Iniciamos en Zipaquirá, Cundinamarca.</p>
+      <p class="pie-pequeno">En Zipaquirá, Bogotá y la Sabana de Bogotá.</p>
     </div>
     <nav aria-label="Información legal y ayuda">
       <h2>Ayuda y legal</h2>
